@@ -12,6 +12,19 @@ export default function DMArea({ friend }) {
   const bottomRef = useRef(null);
   const socket = getSocket();
   const { user } = useAuth();
+  const playNotification = () => {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  oscillator.frequency.value = 880;
+  oscillator.type = 'sine';
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+  oscillator.start(ctx.currentTime);
+  oscillator.stop(ctx.currentTime + 0.3);
+};
 
   useEffect(() => {
     if (!friend) return;
@@ -22,6 +35,7 @@ const onDM = (msg) => {
     (msg.sender_id === user.id && msg.receiver_id === friend.id)
   ) {
     setMessages(prev => [...prev, msg]);
+    if (msg.sender_id === friend.id) playNotification();
   }
 };
     socket.on('new_dm', onDM);
