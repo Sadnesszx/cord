@@ -7,6 +7,7 @@ import DMArea from '../components/chat/DMArea';
 import api from '../lib/api';
 import AvatarPicker from '../components/ui/AvatarPicker';
 import './AppLayout.css';
+import HomePage from '../components/chat/HomePage';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -122,11 +123,15 @@ export default function AppLayout() {
 
       {/* MAIN PANEL */}
       <div className="main-panel">
-        {view === 'dms' ? (
-          <DMArea friend={activeFriend} />
-        ) : (
-          <ChatArea channel={activeChannel} />
-        )}
+       {view === 'dms' ? (
+  activeFriend ? (
+    <DMArea friend={activeFriend} />
+  ) : (
+    <HomePage onSelectFriend={setActiveFriend} />
+  )
+) : (
+  <ChatArea channel={activeChannel} />
+)}
       </div>
 
       {/* CREATE SERVER MODAL */}
