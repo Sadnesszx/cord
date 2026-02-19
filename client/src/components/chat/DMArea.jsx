@@ -67,13 +67,19 @@ const send = (e) => {
         ))}
         <div ref={bottomRef} />
       </div>
-      <div className="chat-input-wrapper">
-        <form className="chat-input-form" onSubmit={send}>
-          <textarea
-            className="chat-input"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) send(e); }}
+<div className="chat-input-wrapper">
+  <form className="chat-input-form">
+    <textarea
+      className="chat-input"
+      value={input}
+      onChange={e => setInput(e.target.value)}
+      onKeyDown={e => { 
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+          setInput('');
+        }
+      }}
             placeholder={`Message ${friend.username}`}
             rows={1}
           />
