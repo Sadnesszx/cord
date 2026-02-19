@@ -36,8 +36,8 @@
   flex: 1;
   overflow-y: scroll;
   padding: 16px 18px 8px;
-  display: block;
   min-height: 0;
+  height: 0;
 }
 
 .chat-loading {
