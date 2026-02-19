@@ -23,8 +23,9 @@ export default function DMArea({ friend }) {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  const send = (e) => {
+const send = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!input.trim()) return;
     socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
     setInput('');
