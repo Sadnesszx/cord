@@ -33,16 +33,11 @@
 }
 
 .chat-messages {
-  position: absolute;
-  top: 48px;
-  bottom: 70px;
-  left: 0;
-  right: 0;
+  flex: 1;
   overflow-y: scroll;
   padding: 16px 18px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: block;
+  min-height: 0;
 }
 
 .chat-loading {
@@ -218,6 +213,7 @@
 .chat-input-wrapper {
   padding: 0 14px 14px;
   flex-shrink: 0;
+  background: var(--bg-base);
 }
 
 .chat-input-form {
