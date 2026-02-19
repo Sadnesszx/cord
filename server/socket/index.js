@@ -20,13 +20,14 @@ const setupSocket = (io) => {
 
     // Join a channel room
     socket.on('join_channel', (channelId) => {
-      // Leave previous channels
-      socket.rooms.forEach((room) => {
-        if (room !== socket.id) socket.leave(room);
-      });
-      socket.join(channelId);
-      console.log(`${socket.user.username} joined channel ${channelId}`);
-    });
+  // Only leave channel rooms, not personal user room
+  socket.rooms.forEach((room) => {
+    if (room !== socket.id && room !== `user_${socket.user.id}`) {
+      socket.leave(room);
+    }
+  });
+  socket.join(channelId);
+});
 
     // Send a message
     socket.on('send_message', async ({ channelId, content }) => {
