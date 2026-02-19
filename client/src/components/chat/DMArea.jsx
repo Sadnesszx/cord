@@ -42,7 +42,14 @@ const onDM = (msg) => {
     return () => socket.off('new_dm', onDM);
   }, [friend?.id]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => {
+  if (messages.length === 0) return;
+  const last = messages[messages.length - 1];
+  const isOwnMessage = last?.sender_id === user?.id;
+  if (isOwnMessage) {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }
+}, [messages]);
 
 const send = (e) => {
     e.preventDefault();
