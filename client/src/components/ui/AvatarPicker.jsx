@@ -21,13 +21,13 @@ export default function AvatarPicker({ onClose }) {
   const [selected, setSelected] = useState(user?.avatar_color || '#555');
   const [saving, setSaving] = useState(false);
 
-  const save = async () => {
+const save = async () => {
     setSaving(true);
     try {
       await api.patch('/api/users/me/avatar', { avatar_color: selected });
       const updatedUser = { ...user, avatar_color: selected };
-      localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
-      login(localStorage.getItem('sadlounge_token'), updatedUser);
+      const token = localStorage.getItem('sadlounge_token');
+      login(token, updatedUser);
       onClose();
     } catch (err) {
       console.error(err);
