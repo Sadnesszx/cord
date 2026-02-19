@@ -14,11 +14,9 @@ export default function DMArea({ friend }) {
   useEffect(() => {
     if (!friend) return;
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => setMessages(data));
-    const onDM = (msg) => {
-      if (msg.sender_id === friend.id || msg.receiver_id === friend.id) {
-        setMessages(prev => [...prev, msg]);
-      }
-    };
+  const onDM = (msg) => {
+  setMessages(prev => [...prev, msg]);
+};;
     socket.on('new_dm', onDM);
     return () => socket.off('new_dm', onDM);
   }, [friend?.id]);
