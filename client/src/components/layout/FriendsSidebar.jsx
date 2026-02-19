@@ -108,21 +108,3 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   );
 }
 
-.friend-avatar-wrapper {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.status-dot {
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 2px solid var(--bg-deep);
-}
-
-.status-dot.online { background: var(--success); }
-.status-dot.offline { background: var(--gray-1); }
-

@@ -198,3 +198,26 @@
 }
 
 .decline-btn:hover { background: #c0392b; color: var(--white); }
+
+.friend-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid #0a0a0a;
+}
+
+.status-dot.online {
+  background: #27ae60;
+}
+
+.status-dot.offline {
+  background: #444;
+}
