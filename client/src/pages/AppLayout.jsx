@@ -5,6 +5,7 @@ import FriendsSidebar from '../components/layout/FriendsSidebar';
 import ChatArea from '../components/chat/ChatArea';
 import DMArea from '../components/chat/DMArea';
 import api from '../lib/api';
+import AvatarPicker from '../components/ui/AvatarPicker';
 import './AppLayout.css';
 
 export default function AppLayout() {
@@ -17,6 +18,7 @@ export default function AppLayout() {
   const [view, setView] = useState('dms');
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [newName, setNewName] = useState('');
   const [joinId, setJoinId] = useState('');
 
@@ -95,7 +97,7 @@ export default function AppLayout() {
         </div>
 
         <div className="top-bar-actions">
-          <div className="top-bar-user">
+          <div className="top-bar-user" onClick={() => setShowAvatarPicker(true)} style={{cursor:"pointer"}} title="Change avatar">
             <div className="top-bar-avatar" style={{ background: user?.avatar_color || '#555' }}>
               {user?.username?.[0]?.toUpperCase()}
             </div>
@@ -158,6 +160,7 @@ export default function AppLayout() {
           </div>
         </div>
       )}
+      {showAvatarPicker && <AvatarPicker onClose={() => setShowAvatarPicker(false)} />}
     </div>
   );
 }
