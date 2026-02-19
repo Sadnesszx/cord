@@ -33,12 +33,12 @@
 
 .chat-messages {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding: 16px 18px 8px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
   min-height: 0;
+  gap: 1px;
 }
 
 .chat-loading {
