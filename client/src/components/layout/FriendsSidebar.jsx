@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import './FriendsSidebar.css';
+import './FriendsSidebar.css';  
+import { getSocket } from '../../lib/socket';
 
 export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [username, setUsername] = useState('');
   const [msg, setMsg] = useState('');
@@ -16,6 +18,12 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+  const socket = getSocket();
+  socket.on('online_users', (users) => setOnlineUsers(users));
+  return () => socket.off('online_users');
+}, []);
 
   const sendRequest = async (e) => {
     e.preventDefault();
@@ -64,11 +72,20 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
           <>
             {friends.length === 0 && <p className="friends-empty">No friends yet.<br/>Add someone with the + button!</p>}
             {friends.map(f => (
-              <button key={f.id} className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`} onClick={() => onSelectFriend(f)}>
-                <div className="friend-avatar" style={{ background: f.avatar_color }}>{f.username[0].toUpperCase()}</div>
-                <span>{f.username}</span>
-              </button>
-            ))}
+  <button
+    key={f.id}
+    className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`}
+    onClick={() => onSelectFriend(f)}
+  >
+    <div className="friend-avatar-wrapper">
+      <div className="friend-avatar" style={{ background: f.avatar_color }}>
+        {f.username[0].toUpperCase()}
+      </div>
+      <span className={`status-dot ${onlineUsers.includes(f.id) ? 'online' : 'offline'}`} />
+    </div>
+    <span>{f.username}</span>
+  </button>
+))}
           </>
         )}
         {tab === 'requests' && (
@@ -90,3 +107,22 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
     </div>
   );
 }
+
+.friend-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-deep);
+}
+
+.status-dot.online { background: var(--success); }
+.status-dot.offline { background: var(--gray-1); }
+

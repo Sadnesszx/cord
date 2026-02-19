@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
 
 const setupSocket = (io) => {
+  const onlineUsers = new Set();
   // Auth middleware for socket
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
@@ -17,6 +18,8 @@ const setupSocket = (io) => {
   io.on('connection', (socket) => {
     console.log(`🔌 ${socket.user.username} connected`);
     socket.join(`user_${socket.user.id}`);
+    onlineUsers.add(socket.user.id);
+io.emit('online_users', Array.from(onlineUsers));
 
     // Join a channel room
     socket.on('join_channel', (channelId) => {
@@ -92,9 +95,11 @@ const setupSocket = (io) => {
       }
     });
 
-    socket.on('disconnect', () => {
-      console.log(`❌ ${socket.user.username} disconnected`);
-    });
+   socket.on('disconnect', () => {
+  console.log(`❌ ${socket.user.username} disconnected`);
+  onlineUsers.delete(socket.user.id);
+  io.emit('online_users', Array.from(onlineUsers));
+});
   });
 };
 
