@@ -1,20 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../lib/socket';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './ChatArea.css';
 
 const formatTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-export default function DMArea({ friend }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const bottomRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-  const isAtBottom = useRef(true);
-  const socket = getSocket();
-  const { user } = useAuth();
-  const playNotification = () => {
+const playNotification = () => {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -28,49 +20,36 @@ export default function DMArea({ friend }) {
   oscillator.stop(ctx.currentTime + 0.3);
 };
 
+export default function DMArea({ friend }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const { user } = useAuth();
+  const bottomRef = useRef(null);
+  const containerRef = useRef(null);
+  const socket = getSocket();
+
   useEffect(() => {
     if (!friend) return;
+    setMessages([]);
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => {
-    setMessages(data);
-    isAtBottom.current = true;
-    setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
-  });
-const onDM = (msg) => {
-  if (
-    (msg.sender_id === friend.id && msg.receiver_id === user.id) ||
-    (msg.sender_id === user.id && msg.receiver_id === friend.id)
-  ) {
-    setMessages(prev => [...prev, msg]);
-    if (msg.sender_id === friend.id) playNotification();
-  }
-};
+      setMessages(data);
+      setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
+    });
+
+    const onDM = (msg) => {
+      if (
+        (msg.sender_id === friend.id && msg.receiver_id === user.id) ||
+        (msg.sender_id === user.id && msg.receiver_id === friend.id)
+      ) {
+        setMessages(prev => [...prev, msg]);
+        if (msg.sender_id === friend.id) playNotification();
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+      }
+    };
+
     socket.on('new_dm', onDM);
     return () => socket.off('new_dm', onDM);
   }, [friend?.id]);
-
-  useEffect(() => {
-  if (isAtBottom.current) {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }
-}, [messages]);
-useEffect(() => {
-  const container = messagesContainerRef.current;
-  if (!container) return;
-  const handleScroll = () => {
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    isAtBottom.current = scrollHeight - scrollTop - clientHeight < 50;
-  };
-  container.addEventListener('scroll', handleScroll);
-  return () => container.removeEventListener('scroll', handleScroll);
-}, []);
-
-const send = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!input.trim()) return;
-    socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
-    setInput('');
-  };
 
   if (!friend) return (
     <div className="chat-empty">
@@ -88,7 +67,8 @@ const send = (e) => {
         </div>
         <span className="chat-header-name">{friend.username}</span>
       </div>
-      <div className="chat-messages" ref={messagesContainerRef}>
+
+      <div className="chat-messages" ref={containerRef}>
         {messages.length === 0 && (
           <div className="chat-start">
             <h3>Start of DM with {friend.username}</h3>
@@ -96,7 +76,9 @@ const send = (e) => {
         )}
         {messages.map((msg) => (
           <div key={msg.id} className="msg-group fade-in">
-            <div className="msg-avatar" style={{ background: msg.avatar_color }}>{msg.username[0].toUpperCase()}</div>
+            <div className="msg-avatar" style={{ background: msg.avatar_color }}>
+              {msg.username[0].toUpperCase()}
+            </div>
             <div className="msg-content">
               <div className="msg-meta">
                 <span className="msg-author">{msg.username}</span>
@@ -108,23 +90,29 @@ const send = (e) => {
         ))}
         <div ref={bottomRef} />
       </div>
-<div className="chat-input-wrapper">
-  <form className="chat-input-form">
-    <textarea
-      className="chat-input"
-      value={input}
-      onChange={e => setInput(e.target.value)}
-      onKeyDown={e => { 
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
-          setInput('');
-        }
-      }}
+
+      <div className="chat-input-wrapper">
+        <form className="chat-input-form">
+          <textarea
+            className="chat-input"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!input.trim()) return;
+                socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+                setInput('');
+              }
+            }}
             placeholder={`Message ${friend.username}`}
             rows={1}
           />
-          <button className="chat-send-btn" type="submit" disabled={!input.trim()}>
+          <button className="chat-send-btn" type="button" onClick={() => {
+            if (!input.trim()) return;
+            socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+            setInput('');
+          }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>
         </form>
