@@ -71,6 +71,26 @@ const setupSocket = (io) => {
       socket.to(channelId).emit('user_stop_typing', { username: socket.user.username });
     });
 
+    // DM messages
+    socket.on('send_dm', async ({ receiverId, content }) => {
+      if (!content?.trim() || !receiverId) return;
+      try {
+        const { rows } = await pool.query(
+          `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
+          [socket.user.id, receiverId, content.trim()]
+        );
+        const { rows: users } = await pool.query(
+          'SELECT username, avatar_color FROM users WHERE id = $1',
+          [socket.user.id]
+        );
+        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color };
+        socket.emit('new_dm', fullMsg);
+        io.to(`user_${receiverId}`).emit('new_dm', fullMsg);
+      } catch (err) {
+        console.error('DM error:', err);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`❌ ${socket.user.username} disconnected`);
     });
