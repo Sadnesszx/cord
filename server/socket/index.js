@@ -16,6 +16,7 @@ const setupSocket = (io) => {
 
   io.on('connection', (socket) => {
     console.log(`🔌 ${socket.user.username} connected`);
+    socket.join(`user_${socket.user.id}`);
 
     // Join a channel room
     socket.on('join_channel', (channelId) => {
