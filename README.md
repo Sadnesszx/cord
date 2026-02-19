@@ -1,4 +1,4 @@
-# 💬 SadLounge — Your DisSadLounge Clone
+# 💬 SadLounge
 
 A real-time chat app built with React, Node.js, Socket.io, and PostgreSQL. Dark, sleek, bubbly design.
 
