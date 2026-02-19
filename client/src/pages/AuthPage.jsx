@@ -44,7 +44,7 @@ export default function AuthPage() {
       <div className="auth-card fade-in">
         <div className="auth-logo">
           <div className="auth-logo-icon">C</div>
-          <span>cord</span>
+          <span>SadLounge</span>
         </div>
 
         <h1 className="auth-title">

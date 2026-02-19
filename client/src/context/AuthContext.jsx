@@ -5,19 +5,19 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('cord_user');
+    const saved = localStorage.getItem('SadLounge_user');
     return saved ? JSON.parse(saved) : null;
   });
 
   const login = (token, userData) => {
-    localStorage.setItem('cord_token', token);
-    localStorage.setItem('cord_user', JSON.stringify(userData));
+    localStorage.setItem('SadLounge_token', token);
+    localStorage.setItem('SadLounge_user', JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('cord_token');
-    localStorage.removeItem('cord_user');
+    localStorage.removeItem('SadLounge_token');
+    localStorage.removeItem('SadLounge_user');
     disconnectSocket();
     setUser(null);
   };

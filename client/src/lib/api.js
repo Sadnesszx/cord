@@ -5,7 +5,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('cord_token');
+  const token = localStorage.getItem('SadLounge_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -14,8 +14,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('cord_token');
-      localStorage.removeItem('cord_user');
+      localStorage.removeItem('SadLounge_token');
+      localStorage.removeItem('SadLounge_user');
       window.location.href = '/login';
     }
     return Promise.reject(err);
