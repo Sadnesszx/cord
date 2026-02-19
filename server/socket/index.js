@@ -16,6 +16,7 @@ const setupSocket = (io) => {
 
   io.on('connection', (socket) => {
     console.log(`🔌 ${socket.user.username} connected`);
+    socket.join(`user_${socket.user.id}`);
 
     // Join a channel room
     socket.on('join_channel', (channelId) => {
@@ -40,6 +41,25 @@ const setupSocket = (io) => {
         );
 
         const message = rows[0];
+
+        // DM messages
+    socket.on('send_dm', async ({ receiverId, content }) => {
+      if (!content?.trim() || !receiverId) return;
+      try {
+        const { rows } = await pool.query(
+          `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
+          [socket.user.id, receiverId, content.trim()]
+        );
+        const { rows: users } = await pool.query('SELECT username, avatar_color FROM users WHERE id = $1', [socket.user.id]);
+        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color };
+        
+        // Send to both users
+        socket.emit('new_dm', fullMsg);
+        io.to(`user_${receiverId}`).emit('new_dm', fullMsg);
+      } catch (err) {
+        console.error('DM error:', err);
+      }
+    });
 
         // Get user info
         const { rows: users } = await pool.query(
