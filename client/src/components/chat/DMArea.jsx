@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
 import './ChatArea.css';
@@ -10,13 +11,19 @@ export default function DMArea({ friend }) {
   const [input, setInput] = useState('');
   const bottomRef = useRef(null);
   const socket = getSocket();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!friend) return;
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => setMessages(data));
-  const onDM = (msg) => {
-  setMessages(prev => [...prev, msg]);
-};;
+const onDM = (msg) => {
+  if (
+    (msg.sender_id === friend.id && msg.receiver_id === user.id) ||
+    (msg.sender_id === user.id && msg.receiver_id === friend.id)
+  ) {
+    setMessages(prev => [...prev, msg]);
+  }
+};
     socket.on('new_dm', onDM);
     return () => socket.off('new_dm', onDM);
   }, [friend?.id]);
