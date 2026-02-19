@@ -22,7 +22,7 @@ const initDB = async () => {
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       name VARCHAR(100) NOT NULL,
       owner_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      icon_color VARCHAR(7) DEFAULT '#232329',
+      icon_color VARCHAR(7) DEFAULT '#1f1a1f',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 

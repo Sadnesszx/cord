@@ -5,8 +5,8 @@ import api from '../lib/api';
 import './Auth.css';
 
 export default function AuthPage() {
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -19,12 +19,10 @@ export default function AuthPage() {
     setError('');
     setLoading(true);
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const payload = mode === 'login'
-        ? { email: form.email, password: form.password }
-        : { username: form.username, email: form.email, password: form.password };
-
-      const { data } = await api.post(endpoint, payload);
+      const { data } = await api.post(`/api/auth/${mode}`, {
+        username: form.username,
+        password: form.password,
+      });
       login(data.token, data.user);
       navigate('/');
     } catch (err) {
@@ -43,42 +41,26 @@ export default function AuthPage() {
 
       <div className="auth-card fade-in">
         <div className="auth-logo">
-          <div className="auth-logo-icon">C</div>
+          <div className="auth-logo-icon">S</div>
           <span>SadLounge</span>
         </div>
 
         <h1 className="auth-title">
-          {mode === 'login' ? 'Welcome back' : 'Create account'}
+          {mode === 'login' ? 'Welcome back' : 'Join SadLounge'}
         </h1>
         <p className="auth-subtitle">
-          {mode === 'login'
-            ? 'Good to see you again.'
-            : 'Join and start chatting.'}
+          {mode === 'login' ? 'Good to see you again.' : 'Pick your username and start chatting.'}
         </p>
 
         <form className="auth-form" onSubmit={submit}>
-          {mode === 'register' && (
-            <div className="auth-field">
-              <label>Username</label>
-              <input
-                name="username"
-                value={form.username}
-                onChange={handle}
-                placeholder="cooluser"
-                autoComplete="off"
-                required
-              />
-            </div>
-          )}
           <div className="auth-field">
-            <label>Email</label>
+            <label>Username</label>
             <input
-              name="email"
-              type="email"
-              value={form.email}
+              name="username"
+              value={form.username}
               onChange={handle}
-              placeholder="you@example.com"
-              autoComplete="email"
+              placeholder="yourname"
+              autoComplete="username"
               required
             />
           </div>
