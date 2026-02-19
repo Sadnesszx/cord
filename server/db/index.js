@@ -14,7 +14,7 @@ const initDB = async () => {
       username VARCHAR(32) UNIQUE NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      avatar_color VARCHAR(7) DEFAULT '#9b1a2a',
+      avatar_color VARCHAR(7) DEFAULT '#9898b8',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -22,7 +22,7 @@ const initDB = async () => {
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       name VARCHAR(100) NOT NULL,
       owner_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      icon_color VARCHAR(7) DEFAULT '#1f1a1f',
+      icon_color VARCHAR(7) DEFAULT '#232329',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -48,25 +48,7 @@ const initDB = async () => {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
-    CREATE TABLE IF NOT EXISTS friend_requests (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      status VARCHAR(20) DEFAULT 'pending',
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      UNIQUE(sender_id, receiver_id)
-    );
-
-    CREATE TABLE IF NOT EXISTS dm_messages (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      content TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
     CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel_id, created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_dm_messages ON dm_messages(sender_id, receiver_id, created_at DESC);
   `);
   console.log('✅ Database initialized');
 };

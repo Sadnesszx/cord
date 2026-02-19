@@ -14,12 +14,8 @@ export default function DMArea({ friend }) {
   useEffect(() => {
     if (!friend) return;
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => setMessages(data));
-
     const onDM = (msg) => {
-      if (
-        (msg.sender_id === friend.id) ||
-        (msg.receiver_id === friend.id)
-      ) {
+      if (msg.sender_id === friend.id || msg.receiver_id === friend.id) {
         setMessages(prev => [...prev, msg]);
       }
     };
@@ -27,9 +23,7 @@ export default function DMArea({ friend }) {
     return () => socket.off('new_dm', onDM);
   }, [friend?.id]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const send = (e) => {
     e.preventDefault();
@@ -41,31 +35,28 @@ export default function DMArea({ friend }) {
   if (!friend) return (
     <div className="chat-empty">
       <div className="chat-empty-icon">💬</div>
-      <h2>Select a friend</h2>
-      <p>Pick a friend to start a DM</p>
+      <h2>No chat selected</h2>
+      <p>Pick a friend to start messaging</p>
     </div>
   );
 
   return (
     <div className="chat-area">
       <div className="chat-header">
-        <div className="msg-avatar" style={{ background: friend.avatar_color, width: 28, height: 28, fontSize: 12 }}>
+        <div className="msg-avatar" style={{ background: friend.avatar_color, width: 26, height: 26, fontSize: 11, borderRadius: 4 }}>
           {friend.username[0].toUpperCase()}
         </div>
         <span className="chat-header-name">{friend.username}</span>
       </div>
-
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="chat-start">
-            <h3>Start of your DM with {friend.username}</h3>
+            <h3>Start of DM with {friend.username}</h3>
           </div>
         )}
         {messages.map((msg) => (
           <div key={msg.id} className="msg-group fade-in">
-            <div className="msg-avatar" style={{ background: msg.avatar_color }}>
-              {msg.username[0].toUpperCase()}
-            </div>
+            <div className="msg-avatar" style={{ background: msg.avatar_color }}>{msg.username[0].toUpperCase()}</div>
             <div className="msg-content">
               <div className="msg-meta">
                 <span className="msg-author">{msg.username}</span>
@@ -77,7 +68,6 @@ export default function DMArea({ friend }) {
         ))}
         <div ref={bottomRef} />
       </div>
-
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={send}>
           <textarea
@@ -89,9 +79,7 @@ export default function DMArea({ friend }) {
             rows={1}
           />
           <button className="chat-send-btn" type="submit" disabled={!input.trim()}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-            </svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>
         </form>
       </div>

@@ -1,5 +1,5 @@
 {
-  "name": "SadLounge-server",
+  "name": "sadlounge-server",
   "version": "1.0.0",
   "scripts": {
     "dev": "nodemon index.js",

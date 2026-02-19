@@ -1,108 +1,111 @@
 .friends-sidebar {
-  width: 230px;
-  min-width: 230px;
-  background: var(--bg-deep);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255,255,255,0.04);
+  height: 100%;
+  overflow: hidden;
 }
 
 .friends-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  font-size: 15px;
+  padding: 14px 14px 10px;
+  border-bottom: var(--border);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
   font-weight: 700;
   color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 .friends-add-btn {
   background: none;
-  color: var(--gray-1);
-  font-size: 22px;
+  color: var(--gray-3);
+  font-size: 20px;
   line-height: 1;
   padding: 0 4px;
   transition: color 0.15s;
 }
 
-.friends-add-btn:hover { color: var(--accent-bright); }
+.friends-add-btn:hover { color: var(--white); }
 
 .friends-add-form {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 10px;
+  border-bottom: var(--border);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .friends-add-form input {
   background: var(--bg-float);
-  border: 1.5px solid rgba(255,255,255,0.06);
-  border-radius: var(--radius-md);
-  padding: 9px 12px;
-  font-size: 13px;
+  border: var(--border-bright);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12px;
   color: var(--white);
   transition: border-color 0.2s;
 }
 
-.friends-add-form input:focus {
-  border-color: var(--accent-dim);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-.friends-add-form input::placeholder { color: var(--gray-1); }
+.friends-add-form input:focus { border-color: var(--gray-2); }
+.friends-add-form input::placeholder { color: var(--gray-2); }
 
 .friends-add-form button {
-  background: var(--accent);
+  background: var(--bg-float);
   color: var(--white);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   padding: 8px;
-  border-radius: var(--radius-md);
-  transition: all 0.2s;
+  border-radius: var(--radius-sm);
+  border: var(--border-bright);
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
 }
 
-.friends-add-form button:hover { background: var(--accent-bright); }
+.friends-add-form button:hover { background: var(--bg-active); border-color: var(--gray-1); }
 
 .friends-msg {
-  font-size: 12px;
-  color: var(--accent-bright);
+  font-size: 11px;
+  color: var(--gray-4);
   text-align: center;
+  font-family: 'Space Mono', monospace;
 }
 
 .friends-tabs {
   display: flex;
-  padding: 8px 8px 0;
+  padding: 8px 8px 4px;
   gap: 4px;
 }
 
 .friends-tabs button {
   flex: 1;
   background: none;
-  color: var(--gray-1);
-  font-size: 12px;
+  color: var(--gray-3);
+  font-size: 11px;
   font-weight: 600;
-  padding: 7px 8px;
-  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: var(--border);
   transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
+  font-family: 'Inter', sans-serif;
 }
 
-.friends-tabs button:hover { background: var(--bg-hover); color: var(--white); }
-.friends-tabs button.active { background: var(--bg-active); color: var(--white); }
+.friends-tabs button:hover { background: var(--bg-hover); color: var(--white); border-color: #2a2a2a; }
+.friends-tabs button.active { background: var(--bg-active); color: var(--white); border-color: var(--gray-1); }
 
 .badge {
-  background: var(--accent);
-  color: var(--white);
+  background: var(--bg-float);
+  color: var(--gray-4);
   font-size: 10px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: var(--radius-full);
+  border: var(--border-bright);
 }
 
 .friends-list {
@@ -112,10 +115,12 @@
 }
 
 .friends-empty {
-  font-size: 12px;
-  color: var(--gray-1);
+  font-size: 11px;
+  color: var(--gray-2);
   text-align: center;
-  padding: 20px 12px;
+  padding: 20px 10px;
+  font-family: 'Space Mono', monospace;
+  line-height: 1.6;
 }
 
 .friend-item {
@@ -123,74 +128,73 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--gray-2);
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.15s;
+  color: var(--gray-3);
+  font-size: 13px;
+  font-weight: 400;
+  transition: all 0.1s;
   text-align: left;
 }
 
-.friend-item:hover { background: var(--bg-hover); color: var(--white); }
+.friend-item:hover { background: var(--bg-hover); color: var(--gray-5); }
 .friend-item.active { background: var(--bg-active); color: var(--white); }
 
 .friend-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--white);
+  color: var(--bg-void);
   flex-shrink: 0;
+  background: var(--gray-2);
 }
 
 .request-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
-  color: var(--gray-2);
-  font-size: 14px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--gray-3);
+  font-size: 13px;
 }
 
-.request-actions {
-  display: flex;
-  gap: 6px;
-  margin-left: auto;
-}
+.request-actions { display: flex; gap: 6px; margin-left: auto; }
 
 .accept-btn {
-  background: rgba(93, 202, 138, 0.15);
-  color: #5dca8a;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  border: 1px solid rgba(39, 174, 96, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
 
-.accept-btn:hover { background: #5dca8a; color: var(--bg-void); }
+.accept-btn:hover { background: #27ae60; color: var(--bg-void); }
 
 .decline-btn {
-  background: rgba(155, 26, 42, 0.15);
-  color: var(--accent-bright);
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
+  background: rgba(192, 57, 43, 0.1);
+  color: #c0392b;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  border: 1px solid rgba(192, 57, 43, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
 
-.decline-btn:hover { background: var(--accent); color: var(--white); }
+.decline-btn:hover { background: #c0392b; color: var(--white); }

@@ -4,7 +4,7 @@ import api from '../../lib/api';
 import './ChannelSidebar.css';
 
 export default function ChannelSidebar({ server, activeChannel, onSelectChannel }) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [channels, setChannels] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newChannel, setNewChannel] = useState('');
@@ -38,20 +38,16 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel 
       <div className="channel-list">
         {!server && (
           <div className="channel-empty-state">
-            <p>Select or create a server to get started</p>
+            <p>Select a server from the top bar</p>
           </div>
         )}
 
         {server && (
           <>
             <div className="channel-section-label">
-              <span>Text Channels</span>
+              <span>Channels</span>
               {server.owner_id === user?.id && (
-                <button
-                  className="channel-add-btn"
-                  onClick={() => setShowCreate(!showCreate)}
-                  title="Create channel"
-                >+</button>
+                <button className="channel-add-btn" onClick={() => setShowCreate(!showCreate)}>+</button>
               )}
             </div>
 
@@ -82,25 +78,6 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel 
             )}
           </>
         )}
-      </div>
-
-      {/* User panel at bottom */}
-      <div className="user-panel">
-        <div className="user-avatar" style={{ background: user?.avatar_color || '#9898b8' }}>
-          {user?.username?.[0]?.toUpperCase()}
-        </div>
-        <div className="user-info">
-          <span className="user-name">{user?.username}</span>
-          <span className="user-status">
-            <span className="status-dot" />
-            Online
-          </span>
-        </div>
-        <button className="logout-btn" onClick={logout} title="Log out">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-          </svg>
-        </button>
       </div>
     </div>
   );

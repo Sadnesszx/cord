@@ -8,7 +8,7 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   const [showAdd, setShowAdd] = useState(false);
   const [username, setUsername] = useState('');
   const [msg, setMsg] = useState('');
-  const [tab, setTab] = useState('friends'); // 'friends' | 'requests'
+  const [tab, setTab] = useState('friends');
 
   const load = () => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -21,7 +21,7 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
     e.preventDefault();
     try {
       await api.post('/api/friends/request', { username });
-      setMsg('Friend request sent!');
+      setMsg('Request sent!');
       setUsername('');
       setTimeout(() => setMsg(''), 3000);
     } catch (err) {
@@ -39,18 +39,13 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
     <div className="friends-sidebar">
       <div className="friends-header">
         <span>Direct Messages</span>
-        <button className="friends-add-btn" onClick={() => setShowAdd(!showAdd)} title="Add friend">+</button>
+        <button className="friends-add-btn" onClick={() => setShowAdd(!showAdd)}>+</button>
       </div>
 
       {showAdd && (
         <form className="friends-add-form" onSubmit={sendRequest}>
-          <input
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            placeholder="Add by username"
-            autoFocus
-          />
-          <button type="submit">Send</button>
+          <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Add by username" autoFocus />
+          <button type="submit">Send Request</button>
           {msg && <p className="friends-msg">{msg}</p>}
         </form>
       )}
@@ -67,30 +62,21 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
       <div className="friends-list">
         {tab === 'friends' && (
           <>
-            {friends.length === 0 && <p className="friends-empty">No friends yet. Add someone!</p>}
+            {friends.length === 0 && <p className="friends-empty">No friends yet.<br/>Add someone with the + button!</p>}
             {friends.map(f => (
-              <button
-                key={f.id}
-                className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`}
-                onClick={() => onSelectFriend(f)}
-              >
-                <div className="friend-avatar" style={{ background: f.avatar_color }}>
-                  {f.username[0].toUpperCase()}
-                </div>
+              <button key={f.id} className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`} onClick={() => onSelectFriend(f)}>
+                <div className="friend-avatar" style={{ background: f.avatar_color }}>{f.username[0].toUpperCase()}</div>
                 <span>{f.username}</span>
               </button>
             ))}
           </>
         )}
-
         {tab === 'requests' && (
           <>
             {requests.length === 0 && <p className="friends-empty">No pending requests</p>}
             {requests.map(r => (
               <div key={r.id} className="request-item">
-                <div className="friend-avatar" style={{ background: r.avatar_color }}>
-                  {r.username[0].toUpperCase()}
-                </div>
+                <div className="friend-avatar" style={{ background: r.avatar_color }}>{r.username[0].toUpperCase()}</div>
                 <span>{r.username}</span>
                 <div className="request-actions">
                   <button className="accept-btn" onClick={() => respond(r.id, 'accept')}>✓</button>

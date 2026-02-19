@@ -4,7 +4,7 @@ let socket = null;
 
 export const getSocket = () => {
   if (!socket) {
-    const token = localStorage.getItem('SadLounge_token');
+    const token = localStorage.getItem('sadlounge_token');
     socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001', {
       auth: { token },
       autoConnect: true,

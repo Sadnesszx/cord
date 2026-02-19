@@ -24,9 +24,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/servers', require('./routes/servers'));
 app.use('/api', require('./routes/messages'));
-app.use('/api/friends', require('./routes/friends'));
 
-app.use('/api/friends', require('./routes/friends'));
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
 // Socket
