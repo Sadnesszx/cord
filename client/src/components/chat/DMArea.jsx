@@ -10,6 +10,8 @@ export default function DMArea({ friend }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const bottomRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const isAtBottom = useRef(true);
   const socket = getSocket();
   const { user } = useAuth();
   const playNotification = () => {
@@ -28,7 +30,11 @@ export default function DMArea({ friend }) {
 
   useEffect(() => {
     if (!friend) return;
-    api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => setMessages(data));
+    api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => {
+    setMessages(data);
+    isAtBottom.current = true;
+    setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
+  });
 const onDM = (msg) => {
   if (
     (msg.sender_id === friend.id && msg.receiver_id === user.id) ||
@@ -43,13 +49,20 @@ const onDM = (msg) => {
   }, [friend?.id]);
 
   useEffect(() => {
-  if (messages.length === 0) return;
-  const last = messages[messages.length - 1];
-  const isOwnMessage = last?.sender_id === user?.id;
-  if (isOwnMessage) {
+  if (isAtBottom.current) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 }, [messages]);
+useEffect(() => {
+  const container = messagesContainerRef.current;
+  if (!container) return;
+  const handleScroll = () => {
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    isAtBottom.current = scrollHeight - scrollTop - clientHeight < 50;
+  };
+  container.addEventListener('scroll', handleScroll);
+  return () => container.removeEventListener('scroll', handleScroll);
+}, []);
 
 const send = (e) => {
     e.preventDefault();
@@ -75,7 +88,7 @@ const send = (e) => {
         </div>
         <span className="chat-header-name">{friend.username}</span>
       </div>
-      <div className="chat-messages">
+      <div className="chat-messages" ref={messagesContainerRef}>
         {messages.length === 0 && (
           <div className="chat-start">
             <h3>Start of DM with {friend.username}</h3>
