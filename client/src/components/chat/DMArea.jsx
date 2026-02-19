@@ -69,26 +69,28 @@ export default function DMArea({ friend }) {
       </div>
 
       <div className="chat-messages" ref={containerRef}>
-        {messages.length === 0 && (
-          <div className="chat-start">
-            <h3>Start of DM with {friend.username}</h3>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <div key={msg.id} className="msg-group fade-in">
-            <div className="msg-avatar" style={{ background: msg.avatar_color }}>
-              {msg.username[0].toUpperCase()}
+        <div className="chat-messages-inner">
+          {messages.length === 0 && (
+            <div className="chat-start">
+              <h3>Start of DM with {friend.username}</h3>
             </div>
-            <div className="msg-content">
-              <div className="msg-meta">
-                <span className="msg-author">{msg.username}</span>
-                <span className="msg-time">{formatTime(msg.created_at)}</span>
+          )}
+          {messages.map((msg) => (
+            <div key={msg.id} className="msg-group fade-in">
+              <div className="msg-avatar" style={{ background: msg.avatar_color }}>
+                {msg.username[0].toUpperCase()}
               </div>
-              <p className="msg-text">{msg.content}</p>
+              <div className="msg-content">
+                <div className="msg-meta">
+                  <span className="msg-author">{msg.username}</span>
+                  <span className="msg-time">{formatTime(msg.created_at)}</span>
+                </div>
+                <p className="msg-text">{msg.content}</p>
+              </div>
             </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
+          ))}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
       <div className="chat-input-wrapper">

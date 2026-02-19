@@ -39,6 +39,7 @@
   flex-direction: column;
   gap: 1px;
   min-height: 0;
+  justify-content: flex-end;
 }
 
 .chat-loading {
@@ -262,4 +263,10 @@
   border-color: var(--gray-1);
 }
 
-.chat-send-btn:disabled { opacity: 0.3; }
+.chat-send-btn:disabled { opacity: 0.3; } 
+.chat-messages-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 100%;
+}
