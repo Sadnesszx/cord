@@ -8,6 +8,7 @@ import api from '../lib/api';
 import AvatarPicker from '../components/ui/AvatarPicker';
 import './AppLayout.css';
 import HomePage from '../components/chat/HomePage';
+import MembersSidebar from '../components/layout/MembersSidebar';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -166,6 +167,11 @@ export default function AppLayout() {
         </div>
       )}
       {showAvatarPicker && <AvatarPicker onClose={() => setShowAvatarPicker(false)} />}
+
+      {/* RIGHT PANEL */}
+      <div className="right-panel">
+        {view === 'servers' && <MembersSidebar server={activeServer} />}
+      </div>
     </div>
-  );
+  );  
 }

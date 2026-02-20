@@ -1,7 +1,7 @@
 .app-layout {
   display: grid;
   grid-template-rows: 48px 1fr;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px 1fr 200px;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -144,6 +144,12 @@
   border-right: var(--border);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.right-panel {
+  grid-column: 3;
+  grid-row: 2;
   overflow: hidden;
 }
 
