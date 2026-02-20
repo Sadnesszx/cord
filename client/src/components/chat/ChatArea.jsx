@@ -62,7 +62,14 @@ export default function ChatArea({ channel }) {
   const typingTimeout = useRef(null);
   const socket = getSocket();
 
-  const deleteMessage = (messageId) => {
+  const deleteMessage = async (messageId) => {
+  try {
+    await api.delete(`/api/messages/${messageId}`);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  } catch (err) {
+    console.error(err);
+  }
+};
   socket.emit('delete_message', { messageId, channelId: channel.id });
 };
 
@@ -103,7 +110,6 @@ return () => {
   socket.off('new_message', onMessage);
   socket.off('user_typing', onTypingStart);
   socket.off('user_stop_typing', onTypingStop);
-  socket.off('message_deleted', onDeleted);
   setTyping([]);
 };
   }, [channel?.id]);
@@ -242,4 +248,3 @@ return () => {
       </div>
     </div>
   );
-}
