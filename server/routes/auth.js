@@ -33,9 +33,12 @@ if (existing.length) return res.status(409).json({ error: 'Username already take
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
 try {
-  if (global.io) {
-    global.io.emit('new_user', { username: user.username });
+  const io = global.getIO?.();
+  if (io) {
+    io.emit('new_user', { username: user.username });
     console.log('Emitted new_user for:', user.username);
+  } else {
+    console.log('IO not available');
   }
 } catch (e) { console.error('notify error:', e); }
 

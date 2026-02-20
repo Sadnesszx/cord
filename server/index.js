@@ -32,7 +32,7 @@ app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
 // Socket
 setupSocket(io);
-global.io = io;
+global.getIO = () => io;
 
 const PORT = process.env.PORT || 3001;
 
