@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import './Auth.css';
 import WarningModal from '../components/ui/WarningModal';
+import TOSPage from '../components/chat/TOSPage';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -13,6 +14,9 @@ export default function AuthPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [warning, setWarning] = useState('');
+  const [tosAccepted, setTosAccepted] = useState(false);
+  const [showTOS, setShowTOS] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
 
   const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -20,6 +24,12 @@ export default function AuthPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    if (mode === 'register' && !tosAccepted) {
+  setLoading(false);
+  setPendingSubmit(true);
+  setShowTOS(true);
+  return;
+}
     if (mode === 'register') {
   if (form.username.length < 3) return setError('Username must be at least 3 characters');
   if (!/^[a-zA-Z0-9]+$/.test(form.username)) return setError('Username can only contain letters and numbers');
@@ -113,6 +123,15 @@ if (data.user.warning) {
   />
 )}
 
+{showTOS && (
+  <TOSPage onClose={() => {
+    setShowTOS(false);
+    setPendingSubmit(false);
+  }} onAccept={() => {
+    setTosAccepted(true);
+    setShowTOS(false);
+  }} />
+)}
     </div>
   );
 }
