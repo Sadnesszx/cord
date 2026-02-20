@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './HomePage.css';
-import { useState } from 'react';
 import TOSPage from './TOSPage';
 
 export default function HomePage({ onSelectFriend }) {
@@ -46,7 +45,9 @@ export default function HomePage({ onSelectFriend }) {
             </button>
           ))}
         </div>
-        <div className="home-section">
+      </div>
+
+      <div className="home-section">
         <div className="home-section-label">Support</div>
         <button
           className="home-contact-btn"
@@ -55,15 +56,15 @@ export default function HomePage({ onSelectFriend }) {
           💬 Contact Owner
         </button>
       </div>
-      </div>
-      <div className="home-section">
-  <div className="home-section-label">Legal</div>
-  <button className="home-contact-btn" onClick={() => setShowTOS(true)}>
-    📋 Terms of Service
-  </button>
-</div>
 
-{showTOS && <TOSPage onClose={() => setShowTOS(false)} />}
+      <div className="home-section">
+        <div className="home-section-label">Legal</div>
+        <button className="home-contact-btn" onClick={() => setShowTOS(true)}>
+          📋 Terms of Service
+        </button>
+      </div>
+
+      {showTOS && <TOSPage onClose={() => setShowTOS(false)} />}
     </div>
   );
 }
