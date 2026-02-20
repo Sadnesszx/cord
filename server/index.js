@@ -20,9 +20,8 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-app.use(express.json());
-// Security headers
 app.use(helmet());
+app.use(express.json());
 
 // Rate limiting - max 20 requests per minute on auth routes
 const authLimiter = rateLimit({
