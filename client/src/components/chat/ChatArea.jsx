@@ -62,13 +62,8 @@ export default function ChatArea({ channel }) {
   const typingTimeout = useRef(null);
   const socket = getSocket();
 
-  const deleteMessage = async (messageId) => {
-  try {
-    await api.delete(`/api/messages/${messageId}`);
-    setMessages(prev => prev.filter(m => m.id !== messageId));
-  } catch (err) {
-    console.error(err);
-  }
+  const deleteMessage = (messageId) => {
+  socket.emit('delete_message', { messageId, channelId: channel.id });
 };
 
   // Load messages
@@ -99,12 +94,18 @@ export default function ChatArea({ channel }) {
     socket.on('user_typing', onTypingStart);
     socket.on('user_stop_typing', onTypingStop);
 
-    return () => {
-      socket.off('new_message', onMessage);
-      socket.off('user_typing', onTypingStart);
-      socket.off('user_stop_typing', onTypingStop);
-      setTyping([]);
-    };
+    const onDeleted = ({ messageId }) => {
+  setMessages(prev => prev.filter(m => m.id !== messageId));
+};
+socket.on('message_deleted', onDeleted);
+
+return () => {
+  socket.off('new_message', onMessage);
+  socket.off('user_typing', onTypingStart);
+  socket.off('user_stop_typing', onTypingStop);
+  socket.off('message_deleted', onDeleted);
+  setTyping([]);
+};
   }, [channel?.id]);
 
   // Scroll to bottom on new messages

@@ -36,6 +36,16 @@ io.emit('online_users', Array.from(onlineUsers));
 
     // Send a message
     socket.on('send_message', async ({ channelId, content }) => {
+      socket.on('delete_message', async ({ messageId, channelId }) => {
+  await pool.query('DELETE FROM messages WHERE id = $1 AND user_id = $2', [messageId, socket.user.id]);
+  io.to(`channel_${channelId}`).emit('message_deleted', { messageId });
+});
+
+socket.on('delete_dm', async ({ messageId, receiverId }) => {
+  await pool.query('DELETE FROM dm_messages WHERE id = $1 AND sender_id = $2', [messageId, socket.user.id]);
+  io.to(`user_${socket.user.id}`).emit('dm_deleted', { messageId });
+  io.to(`user_${receiverId}`).emit('dm_deleted', { messageId });
+});
       if (!content?.trim() || !channelId) return;
 
       try {

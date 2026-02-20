@@ -28,13 +28,8 @@ export default function DMArea({ friend }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const socket = getSocket();
-  const deleteDM = async (messageId) => {
-  try {
-    await api.delete(`/api/friends/dm/message/${messageId}`);
-    setMessages(prev => prev.filter(m => m.id !== messageId));
-  } catch (err) {
-    console.error(err);
-  }
+  const deleteDM = (messageId) => {
+  socket.emit('delete_dm', { messageId, receiverId: friend.id });
 };
   const [viewProfile, setViewProfile] = useState(null);
 
@@ -57,7 +52,15 @@ export default function DMArea({ friend }) {
       }
     };
 
-    socket.on('new_dm', onDM);
+    const onDMDeleted = ({ messageId }) => {
+  setMessages(prev => prev.filter(m => m.id !== messageId));
+};
+socket.on('dm_deleted', onDMDeleted);
+
+return () => {
+  socket.off('new_dm', onDM);
+  socket.off('dm_deleted', onDMDeleted);
+};
     return () => socket.off('new_dm', onDM);
   }, [friend?.id]);
 
