@@ -3,6 +3,7 @@ import { getSocket } from '../../lib/socket';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './ChatArea.css';
+import ProfileModal from '../ui/ProfileModal';
 
 const formatTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -27,6 +28,7 @@ export default function DMArea({ friend }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const socket = getSocket();
+  const [viewProfile, setViewProfile] = useState(null);
 
   useEffect(() => {
     if (!friend) return;
@@ -77,9 +79,13 @@ export default function DMArea({ friend }) {
   )}
   {messages.map((msg) => (
     <div key={msg.id} className="msg-group fade-in">
-      <div className="msg-avatar" style={{ background: msg.avatar_color }}>
-        {msg.username[0].toUpperCase()}
-      </div>
+      <div
+  className="msg-avatar"
+  style={{ background: msg.avatar_color, cursor: 'pointer' }}
+  onClick={() => setViewProfile(msg.username)}
+>
+  {msg.username[0].toUpperCase()}
+</div>
       <div className="msg-content">
         <div className="msg-meta">
           <span className="msg-author">{msg.username}</span>
@@ -118,6 +124,9 @@ export default function DMArea({ friend }) {
           </button>
         </form>
       </div>
+
+{viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
+
     </div>
   );
 }
