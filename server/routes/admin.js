@@ -36,10 +36,14 @@ router.post('/ban', auth, async (req, res) => {
   const { username, reason } = req.body;
   try {
     const { rows } = await pool.query(
-      'UPDATE users SET banned = TRUE, ban_reason = $1 WHERE username = $2 RETURNING username',
+      'UPDATE users SET banned = TRUE, ban_reason = $1 WHERE username = $2 RETURNING id, username',
       [reason || 'No reason provided', username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
+    try {
+      const io = global.getIO?.();
+      if (io) io.to(`user_${rows[0].id}`).emit('force_logout', { reason: reason || 'You have been banned.' });
+    } catch (e) {}
     res.json({ message: `${username} has been banned` });
   } catch (err) {
     console.error(err);

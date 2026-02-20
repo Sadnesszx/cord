@@ -11,6 +11,8 @@ import HomePage from '../components/chat/HomePage';
 import MembersSidebar from '../components/layout/MembersSidebar';
 import ServerBrowser from '../components/ui/ServerBrowser';
 import ToastNotification from '../components/ui/ToastNotification';
+import { getSocket } from '../lib/socket';
+import { useNavigate } from 'react-router-dom';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -26,6 +28,17 @@ export default function AppLayout() {
   const [newName, setNewName] = useState('');
   const [joinId, setJoinId] = useState('');
   const [showBrowser, setShowBrowser] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+  const socket = getSocket();
+  socket.on('force_logout', ({ reason }) => {
+    logout();
+    navigate('/');
+    setTimeout(() => alert(reason), 300);
+  });
+  return () => socket.off('force_logout');
+}, []);
 
   const loadServers = () => {
     if (!serversLoaded) {
