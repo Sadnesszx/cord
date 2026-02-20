@@ -3,11 +3,12 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './ChannelSidebar.css';
 
-export default function ChannelSidebar({ server, activeChannel, onSelectChannel }) {
+export default function ChannelSidebar({ server, activeChannel, onSelectChannel, onServerDeleted }) {
   const { user } = useAuth();
   const [channels, setChannels] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newChannel, setNewChannel] = useState('');
+  const isOwner = server?.owner_id === user?.id;
 
   useEffect(() => {
     if (!server) { setChannels([]); return; }
@@ -27,22 +28,41 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel 
     setShowCreate(false);
   };
 
+  const deleteChannel = async (channelId) => {
+    if (!confirm('Delete this channel?')) return;
+    await api.delete(`/api/servers/${server.id}/channels/${channelId}`);
+    const updated = channels.filter(c => c.id !== channelId);
+    setChannels(updated);
+    if (activeChannel?.id === channelId) onSelectChannel(updated[0] || null);
+  };
+
+  const deleteServer = async () => {
+    if (!confirm(`Delete "${server.name}"? This cannot be undone!`)) return;
+    await api.delete(`/api/servers/${server.id}`);
+    onServerDeleted(server.id);
+  };
+
   return (
     <div className="channel-sidebar">
       {server && (
         <div className="channel-header">
-  <span className="channel-server-name">{server.name}</span>
-  <button
-    className="channel-copy-id"
-    onClick={() => {
-      navigator.clipboard.writeText(server.id);
-      alert('Server ID copied!');
-    }}
-    title="Copy server ID to invite friends"
-  >
-    Copy ID
-  </button>
-</div>
+          <span className="channel-server-name">{server.name}</span>
+          <button
+            className="channel-copy-id"
+            onClick={() => {
+              navigator.clipboard.writeText(server.id);
+              alert('Server ID copied!');
+            }}
+            title="Copy server ID to invite friends"
+          >
+            Copy ID
+          </button>
+          {isOwner && (
+            <button className="channel-delete-server" onClick={deleteServer} title="Delete server">
+              🗑 Delete Server
+            </button>
+          )}
+        </div>
       )}
 
       <div className="channel-list">
@@ -56,20 +76,24 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel 
           <>
             <div className="channel-section-label">
               <span>Channels</span>
-              {server.owner_id === user?.id && (
+              {isOwner && (
                 <button className="channel-add-btn" onClick={() => setShowCreate(!showCreate)}>+</button>
               )}
             </div>
 
             {channels.map((ch) => (
-              <button
-                key={ch.id}
-                className={`channel-item ${activeChannel?.id === ch.id ? 'active' : ''}`}
-                onClick={() => onSelectChannel(ch)}
-              >
-                <span className="channel-hash">#</span>
-                <span className="channel-name">{ch.name}</span>
-              </button>
+              <div key={ch.id} className={`channel-item-wrapper ${activeChannel?.id === ch.id ? 'active' : ''}`}>
+                <button
+                  className={`channel-item ${activeChannel?.id === ch.id ? 'active' : ''}`}
+                  onClick={() => onSelectChannel(ch)}
+                >
+                  <span className="channel-hash">#</span>
+                  <span className="channel-name">{ch.name}</span>
+                </button>
+                {isOwner && (
+                  <button className="channel-delete-btn" onClick={() => deleteChannel(ch.id)} title="Delete channel">✕</button>
+                )}
+              </div>
             ))}
 
             {showCreate && (

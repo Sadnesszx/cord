@@ -129,4 +129,32 @@ router.get('/:id/members', auth, async (req, res) => {
   }
 });
 
+// Delete a server
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Server not found' });
+    if (rows[0].owner_id !== req.user.id) return res.status(403).json({ error: 'Not the owner' });
+    await pool.query('DELETE FROM servers WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Server deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete a channel
+router.delete('/:serverId/channels/:channelId', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.serverId]);
+    if (!rows.length) return res.status(404).json({ error: 'Server not found' });
+    if (rows[0].owner_id !== req.user.id) return res.status(403).json({ error: 'Not the owner' });
+    await pool.query('DELETE FROM channels WHERE id = $1', [req.params.channelId]);
+    res.json({ message: 'Channel deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
