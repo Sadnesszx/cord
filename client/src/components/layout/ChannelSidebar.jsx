@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './ChannelSidebar.css';
+import ConfirmModal from '../ui/ConfirmModal';
 
 export default function ChannelSidebar({ server, activeChannel, onSelectChannel, onServerDeleted }) {
   const { user } = useAuth();
@@ -9,6 +10,7 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
   const [showCreate, setShowCreate] = useState(false);
   const [newChannel, setNewChannel] = useState('');
   const isOwner = server?.owner_id === user?.id;
+  const [confirm, setConfirm] = useState(null); // { message, action }
 
   useEffect(() => {
     if (!server) { setChannels([]); return; }
@@ -28,19 +30,29 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
     setShowCreate(false);
   };
 
-  const deleteChannel = async (channelId) => {
-    if (!confirm('Delete this channel?')) return;
-    await api.delete(`/api/servers/${server.id}/channels/${channelId}`);
-    const updated = channels.filter(c => c.id !== channelId);
-    setChannels(updated);
-    if (activeChannel?.id === channelId) onSelectChannel(updated[0] || null);
-  };
+  const deleteChannel = (channelId) => {
+  setConfirm({
+    message: 'Delete this channel? This cannot be undone!',
+    action: async () => {
+      await api.delete(`/api/servers/${server.id}/channels/${channelId}`);
+      const updated = channels.filter(c => c.id !== channelId);
+      setChannels(updated);
+      if (activeChannel?.id === channelId) onSelectChannel(updated[0] || null);
+      setConfirm(null);
+    }
+  });
+};
 
-  const deleteServer = async () => {
-    if (!confirm(`Delete "${server.name}"? This cannot be undone!`)) return;
-    await api.delete(`/api/servers/${server.id}`);
-    onServerDeleted(server.id);
-  };
+const deleteServer = () => {
+  setConfirm({
+    message: `Delete "${server.name}"? This cannot be undone!`,
+    action: async () => {
+      await api.delete(`/api/servers/${server.id}`);
+      onServerDeleted(server.id);
+      setConfirm(null);
+    }
+  });
+};
 
   return (
     <div className="channel-sidebar">
@@ -113,6 +125,13 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
           </>
         )}
       </div>
+      {confirm && (
+        <ConfirmModal
+          message={confirm.message}
+          onConfirm={confirm.action}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
     </div>
   );
 }
