@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ChannelSidebar from '../components/layout/ChannelSidebar';
 import FriendsSidebar from '../components/layout/FriendsSidebar';
