@@ -150,3 +150,41 @@
   font-family: 'Space Mono', monospace;
   text-align: center;
 }
+
+.profile-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.add-friend-btn {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+.add-friend-btn:hover:not(.disabled) {
+  background: #272727;
+  border-color: #444;
+  color: #e8e8e8;
+}
+
+.add-friend-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.profile-friend-msg {
+  font-size: 11px;
+  color: #27ae60;
+  font-family: 'Space Mono', monospace;
+}

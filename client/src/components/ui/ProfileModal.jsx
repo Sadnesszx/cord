@@ -9,16 +9,40 @@ export default function ProfileModal({ username, onClose }) {
   const [loading, setLoading] = useState(true);
   const [newPassword, setNewPassword] = useState('');
   const [resetMsg, setResetMsg] = useState('');
+  const [friendStatus, setFriendStatus] = useState('none'); // 'none' | 'friend' | 'pending'
+  const [friendMsg, setFriendMsg] = useState('');
   const isAdmin = user?.username === 'Sadness';
+  const isOwnProfile = user?.username === username;
 
   useEffect(() => {
     api.get(`/api/users/${username}`).then(({ data }) => {
       setProfile(data);
       setLoading(false);
     }).catch(() => setLoading(false));
+
+    // Check friend status
+    if (!isOwnProfile) {
+      api.get('/api/friends').then(({ data }) => {
+        if (data.find(f => f.username === username)) {
+          setFriendStatus('friend');
+        }
+      });
+    }
   }, [username]);
 
   const joined = profile ? new Date(profile.created_at).toLocaleDateString([], { month: 'long', year: 'numeric' }) : '';
+
+  const addFriend = async () => {
+    try {
+      await api.post('/api/friends/request', { username });
+      setFriendStatus('pending');
+      setFriendMsg('Friend request sent!');
+      setTimeout(() => setFriendMsg(''), 3000);
+    } catch (err) {
+      setFriendMsg(err.response?.data?.error || 'Error');
+      setTimeout(() => setFriendMsg(''), 3000);
+    }
+  };
 
   const resetPassword = async (e) => {
     e.preventDefault();
@@ -44,7 +68,20 @@ export default function ProfileModal({ username, onClose }) {
               {profile.username[0].toUpperCase()}
             </div>
             <div className="profile-body">
-              <h2 className="profile-username">{profile.username}</h2>
+              <div className="profile-top-row">
+                <h2 className="profile-username">{profile.username}</h2>
+                {!isOwnProfile && (
+                  <button
+                    className={`add-friend-btn ${friendStatus !== 'none' ? 'disabled' : ''}`}
+                    onClick={addFriend}
+                    disabled={friendStatus !== 'none'}
+                  >
+                    {friendStatus === 'friend' ? '✓ Friends' : friendStatus === 'pending' ? 'Pending...' : '+ Add Friend'}
+                  </button>
+                )}
+              </div>
+              {friendMsg && <p className="profile-friend-msg">{friendMsg}</p>}
+
               {profile.bio ? (
                 <div className="profile-bio-section">
                   <p className="profile-bio-label">About me</p>
