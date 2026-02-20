@@ -24,11 +24,14 @@ export default function AuthPage() {
 }
     try {
       const { data } = await api.post(`/api/auth/${mode}`, {
-        username: form.username,
-        password: form.password,
-      });
-      login(data.token, data.user);
-      navigate('/');
+  username: form.username,
+  password: form.password,
+});
+if (data.user.warning) {
+  alert(`⚠️ Warning from admin: ${data.user.warning}`);
+}
+login(data.token, data.user);
+navigate('/');;
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong');
     } finally {

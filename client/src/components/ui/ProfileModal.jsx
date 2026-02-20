@@ -14,6 +14,37 @@ export default function ProfileModal({ username, onClose }) {
   const isAdmin = user?.username === 'Sadness';
   const isOwnProfile = user?.username === username;
 
+  const [warningText, setWarningText] = useState('');
+const [banReason, setBanReason] = useState('');
+
+const warnUser = async (e) => {
+  e.preventDefault();
+  try {
+    await api.post('/api/admin/warn', { username, warning: warningText });
+    setResetMsg('Warning sent!');
+    setWarningText('');
+    setTimeout(() => setResetMsg(''), 3000);
+  } catch (err) { setResetMsg('Error'); }
+};
+
+const banUser = async (e) => {
+  e.preventDefault();
+  try {
+    await api.post('/api/admin/ban', { username, reason: banReason });
+    setResetMsg(`${username} banned!`);
+    setBanReason('');
+    setTimeout(() => setResetMsg(''), 3000);
+  } catch (err) { setResetMsg('Error'); }
+};
+
+const unbanUser = async () => {
+  try {
+    await api.post('/api/admin/unban', { username });
+    setResetMsg(`${username} unbanned!`);
+    setTimeout(() => setResetMsg(''), 3000);
+  } catch (err) { setResetMsg('Error'); }
+};
+
   useEffect(() => {
     api.get(`/api/users/${username}`).then(({ data }) => {
       setProfile(data);
@@ -92,23 +123,30 @@ export default function ProfileModal({ username, onClose }) {
               )}
               <p className="profile-joined">Joined {joined}</p>
 
-              {isAdmin && username !== 'Sadness' && (
-                <div className="profile-admin-section">
-                  <p className="profile-bio-label">Admin — Reset Password</p>
-                  <form onSubmit={resetPassword}>
-                    <input
-                      type="text"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      placeholder="New password for user"
-                    />
-                    <button type="submit" className="btn-primary" style={{ marginTop: 8, width: '100%' }}>
-                      Reset Password
-                    </button>
-                  </form>
-                  {resetMsg && <p className="profile-reset-msg">{resetMsg}</p>}
-                </div>
-              )}
+             {isAdmin && username !== 'Sadness' && (
+  <div className="profile-admin-section">
+    <p className="profile-bio-label">Admin Controls</p>
+
+    <form onSubmit={resetPassword}>
+      <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password for user" />
+      <button type="submit" className="btn-primary" style={{ marginTop: 8, width: '100%' }}>Reset Password</button>
+    </form>
+
+    <form onSubmit={warnUser}>
+      <input type="text" value={warningText} onChange={e => setWarningText(e.target.value)} placeholder="Warning message (leave empty to clear)" />
+      <button type="submit" className="admin-warn-btn" style={{ marginTop: 8, width: '100%' }}>Send Warning</button>
+    </form>
+
+    <form onSubmit={banUser}>
+      <input type="text" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason" />
+      <button type="submit" className="admin-ban-btn" style={{ marginTop: 8, width: '100%' }}>Ban User</button>
+    </form>
+
+    <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
+
+    {resetMsg && <p className="profile-reset-msg">{resetMsg}</p>}
+  </div>
+)}
             </div>
           </>
         )}
