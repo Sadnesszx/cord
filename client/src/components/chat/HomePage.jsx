@@ -43,6 +43,15 @@ export default function HomePage({ onSelectFriend }) {
             </button>
           ))}
         </div>
+        <div className="home-section">
+        <div className="home-section-label">Support</div>
+        <button
+          className="home-contact-btn"
+          onClick={() => onSelectFriend({ id: '4b0b34aa-2f1e-4033-9e80-97accbb7edd3', username: 'Sadness' })}
+        >
+          💬 Contact Owner
+        </button>
+      </div>
       </div>
     </div>
   );
