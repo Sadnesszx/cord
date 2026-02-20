@@ -13,6 +13,7 @@ import ServerBrowser from '../components/ui/ServerBrowser';
 import ToastNotification from '../components/ui/ToastNotification';
 import { getSocket } from '../lib/socket';
 import { useNavigate } from 'react-router-dom';
+import WarningModal from '../components/ui/WarningModal';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -28,14 +29,14 @@ export default function AppLayout() {
   const [newName, setNewName] = useState('');
   const [joinId, setJoinId] = useState('');
   const [showBrowser, setShowBrowser] = useState(false);
+  const [banMessage, setBanMessage] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
+useEffect(() => {
   const socket = getSocket();
   socket.on('force_logout', ({ reason }) => {
     logout();
-    navigate('/');
-    setTimeout(() => alert(reason), 300);
+    setBanMessage(reason);
   });
   return () => socket.off('force_logout');
 }, []);
@@ -213,6 +214,12 @@ const handleDMs = () => {
   />
 )}
 <ToastNotification />
+{banMessage && (
+  <WarningModal
+    message={banMessage}
+    onClose={() => { setBanMessage(''); navigate('/'); }}
+  />
+)}
     </div>
-  );  
+  );
 }
