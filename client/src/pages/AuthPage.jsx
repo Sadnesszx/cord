@@ -18,6 +18,10 @@ export default function AuthPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    if (mode === 'register') {
+  if (form.username.length < 3) return setError('Username must be at least 3 characters');
+  if (!/^[a-zA-Z0-9]+$/.test(form.username)) return setError('Username can only contain letters and numbers');
+}
     try {
       const { data } = await api.post(`/api/auth/${mode}`, {
         username: form.username,
