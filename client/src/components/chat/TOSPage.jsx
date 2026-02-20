@@ -1,6 +1,6 @@
 import './TOSPage.css';
 
-export default function TOSPage({ onClose }) {
+export default function TOSPage({ onClose, onAccept }) {
   return (
     <div className="tos-overlay" onClick={onClose}>
       <div className="tos-modal" onClick={e => e.stopPropagation()}>
@@ -55,6 +55,13 @@ export default function TOSPage({ onClose }) {
           </div>
 
           <p className="tos-footer">These terms may be updated at any time. Continued use of SadLounge means you accept any changes.</p>
+        </div>
+
+        <div className="tos-actions">
+          <button className="btn-ghost" onClick={onClose}>Decline</button>
+          {onAccept && (
+            <button className="btn-primary" onClick={onAccept}>I Accept</button>
+          )}
         </div>
       </div>
     </div>
