@@ -20,6 +20,10 @@ const io = new Server(server, {
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
 
+// Socket
+setupSocket(io);
+global.getIO = () => io;
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/servers', require('./routes/servers'));
@@ -29,10 +33,6 @@ app.use('/api/friends', require('./routes/friends'));
 app.use('/api/admin', require('./routes/admin'));
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
-
-// Socket
-setupSocket(io);
-global.getIO = () => io;
 
 const PORT = process.env.PORT || 3001;
 
