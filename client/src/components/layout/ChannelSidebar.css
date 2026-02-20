@@ -107,3 +107,22 @@
 
 /* No user panel — moved to top bar */
 .user-panel { display: none; }
+
+.channel-copy-id {
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-sm);
+  color: var(--gray-3);
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.channel-copy-id:hover {
+  background: var(--bg-active);
+  color: var(--white);
+}

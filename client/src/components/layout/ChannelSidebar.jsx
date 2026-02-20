@@ -31,8 +31,18 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel 
     <div className="channel-sidebar">
       {server && (
         <div className="channel-header">
-          <span className="channel-server-name">{server.name}</span>
-        </div>
+  <span className="channel-server-name">{server.name}</span>
+  <button
+    className="channel-copy-id"
+    onClick={() => {
+      navigator.clipboard.writeText(server.id);
+      alert('Server ID copied!');
+    }}
+    title="Copy server ID to invite friends"
+  >
+    Copy ID
+  </button>
+</div>
       )}
 
       <div className="channel-list">
