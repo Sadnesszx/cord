@@ -47,15 +47,8 @@
 .auth-logo-icon {
   width: 32px;
   height: 32px;
-  background: var(--bg-float);
-  border: var(--border-bright);
   border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  font-family: 'Space Mono', monospace;
+  object-fit: cover;
 }
 
 .auth-title {
