@@ -34,8 +34,8 @@ if (existing.length) return res.status(409).json({ error: 'Username already take
 
 try {
   const { io } = require('../index');
-  io.to(`user_${process.env.ADMIN_ID}`).emit('new_user', { username: user.username });
-} catch (e) {}
+  io.emit('new_user', { username: user.username });
+} catch (e) { console.error('notify error', e); }
 
     res.status(201).json({ token, user });
   } catch (err) {

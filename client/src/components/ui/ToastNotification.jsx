@@ -11,25 +11,28 @@ export default function ToastNotification() {
     if (user?.username !== 'Sadness') return;
     const socket = getSocket();
 
-    socket.on('new_user', ({ username }) => {
+    const onNewUser = ({ username }) => {
       const id = Date.now();
       setToasts(prev => [...prev, { id, username }]);
       setTimeout(() => {
         setToasts(prev => prev.filter(t => t.id !== id));
-      }, 5000);
-    });
+      }, 6000);
+    };
 
-    return () => socket.off('new_user');
-  }, [user]);
+    socket.on('new_user', onNewUser);
+    return () => socket.off('new_user', onNewUser);
+  }, [user?.username]);
+
+  if (user?.username !== 'Sadness') return null;
 
   return (
     <div className="toast-container">
       {toasts.map(t => (
         <div key={t.id} className="toast">
-          <span className="toast-icon">👤</span>
+          <span className="toast-icon">🎉</span>
           <div className="toast-text">
-            <span className="toast-title">New User!</span>
-            <span className="toast-msg">{t.username} just registered</span>
+            <span className="toast-title">New Member!</span>
+            <span className="toast-msg"><strong>{t.username}</strong> has just joined us!</span>
           </div>
           <button className="toast-close" onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))}>✕</button>
         </div>
