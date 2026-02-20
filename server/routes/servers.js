@@ -112,4 +112,21 @@ router.post('/:serverId/join', auth, async (req, res) => {
   }
 });
 
+// Get server members
+router.get('/:id/members', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.username, u.avatar_color FROM users u
+       JOIN server_members sm ON sm.user_id = u.id
+       WHERE sm.server_id = $1
+       ORDER BY u.username ASC`,
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
