@@ -86,7 +86,7 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
                     <div className="friend-avatar" style={{ background: f.avatar_color }}>
                       {f.username[0].toUpperCase()}
                     </div>
-                    <span className={`status-dot ${onlineUsers.includes(f.id) ? 'online' : 'offline'}`} />
+                    <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) ? 'online' : 'offline'}`} />
                   </div>
                   <span>{f.username}</span>
                 </button>

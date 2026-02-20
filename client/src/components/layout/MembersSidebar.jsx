@@ -22,8 +22,8 @@ export default function MembersSidebar({ server }) {
 
   if (!server) return null;
 
-  const online = members.filter(m => onlineUsers.includes(m.id));
-  const offline = members.filter(m => !onlineUsers.includes(m.id));
+const online = members.filter(m => onlineUsers.map(id => String(id)).includes(String(m.id)));
+const offline = members.filter(m => !onlineUsers.map(id => String(id)).includes(String(m.id)));
 
   return (
     <div className="members-sidebar">
