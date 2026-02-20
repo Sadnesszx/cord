@@ -74,7 +74,7 @@ export default function AppLayout() {
     <div className="app-layout">
       {/* TOP BAR */}
       <div className="top-bar">
-        <span className="top-bar-logo">SadLounge</span>
+        <span className="top-bar-logo" onClick={handleDMs} style={{ cursor: 'pointer' }}>SadLounge</span>
 
         <div className="top-bar-servers" onClick={loadServers}>
           <button
