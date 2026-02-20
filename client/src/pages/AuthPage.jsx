@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import './Auth.css';
+import WarningModal from '../components/ui/WarningModal';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -11,6 +12,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [warning, setWarning] = useState('');
 
   const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -102,6 +104,12 @@ navigate('/');;
           </button>
         </p>
       </div>
+      {warning && (
+  <WarningModal
+    message={warning}
+    onClose={() => { setWarning(''); navigate('/'); }}
+  />
+)}
     </div>
   );
 }
