@@ -4,7 +4,7 @@ import api from '../../lib/api';
 import './ChannelSidebar.css';
 import ConfirmModal from '../ui/ConfirmModal';
 
-export default function ChannelSidebar({ server, activeChannel, onSelectChannel, onServerDeleted }) {
+export default function ChannelSidebar({ server, activeChannel, onSelectChannel, onServerDeleted, onServerRenamed }) {
   const { user } = useAuth();
   const [channels, setChannels] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
