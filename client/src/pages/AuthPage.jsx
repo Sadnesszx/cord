@@ -29,11 +29,12 @@ export default function AuthPage() {
   username: form.username,
   password: form.password,
 });
-if (data.user.warning) {
-  alert(`⚠️ Warning from admin: ${data.user.warning}`);
-}
 login(data.token, data.user);
-navigate('/');;
+if (data.user.warning) {
+  setWarning(data.user.warning);
+} else {
+  navigate('/');
+}
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong');
     } finally {
@@ -104,12 +105,14 @@ navigate('/');;
           </button>
         </p>
       </div>
-      {warning && (
+
+{warning && (
   <WarningModal
     message={warning}
     onClose={() => { setWarning(''); navigate('/'); }}
   />
 )}
+
     </div>
   );
 }
