@@ -156,4 +156,21 @@ router.post('/dm/send', auth, async (req, res) => {
   }
 });
 
+// Delete a DM message
+router.delete('/dm/message/:messageId', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT sender_id FROM dm_messages WHERE id = $1',
+      [req.params.messageId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Message not found' });
+    if (rows[0].sender_id !== req.user.id) return res.status(403).json({ error: 'Not your message' });
+    await pool.query('DELETE FROM dm_messages WHERE id = $1', [req.params.messageId]);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

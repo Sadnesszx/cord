@@ -28,6 +28,14 @@ export default function DMArea({ friend }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const socket = getSocket();
+  const deleteDM = async (messageId) => {
+  try {
+    await api.delete(`/api/friends/dm/message/${messageId}`);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  } catch (err) {
+    console.error(err);
+  }
+};
   const [viewProfile, setViewProfile] = useState(null);
 
   useEffect(() => {
@@ -78,23 +86,34 @@ export default function DMArea({ friend }) {
     </div>
   )}
   {messages.map((msg) => (
-    <div key={msg.id} className="msg-group fade-in">
-      <div
-  className="msg-avatar"
-  style={{ background: msg.avatar_color, cursor: 'pointer' }}
-  onClick={() => setViewProfile(msg.username)}
->
-  {msg.username[0].toUpperCase()}
-</div>
-      <div className="msg-content">
-        <div className="msg-meta">
-          <span className="msg-author">{msg.username}</span>
-          <span className="msg-time">{formatTime(msg.created_at)}</span>
-        </div>
+  <div key={msg.id} className="msg-group fade-in">
+    <div
+      className="msg-avatar"
+      style={{ background: msg.avatar_color, cursor: 'pointer' }}
+      onClick={() => setViewProfile(msg.username)}
+    >
+      {msg.username[0].toUpperCase()}
+    </div>
+    <div className="msg-content">
+      <div className="msg-meta">
+        <span className="msg-author">{msg.username}</span>
+        <span className="msg-time">{formatTime(msg.created_at)}</span>
+      </div>
+      <div className="msg-text-wrapper">
         <p className="msg-text">{msg.content}</p>
+        {msg.sender_id === user?.id && (
+          <button
+            className="msg-delete-btn"
+            onClick={() => deleteDM(msg.id)}
+            title="Delete message"
+          >
+            ✕
+          </button>
+        )}
       </div>
     </div>
-  ))}
+  </div>
+))}
   <div ref={bottomRef} />
 </div>
 
