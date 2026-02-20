@@ -92,7 +92,7 @@ router.get('/dm/:friendId', auth, async (req, res) => {
        JOIN users u ON dm.sender_id = u.id
        WHERE (dm.sender_id = $1 AND dm.receiver_id = $2)
           OR (dm.sender_id = $2 AND dm.receiver_id = $1)
-       ORDER BY dm.created_at ASC LIMIT 100`,
+       ORDER BY dm.created_at ASC LIMIT 500`,
       [req.user.id, req.params.friendId]
     );
     res.json(rows);
