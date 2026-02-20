@@ -62,6 +62,15 @@ export default function ChatArea({ channel }) {
   const typingTimeout = useRef(null);
   const socket = getSocket();
 
+  const deleteMessage = async (messageId) => {
+  try {
+    await api.delete(`/api/messages/${messageId}`);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   // Load messages
   useEffect(() => {
     if (!channel) return;
@@ -175,8 +184,19 @@ export default function ChatArea({ channel }) {
                   <span className="msg-time">{formatTime(group.messages[0].created_at)}</span>
                 </div>
                 {group.messages.map((msg) => (
-                  <p key={msg.id} className="msg-text">{msg.content}</p>
-                ))}
+  <div key={msg.id} className="msg-text-wrapper">
+    <p className="msg-text">{msg.content}</p>
+    {msg.user_id === user?.id && (
+      <button
+        className="msg-delete-btn"
+        onClick={() => deleteMessage(msg.id)}
+        title="Delete message"
+      >
+        ✕
+      </button>
+    )}
+  </div>
+))}
               </div>
             </div>
           );

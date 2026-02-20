@@ -34,4 +34,22 @@ router.get('/channels/:channelId/messages', auth, async (req, res) => {
   }
 });
 
+// Delete a message
+router.delete('/messages/:messageId', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT user_id FROM messages WHERE id = $1',
+      [req.params.messageId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Message not found' });
+    if (rows[0].user_id !== req.user.id) return res.status(403).json({ error: 'Not your message' });
+
+    await pool.query('DELETE FROM messages WHERE id = $1', [req.params.messageId]);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
