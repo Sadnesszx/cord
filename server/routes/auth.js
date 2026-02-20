@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
 
+
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
@@ -17,6 +18,11 @@ if (!/^[a-zA-Z0-9]+$/.test(username))
     return res.status(400).json({ error: 'Username can only contain letters and numbers' });
 
   try {
+    const { rows: existing } = await pool.query(
+  'SELECT id FROM users WHERE LOWER(username) = LOWER($1)',
+  [username]
+);
+if (existing.length) return res.status(409).json({ error: 'Username already taken' });
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
       `INSERT INTO users (username, email, password_hash)
