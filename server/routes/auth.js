@@ -34,8 +34,10 @@ if (existing.length) return res.status(409).json({ error: 'Username already take
 
 try {
   const { io } = require('../index');
+  console.log('Emitting new_user event for:', user.username);
+  console.log('IO exists:', !!io);
   io.emit('new_user', { username: user.username });
-} catch (e) { console.error('notify error', e); }
+} catch (e) { console.error('notify error:', e); }
 
     res.status(201).json({ token, user });
   } catch (err) {
