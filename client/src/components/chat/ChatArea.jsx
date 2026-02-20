@@ -20,7 +20,6 @@ const formatDate = (ts) => {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-
   if (d.toDateString() === today.toDateString()) return 'Today';
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
@@ -29,7 +28,6 @@ const formatDate = (ts) => {
 const groupMessages = (messages) => {
   const groups = [];
   let lastDate = null;
-
   messages.forEach((msg) => {
     const date = new Date(msg.created_at).toDateString();
     if (date !== lastDate) {
@@ -63,17 +61,14 @@ export default function ChatArea({ channel }) {
   const socket = getSocket();
 
   const deleteMessage = async (messageId) => {
-  try {
-    await api.delete(`/api/messages/${messageId}`);
-    setMessages(prev => prev.filter(m => m.id !== messageId));
-  } catch (err) {
-    console.error(err);
-  }
-};
-  socket.emit('delete_message', { messageId, channelId: channel.id });
-};
+    try {
+      await api.delete(`/api/messages/${messageId}`);
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  // Load messages
   useEffect(() => {
     if (!channel) return;
     setMessages([]);
@@ -83,12 +78,9 @@ export default function ChatArea({ channel }) {
       setLoading(false);
     });
 
-    // Join socket room
     socket.emit('join_channel', channel.id);
 
-    const onMessage = (msg) => {
-      setMessages(prev => [...prev, msg]);
-    };
+    const onMessage = (msg) => setMessages(prev => [...prev, msg]);
     const onTypingStart = ({ username }) => {
       if (username !== user.username)
         setTyping(prev => [...new Set([...prev, username])]);
@@ -101,20 +93,14 @@ export default function ChatArea({ channel }) {
     socket.on('user_typing', onTypingStart);
     socket.on('user_stop_typing', onTypingStop);
 
-    const onDeleted = ({ messageId }) => {
-  setMessages(prev => prev.filter(m => m.id !== messageId));
-};
-socket.on('message_deleted', onDeleted);
-
-return () => {
-  socket.off('new_message', onMessage);
-  socket.off('user_typing', onTypingStart);
-  socket.off('user_stop_typing', onTypingStop);
-  setTyping([]);
-};
+    return () => {
+      socket.off('new_message', onMessage);
+      socket.off('user_typing', onTypingStart);
+      socket.off('user_stop_typing', onTypingStop);
+      setTyping([]);
+    };
   }, [channel?.id]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -132,7 +118,6 @@ return () => {
       sendMessage(e);
       return;
     }
-    // Typing indicator
     socket.emit('typing_start', { channelId: channel.id });
     clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
@@ -154,13 +139,11 @@ return () => {
 
   return (
     <div className="chat-area">
-      {/* Header */}
       <div className="chat-header">
         <span className="chat-header-hash">#</span>
         <span className="chat-header-name">{channel.name}</span>
       </div>
 
-      {/* Messages */}
       <div className="chat-messages">
         {loading && <div className="chat-loading">Loading messages...</div>}
 
@@ -191,25 +174,24 @@ return () => {
                   <span className="msg-time">{formatTime(group.messages[0].created_at)}</span>
                 </div>
                 {group.messages.map((msg) => (
-  <div key={msg.id} className="msg-text-wrapper">
-    <p className="msg-text">{msg.content}</p>
-    {msg.user_id === user?.id && (
-      <button
-        className="msg-delete-btn"
-        onClick={() => deleteMessage(msg.id)}
-        title="Delete message"
-      >
-        ✕
-      </button>
-    )}
-  </div>
-))}
+                  <div key={msg.id} className="msg-text-wrapper">
+                    <p className="msg-text">{msg.content}</p>
+                    {msg.user_id === user?.id && (
+                      <button
+                        className="msg-delete-btn"
+                        onClick={() => deleteMessage(msg.id)}
+                        title="Delete message"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           );
         })}
 
-        {/* Typing indicator */}
         {typing.length > 0 && (
           <div className="typing-indicator fade-in">
             <div className="typing-dots">
@@ -224,7 +206,6 @@ return () => {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={sendMessage}>
           <textarea
@@ -235,11 +216,7 @@ return () => {
             placeholder={`Message #${channel.name}`}
             rows={1}
           />
-          <button
-            className="chat-send-btn"
-            type="submit"
-            disabled={!input.trim()}
-          >
+          <button className="chat-send-btn" type="submit" disabled={!input.trim()}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
@@ -248,3 +225,4 @@ return () => {
       </div>
     </div>
   );
+}

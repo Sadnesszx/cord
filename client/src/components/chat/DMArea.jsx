@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { getSocket } from '../../lib/socket';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
-import './ChatArea.css';
 import ProfileModal from '../ui/ProfileModal';
+import './ChatArea.css';
 
 const formatTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -27,18 +27,17 @@ export default function DMArea({ friend }) {
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
-  const socket = getSocket();
-  const deleteDM = async (messageId) => {
-  try {
-    await api.delete(`/api/friends/dm/message/${messageId}`);
-    setMessages(prev => prev.filter(m => m.id !== messageId));
-  } catch (err) {
-    console.error(err);
-  }
-};
-  socket.emit('delete_dm', { messageId, receiverId: friend.id });
-};
   const [viewProfile, setViewProfile] = useState(null);
+  const socket = getSocket();
+
+  const deleteDM = async (messageId) => {
+    try {
+      await api.delete(`/api/friends/dm/message/${messageId}`);
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (!friend) return;
@@ -59,15 +58,10 @@ export default function DMArea({ friend }) {
       }
     };
 
-    const onDMDeleted = ({ messageId }) => {
-  setMessages(prev => prev.filter(m => m.id !== messageId));
-};
-socket.on('dm_deleted', onDMDeleted);
-
-return () => {
-  socket.off('new_dm', onDM);
-};
-    return () => socket.off('new_dm', onDM);
+    socket.on('new_dm', onDM);
+    return () => {
+      socket.off('new_dm', onDM);
+    };
   }, [friend?.id]);
 
   if (!friend) return (
@@ -88,43 +82,43 @@ return () => {
       </div>
 
       <div className="chat-messages" ref={containerRef}>
-  <div style={{ flex: 1 }} />
-  {messages.length === 0 && (
-    <div className="chat-start">
-      <h3>Start of DM with {friend.username}</h3>
-    </div>
-  )}
-  {messages.map((msg) => (
-  <div key={msg.id} className="msg-group fade-in">
-    <div
-      className="msg-avatar"
-      style={{ background: msg.avatar_color, cursor: 'pointer' }}
-      onClick={() => setViewProfile(msg.username)}
-    >
-      {msg.username[0].toUpperCase()}
-    </div>
-    <div className="msg-content">
-      <div className="msg-meta">
-        <span className="msg-author">{msg.username}</span>
-        <span className="msg-time">{formatTime(msg.created_at)}</span>
-      </div>
-      <div className="msg-text-wrapper">
-        <p className="msg-text">{msg.content}</p>
-        {msg.sender_id === user?.id && (
-          <button
-            className="msg-delete-btn"
-            onClick={() => deleteDM(msg.id)}
-            title="Delete message"
-          >
-            ✕
-          </button>
+        <div style={{ flex: 1 }} />
+        {messages.length === 0 && (
+          <div className="chat-start">
+            <h3>Start of DM with {friend.username}</h3>
+          </div>
         )}
+        {messages.map((msg) => (
+          <div key={msg.id} className="msg-group fade-in">
+            <div
+              className="msg-avatar"
+              style={{ background: msg.avatar_color, cursor: 'pointer' }}
+              onClick={() => setViewProfile(msg.username)}
+            >
+              {msg.username[0].toUpperCase()}
+            </div>
+            <div className="msg-content">
+              <div className="msg-meta">
+                <span className="msg-author">{msg.username}</span>
+                <span className="msg-time">{formatTime(msg.created_at)}</span>
+              </div>
+              <div className="msg-text-wrapper">
+                <p className="msg-text">{msg.content}</p>
+                {msg.sender_id === user?.id && (
+                  <button
+                    className="msg-delete-btn"
+                    onClick={() => deleteDM(msg.id)}
+                    title="Delete message"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div ref={bottomRef} />
       </div>
-    </div>
-  </div>
-))}
-  <div ref={bottomRef} />
-</div>
 
       <div className="chat-input-wrapper">
         <form className="chat-input-form">
@@ -153,7 +147,7 @@ return () => {
         </form>
       </div>
 
-{viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
-
+      {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
     </div>
   );
+}
