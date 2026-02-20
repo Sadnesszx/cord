@@ -19,6 +19,8 @@ const setupSocket = (io) => {
     console.log(`🔌 ${socket.user.username} connected`);
     socket.join(`user_${socket.user.id}`);
     onlineUsers.add(socket.user.id);
+console.log('Online users:', Array.from(onlineUsers));
+console.log('User ID type:', typeof socket.user.id, socket.user.id);
 io.emit('online_users', Array.from(onlineUsers));
 
     // Join a channel room
