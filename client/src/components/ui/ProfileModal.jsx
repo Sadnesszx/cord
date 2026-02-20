@@ -94,13 +94,13 @@ const unbanUser = async () => {
         {loading && <p className="profile-loading">Loading...</p>}
         {!loading && profile && (
           <>
-            <div className="profile-banner" style={{ background: profile.avatar_color }} />
-            <div className="profile-avatar" style={{ background: profile.avatar_color }}>
-              {profile.username[0].toUpperCase()}
+            <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : profile.avatar_color }} />
+            <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color }}>
+              {profile.banned ? '🚫' : profile.username[0].toUpperCase()}
             </div>
             <div className="profile-body">
               <div className="profile-top-row">
-                <h2 className="profile-username">{profile.username}</h2>
+                <h2 className="profile-username">{profile.banned ? 'Account Banned' : profile.username}</h2>
                 {!isOwnProfile && (
                   <button
                     className={`add-friend-btn ${friendStatus !== 'none' ? 'disabled' : ''}`}

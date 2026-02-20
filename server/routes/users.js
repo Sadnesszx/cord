@@ -59,7 +59,7 @@ router.patch('/me/bio', auth, async (req, res) => {
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, bio, created_at FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, bio, created_at, banned FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
