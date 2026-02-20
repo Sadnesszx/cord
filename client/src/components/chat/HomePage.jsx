@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './HomePage.css';
+import { useState } from 'react';
+import TOSPage from './TOSPage';
 
 export default function HomePage({ onSelectFriend }) {
   const { user } = useAuth();
   const [friends, setFriends] = useState([]);
+  const [showTOS, setShowTOS] = useState(false);
 
   useEffect(() => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -53,6 +56,14 @@ export default function HomePage({ onSelectFriend }) {
         </button>
       </div>
       </div>
+      <div className="home-section">
+  <div className="home-section-label">Legal</div>
+  <button className="home-contact-btn" onClick={() => setShowTOS(true)}>
+    📋 Terms of Service
+  </button>
+</div>
+
+{showTOS && <TOSPage onClose={() => setShowTOS(false)} />}
     </div>
   );
 }
