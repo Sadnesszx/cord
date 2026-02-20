@@ -242,3 +242,15 @@
 }
 
 .btn-primary:hover { background: var(--bg-active); border-color: var(--gray-1); }
+
+.top-bar-settings {
+  background: none;
+  color: var(--gray-2);
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.top-bar-settings:hover { color: var(--white); }

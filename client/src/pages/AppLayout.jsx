@@ -14,6 +14,7 @@ import ToastNotification from '../components/ui/ToastNotification';
 import { getSocket } from '../lib/socket';
 import { useNavigate } from 'react-router-dom';
 import WarningModal from '../components/ui/WarningModal';
+import SettingsModal from '../components/ui/SettingsModal';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -31,6 +32,7 @@ export default function AppLayout() {
   const [showBrowser, setShowBrowser] = useState(false);
   const [banMessage, setBanMessage] = useState('');
   const navigate = useNavigate();
+  const [showSettings, setShowSettings] = useState(false);
 
 useEffect(() => {
   const socket = getSocket();
@@ -117,6 +119,9 @@ const handleDMs = () => {
         </div>
 
         <div className="top-bar-actions">
+          <button className="top-bar-settings" onClick={() => setShowSettings(true)} title="Settings">
+            ⚙️
+           </button>
           <div className="top-bar-user" onClick={() => setShowAvatarPicker(true)} style={{cursor:"pointer"}} title="Change avatar">
             <div className="top-bar-avatar" style={{ background: user?.avatar_color || '#555' }}>
               {user?.username?.[0]?.toUpperCase()}
@@ -214,6 +219,7 @@ const handleDMs = () => {
   />
 )}
 <ToastNotification />
+{showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 {banMessage && (
   <WarningModal
     message={banMessage}
