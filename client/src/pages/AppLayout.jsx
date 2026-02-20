@@ -40,11 +40,12 @@ export default function AppLayout() {
     setView('servers');
   };
 
-  const handleDMs = () => {
-    setView('dms');
-    setActiveServer(null);
-    setActiveChannel(null);
-  };
+const handleDMs = () => {
+  setView('dms');
+  setActiveServer(null);
+  setActiveChannel(null);
+  setActiveFriend(null);
+};
 
   const createServer = async (e) => {
     e.preventDefault();
