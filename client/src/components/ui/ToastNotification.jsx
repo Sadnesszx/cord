@@ -7,17 +7,32 @@ export default function ToastNotification() {
   const { user } = useAuth();
   const [toasts, setToasts] = useState([]);
 
+  const playToastSound = () => {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  oscillator.frequency.value = 600;
+  oscillator.type = 'sine';
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+  oscillator.start(ctx.currentTime);
+  oscillator.stop(ctx.currentTime + 0.4);
+};
+
   useEffect(() => {
     if (user?.username !== 'Sadness') return;
     const socket = getSocket();
 
     const onNewUser = ({ username }) => {
-      const id = Date.now();
-      setToasts(prev => [...prev, { id, username }]);
-      setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== id));
-      }, 6000);
-    };
+  const id = Date.now();
+  playToastSound();
+  setToasts(prev => [...prev, { id, username }]);
+  setTimeout(() => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, 6000);
+};
 
     socket.on('new_user', onNewUser);
     return () => socket.off('new_user', onNewUser);
