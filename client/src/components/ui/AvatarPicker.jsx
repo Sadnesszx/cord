@@ -19,12 +19,39 @@ const COLORS = [
 export default function AvatarPicker({ onClose }) {
   const { user, login } = useAuth();
   const [selected, setSelected] = useState(user?.avatar_color || '#555');
+  const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
 
-const save = async () => {
+  const saveAvatar = async () => {
     setSaving(true);
     try {
       await api.patch('/api/users/me/avatar', { avatar_color: selected });
+      const updatedUser = { ...user, avatar_color: selected };
+      const token = localStorage.getItem('sadlounge_token');
+      login(token, updatedUser);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBio = async () => {
+    try {
+      await api.patch('/api/users/me/bio', { bio });
+      setMsg('Bio saved!');
+      setTimeout(() => setMsg(''), 3000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const saveAll = async () => {
+    setSaving(true);
+    try {
+      await api.patch('/api/users/me/avatar', { avatar_color: selected });
+      if (bio.trim()) await api.patch('/api/users/me/bio', { bio });
       const updatedUser = { ...user, avatar_color: selected };
       const token = localStorage.getItem('sadlounge_token');
       login(token, updatedUser);
@@ -39,7 +66,7 @@ const save = async () => {
   return (
     <div className="avatar-picker-overlay" onClick={onClose}>
       <div className="avatar-picker" onClick={e => e.stopPropagation()}>
-        <h3>Choose Avatar Color</h3>
+        <h3>Edit Profile</h3>
 
         <div className="avatar-preview">
           <div className="avatar-preview-circle" style={{ background: selected }}>
@@ -48,6 +75,7 @@ const save = async () => {
           <span>{user?.username}</span>
         </div>
 
+        <p className="avatar-section-label">Avatar Color</p>
         <div className="avatar-colors">
           {COLORS.map(({ color, label }) => (
             <button
@@ -60,9 +88,21 @@ const save = async () => {
           ))}
         </div>
 
+        <p className="avatar-section-label">Bio</p>
+        <textarea
+          className="avatar-bio-input"
+          value={bio}
+          onChange={e => setBio(e.target.value)}
+          placeholder="Tell people about yourself..."
+          maxLength={200}
+          rows={3}
+        />
+        <p className="avatar-char-count">{bio.length}/200</p>
+        {msg && <p className="avatar-msg">{msg}</p>}
+
         <div className="avatar-actions">
           <button className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={save} disabled={saving}>
+          <button className="btn-primary" onClick={saveAll} disabled={saving}>
             {saving ? 'Saving...' : 'Save'}
           </button>
         </div>

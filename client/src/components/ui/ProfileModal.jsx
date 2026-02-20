@@ -18,10 +18,11 @@ export default function ProfileModal({ username, onClose }) {
   return (
     <div className="profile-overlay" onClick={onClose}>
       <div className="profile-modal" onClick={e => e.stopPropagation()}>
+        <button className="profile-close" onClick={onClose}>✕</button>
         {loading && <p className="profile-loading">Loading...</p>}
         {!loading && profile && (
           <>
-            <div className="profile-header" style={{ background: profile.avatar_color }} />
+            <div className="profile-banner" style={{ background: profile.avatar_color }} />
             <div className="profile-avatar" style={{ background: profile.avatar_color }}>
               {profile.username[0].toUpperCase()}
             </div>
@@ -39,7 +40,6 @@ export default function ProfileModal({ username, onClose }) {
             </div>
           </>
         )}
-        <button className="profile-close" onClick={onClose}>✕</button>
       </div>
     </div>
   );

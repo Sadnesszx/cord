@@ -20,9 +20,10 @@
   position: relative;
 }
 
-.profile-header {
+.profile-banner {
   height: 80px;
-  opacity: 0.4;
+  width: 100%;
+  opacity: 0.5;
 }
 
 .profile-avatar {
@@ -42,7 +43,7 @@
 }
 
 .profile-body {
-  padding: 48px 20px 20px;
+  padding: 52px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -93,7 +94,7 @@
 }
 
 .profile-loading {
-  padding: 24px;
+  padding: 40px;
   text-align: center;
   color: var(--gray-2);
   font-size: 12px;
@@ -104,7 +105,7 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.5);
   color: var(--white);
   width: 26px;
   height: 26px;
@@ -114,8 +115,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
+  z-index: 1;
 }
 
-.profile-close:hover {
-  background: rgba(0,0,0,0.7);
-}
+.profile-close:hover { background: rgba(0,0,0,0.8); }
