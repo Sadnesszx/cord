@@ -176,4 +176,34 @@ router.get('/browse/all', auth, async (req, res) => {
   }
 });
 
+// Leave a server
+router.post('/:id/leave', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Server not found' });
+    if (rows[0].owner_id === req.user.id) return res.status(400).json({ error: "You can't leave a server you own — delete it instead" });
+    await pool.query('DELETE FROM server_members WHERE server_id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+    res.json({ message: 'Left server' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Rename a server
+router.patch('/:id/rename', auth, async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name required' });
+  try {
+    const { rows } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Server not found' });
+    if (rows[0].owner_id !== req.user.id) return res.status(403).json({ error: 'Not the owner' });
+    const { rows: updated } = await pool.query('UPDATE servers SET name = $1 WHERE id = $2 RETURNING *', [name, req.params.id]);
+    res.json(updated[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

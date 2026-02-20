@@ -11,6 +11,8 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
   const [newChannel, setNewChannel] = useState('');
   const isOwner = server?.owner_id === user?.id;
   const [confirm, setConfirm] = useState(null); // { message, action }
+  const [showRename, setShowRename] = useState(false);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
     if (!server) { setChannels([]); return; }
@@ -54,28 +56,60 @@ const deleteServer = () => {
   });
 };
 
+const leaveServer = () => {
+  setConfirm({
+    message: `Leave "${server.name}"?`,
+    action: async () => {
+      await api.post(`/api/servers/${server.id}/leave`);
+      onServerDeleted(server.id);
+      setConfirm(null);
+    }
+  });
+};
+
+const renameServer = async (e) => {
+  e.preventDefault();
+  if (!newName.trim()) return;
+  const { data } = await api.patch(`/api/servers/${server.id}/rename`, { name: newName.trim() });
+  onServerRenamed(data);
+  setNewName('');
+  setShowRename(false);
+};
+
   return (
     <div className="channel-sidebar">
       {server && (
-        <div className="channel-header">
-          <span className="channel-server-name">{server.name}</span>
-          <button
-            className="channel-copy-id"
-            onClick={() => {
-              navigator.clipboard.writeText(server.id);
-              alert('Server ID copied!');
-            }}
-            title="Copy server ID to invite friends"
-          >
-            Copy ID
-          </button>
-          {isOwner && (
-            <button className="channel-delete-server" onClick={deleteServer} title="Delete server">
-              🗑 Delete Server
-            </button>
-          )}
+  <div className="channel-header">
+    <span className="channel-server-name">{server.name}</span>
+    <button className="channel-copy-id" onClick={() => { navigator.clipboard.writeText(server.id); alert('Server ID copied!'); }}>
+      Copy ID
+    </button>
+    {isOwner && (
+      <>
+        <button className="channel-rename-server" onClick={() => setShowRename(!showRename)}>
+          ✏️ Rename
+        </button>
+        <button className="channel-delete-server" onClick={deleteServer}>
+          🗑 Delete Server
+        </button>
+      </>
+    )}
+    {!isOwner && (
+      <button className="channel-leave-server" onClick={leaveServer}>
+        🚪 Leave Server
+      </button>
+    )}
+    {showRename && (
+      <form onSubmit={renameServer} className="channel-rename-form">
+        <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="New server name" autoFocus />
+        <div className="channel-create-actions">
+          <button type="button" className="btn-ghost" onClick={() => setShowRename(false)}>Cancel</button>
+          <button type="submit" className="btn-primary">Rename</button>
         </div>
-      )}
+      </form>
+    )}
+  </div>
+)}
 
       <div className="channel-list">
         {!server && (

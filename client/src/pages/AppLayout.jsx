@@ -122,7 +122,7 @@ const handleDMs = () => {
         {view === 'dms' ? (
           <FriendsSidebar activeFriend={activeFriend} onSelectFriend={setActiveFriend} />
         ) : (
-          <ChannelSidebar
+<ChannelSidebar
   server={activeServer}
   activeChannel={activeChannel}
   onSelectChannel={setActiveChannel}
@@ -131,6 +131,10 @@ const handleDMs = () => {
     setActiveServer(null);
     setActiveChannel(null);
     setView('dms');
+  }}
+  onServerRenamed={(updated) => {
+    setServers(servers.map(s => s.id === updated.id ? updated : s));
+    setActiveServer(updated);
   }}
 />
         )}
