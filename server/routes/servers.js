@@ -157,4 +157,23 @@ router.delete('/:serverId/channels/:channelId', auth, async (req, res) => {
   }
 });
 
+// Browse all servers
+router.get('/browse/all', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT s.id, s.name, s.owner_id, u.username as owner_name,
+       COUNT(sm.user_id)::int as member_count
+       FROM servers s
+       JOIN users u ON s.owner_id = u.id
+       LEFT JOIN server_members sm ON sm.server_id = s.id
+       GROUP BY s.id, u.username
+       ORDER BY member_count DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

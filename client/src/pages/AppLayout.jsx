@@ -9,6 +9,7 @@ import AvatarPicker from '../components/ui/AvatarPicker';
 import './AppLayout.css';
 import HomePage from '../components/chat/HomePage';
 import MembersSidebar from '../components/layout/MembersSidebar';
+import ServerBrowser from '../components/ui/ServerBrowser';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -23,6 +24,7 @@ export default function AppLayout() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [newName, setNewName] = useState('');
   const [joinId, setJoinId] = useState('');
+  const [showBrowser, setShowBrowser] = useState(false);
 
   const loadServers = () => {
     if (!serversLoaded) {
@@ -96,7 +98,7 @@ const handleDMs = () => {
           ))}
 
           <button className="top-bar-new-server" onClick={() => setShowCreate(true)}>+ New</button>
-          <button className="top-bar-new-server" onClick={() => setShowJoin(true)}>Join</button>
+          <button className="top-bar-new-server" onClick={() => setShowBrowser(true)}>Browse</button>
         </div>
 
         <div className="top-bar-actions">
@@ -183,6 +185,15 @@ const handleDMs = () => {
       <div className="right-panel">
         {view === 'servers' && <MembersSidebar server={activeServer} />}
       </div>
+      {showBrowser && (
+  <ServerBrowser
+    onJoin={(server) => {
+      if (!servers.find(s => s.id === server.id)) setServers([...servers, server]);
+      handleSelectServer(server);
+    }}
+    onClose={() => setShowBrowser(false)}
+  />
+)}
     </div>
   );  
 }
