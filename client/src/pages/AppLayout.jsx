@@ -10,6 +10,7 @@ import './AppLayout.css';
 import HomePage from '../components/chat/HomePage';
 import MembersSidebar from '../components/layout/MembersSidebar';
 import ServerBrowser from '../components/ui/ServerBrowser';
+import ToastNotification from '../components/ui/ToastNotification';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -194,6 +195,7 @@ const handleDMs = () => {
     onClose={() => setShowBrowser(false)}
   />
 )}
+<ToastNotification />
     </div>
   );  
 }

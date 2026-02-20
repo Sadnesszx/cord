@@ -31,6 +31,12 @@ if (existing.length) return res.status(409).json({ error: 'Username already take
     );
     const user = rows[0];
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+try {
+  const { io } = require('../index');
+  io.to(`user_${process.env.ADMIN_ID}`).emit('new_user', { username: user.username });
+} catch (e) {}
+
     res.status(201).json({ token, user });
   } catch (err) {
     if (err.code === '23505') {
