@@ -118,4 +118,42 @@ router.delete('/:friendId', auth, async (req, res) => {
   }
 });
 
+// Get all DM conversations (admin only)
+router.get('/inbox/all', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT DISTINCT ON (u.id) u.id, u.username, u.avatar_color, dm.content as last_message, dm.created_at
+       FROM dm_messages dm
+       JOIN users u ON (
+         CASE WHEN dm.sender_id = $1 THEN dm.receiver_id = u.id
+         ELSE dm.sender_id = u.id END
+       )
+       WHERE dm.sender_id = $1 OR dm.receiver_id = $1
+       ORDER BY u.id, dm.created_at DESC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Send DM to any user (for contact owner)
+router.post('/dm/send', auth, async (req, res) => {
+  const { receiverId, content } = req.body;
+  if (!content?.trim() || !receiverId) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
+      [req.user.id, receiverId, content.trim()]
+    );
+    const { rows: users } = await pool.query('SELECT username, avatar_color FROM users WHERE id = $1', [req.user.id]);
+    res.json({ ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

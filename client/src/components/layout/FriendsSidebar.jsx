@@ -13,11 +13,17 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   const [msg, setMsg] = useState('');
   const [tab, setTab] = useState('friends');
   const [viewProfile, setViewProfile] = useState(null);
+  const { user } = useAuth();
+  const isAdmin = user?.username === 'Sadness';
+  const [inbox, setInbox] = useState([]);
 
-  const load = () => {
-    api.get('/api/friends').then(({ data }) => setFriends(data));
-    api.get('/api/friends/requests').then(({ data }) => setRequests(data));
-  };
+ const load = () => {
+  api.get('/api/friends').then(({ data }) => setFriends(data));
+  api.get('/api/friends/requests').then(({ data }) => setRequests(data));
+  if (user?.username === 'Sadness') {
+    api.get('/api/friends/inbox/all').then(({ data }) => setInbox(data));
+  }
+};
 
   useEffect(() => { load(); }, []);
 
@@ -67,13 +73,18 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
       )}
 
       <div className="friends-tabs">
-        <button className={tab === 'friends' ? 'active' : ''} onClick={() => setTab('friends')}>
-          Friends {friends.length > 0 && <span className="badge">{friends.length}</span>}
-        </button>
-        <button className={tab === 'requests' ? 'active' : ''} onClick={() => setTab('requests')}>
-          Requests {requests.length > 0 && <span className="badge">{requests.length}</span>}
-        </button>
-      </div>
+  <button className={tab === 'friends' ? 'active' : ''} onClick={() => setTab('friends')}>
+    Friends {friends.length > 0 && <span className="badge">{friends.length}</span>}
+  </button>
+  <button className={tab === 'requests' ? 'active' : ''} onClick={() => setTab('requests')}>
+    Requests {requests.length > 0 && <span className="badge">{requests.length}</span>}
+  </button>
+  {isAdmin && (
+    <button className={tab === 'inbox' ? 'active' : ''} onClick={() => setTab('inbox')}>
+      Inbox {inbox.length > 0 && <span className="badge">{inbox.length}</span>}
+    </button>
+  )}
+</div>
 
       <div className="friends-list">
         {tab === 'friends' && (
@@ -96,6 +107,24 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
             ))}
           </>
         )}
+        {tab === 'inbox' && (
+  <>
+    {inbox.length === 0 && <p className="friends-empty">No messages yet</p>}
+    {inbox.map(u => (
+      <button key={u.id} className={`friend-item ${activeFriend?.id === u.id ? 'active' : ''}`} onClick={() => onSelectFriend(u)}>
+        <div className="friend-avatar-wrapper">
+          <div className="friend-avatar" style={{ background: u.avatar_color }}>
+            {u.username[0].toUpperCase()}
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <div style={{ fontSize: 13, color: 'var(--white)' }}>{u.username}</div>
+          <div style={{ fontSize: 11, color: 'var(--gray-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.last_message}</div>
+        </div>
+      </button>
+    ))}
+  </>
+)}
         {tab === 'requests' && (
           <>
             {requests.length === 0 && <p className="friends-empty">No pending requests</p>}
