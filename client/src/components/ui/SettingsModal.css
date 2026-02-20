@@ -1,0 +1,109 @@
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.settings-modal {
+  background: var(--bg-raised);
+  border: var(--border-bright);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 340px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-modal h3 {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Space Mono', monospace;
+}
+
+.settings-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-section input {
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--white);
+  transition: border-color 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.settings-section input:focus { border-color: var(--gray-2); }
+.settings-section input::placeholder { color: var(--gray-2); }
+
+.settings-section textarea {
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  resize: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.settings-section textarea:focus { border-color: var(--gray-2); }
+.settings-section textarea::placeholder { color: var(--gray-2); }
+
+.settings-char-count {
+  font-size: 10px;
+  color: var(--gray-2);
+  text-align: right;
+  font-family: 'Space Mono', monospace;
+}
+
+.settings-error {
+  font-size: 12px;
+  color: #c0392b;
+  font-family: 'Space Mono', monospace;
+}
+
+.settings-success {
+  font-size: 12px;
+  color: #27ae60;
+  font-family: 'Space Mono', monospace;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

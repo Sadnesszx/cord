@@ -221,3 +221,51 @@
 .status-dot.offline {
   background: #444;
 }
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.1s;
+}
+
+.friend-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--gray-3);
+  font-size: 13px;
+  text-align: left;
+  transition: all 0.1s;
+  border-radius: var(--radius-sm);
+}
+
+.friend-item:hover .friend-item-main { color: var(--gray-5); }
+.friend-item.active .friend-item-main { color: var(--white); }
+
+.view-profile-btn {
+  background: none;
+  color: transparent;
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.friend-item:hover .view-profile-btn { color: var(--gray-2); }
+.view-profile-btn:hover { color: var(--white) !important; }
+
+.unfriend-btn {
+  background: none;
+  color: transparent;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.friend-item:hover .unfriend-btn { color: var(--gray-2); }
+.unfriend-btn:hover { color: #c0392b !important; }

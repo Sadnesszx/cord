@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import './FriendsSidebar.css';  
 import { getSocket } from '../../lib/socket';
+import ProfileModal from '../ui/ProfileModal';
+import './FriendsSidebar.css';
 
 export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   const [friends, setFriends] = useState([]);
@@ -11,6 +12,7 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   const [username, setUsername] = useState('');
   const [msg, setMsg] = useState('');
   const [tab, setTab] = useState('friends');
+  const [viewProfile, setViewProfile] = useState(null);
 
   const load = () => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -20,10 +22,10 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-  const socket = getSocket();
-  socket.on('online_users', (users) => setOnlineUsers(users));
-  return () => socket.off('online_users');
-}, []);
+    const socket = getSocket();
+    socket.on('online_users', (users) => setOnlineUsers(users));
+    return () => socket.off('online_users');
+  }, []);
 
   const sendRequest = async (e) => {
     e.preventDefault();
@@ -41,6 +43,12 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   const respond = async (id, action) => {
     await api.post(`/api/friends/requests/${id}/respond`, { action });
     load();
+  };
+
+  const unfriend = async (friendId) => {
+    await api.delete(`/api/friends/${friendId}`);
+    load();
+    if (activeFriend?.id === friendId) onSelectFriend(null);
   };
 
   return (
@@ -72,20 +80,20 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
           <>
             {friends.length === 0 && <p className="friends-empty">No friends yet.<br/>Add someone with the + button!</p>}
             {friends.map(f => (
-  <button
-    key={f.id}
-    className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`}
-    onClick={() => onSelectFriend(f)}
-  >
-    <div className="friend-avatar-wrapper">
-      <div className="friend-avatar" style={{ background: f.avatar_color }}>
-        {f.username[0].toUpperCase()}
-      </div>
-      <span className={`status-dot ${onlineUsers.includes(f.id) ? 'online' : 'offline'}`} />
-    </div>
-    <span>{f.username}</span>
-  </button>
-))}
+              <div key={f.id} className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`}>
+                <button className="friend-item-main" onClick={() => onSelectFriend(f)}>
+                  <div className="friend-avatar-wrapper">
+                    <div className="friend-avatar" style={{ background: f.avatar_color }}>
+                      {f.username[0].toUpperCase()}
+                    </div>
+                    <span className={`status-dot ${onlineUsers.includes(f.id) ? 'online' : 'offline'}`} />
+                  </div>
+                  <span>{f.username}</span>
+                </button>
+                <button className="view-profile-btn" onClick={() => setViewProfile(f.username)} title="View profile">👤</button>
+                <button className="unfriend-btn" onClick={() => unfriend(f.id)} title="Unfriend">✕</button>
+              </div>
+            ))}
           </>
         )}
         {tab === 'requests' && (
@@ -104,7 +112,8 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
           </>
         )}
       </div>
+
+      {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
     </div>
   );
 }
-

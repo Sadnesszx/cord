@@ -101,4 +101,21 @@ router.get('/dm/:friendId', auth, async (req, res) => {
   }
 });
 
+// Unfriend
+router.delete('/:friendId', auth, async (req, res) => {
+  try {
+    await pool.query(
+      `DELETE FROM friend_requests WHERE 
+       ((sender_id = $1 AND receiver_id = $2) OR 
+       (sender_id = $2 AND receiver_id = $1))
+       AND status = 'accepted'`,
+      [req.user.id, req.params.friendId]
+    );
+    res.json({ message: 'Unfriended' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
