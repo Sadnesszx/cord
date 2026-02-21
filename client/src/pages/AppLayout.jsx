@@ -65,8 +65,6 @@ export default function AppLayout() {
   return () => clearInterval(interval);
 }, []);
 
-  if (serverDown) return <ServerDown />;
-
   const loadServers = () => {
     if (!serversLoaded) {
       api.get('/api/servers').then(({ data }) => {
@@ -112,6 +110,8 @@ export default function AppLayout() {
   };
 
   useState(() => { loadServers(); }, []);
+
+  if (serverDown) return <ServerDown />;
 
   return (
     <div className="app-layout">
