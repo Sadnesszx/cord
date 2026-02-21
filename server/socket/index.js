@@ -40,13 +40,14 @@ const setupSocket = (io) => {
         );
         const message = rows[0];
         const { rows: users } = await pool.query(
-          `SELECT username, avatar_color FROM users WHERE id = $1`,
-          [socket.user.id]
+          `SELECT username, avatar_color, avatar_url FROM users WHERE id = $1`,
+           [socket.user.id]
         );
         const fullMessage = {
-          ...message,
-          username: users[0].username,
-          avatar_color: users[0].avatar_color,
+       ...message,
+           username: users[0].username,
+           avatar_color: users[0].avatar_color,
+           avatar_url: users[0].avatar_url,
         };
         io.to(channelId).emit('new_message', fullMessage);
       } catch (err) {
