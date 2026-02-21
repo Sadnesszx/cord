@@ -161,17 +161,21 @@ useEffect(() => {
           <button className="top-bar-settings" onClick={() => setShowSettings(true)} title="Settings">
             ⚙️
           </button>
-          <div className="top-bar-user" onClick={() => setViewOwnProfile(true)} style={{ cursor: 'pointer' }} title="View profile">
-            <div className="top-bar-avatar" style={{ background: user?.avatar_color || '#555' }}>
-              {user?.username?.[0]?.toUpperCase()}
-            </div>
-            <span className="top-bar-username">{user?.username}</span>
-            <button className="top-bar-logout" onClick={logout} title="Log out">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-              </svg>
-            </button>
-          </div>
+         <div className="top-bar-user" onClick={() => setViewOwnProfile(true)} style={{ cursor: 'pointer' }} title="View profile">
+  {user?.avatar_url ? (
+    <img src={user.avatar_url} className="top-bar-avatar" style={{ objectFit: 'cover' }} alt={user.username} />
+  ) : (
+    <div className="top-bar-avatar" style={{ background: user?.avatar_color || '#555' }}>
+      {user?.username?.[0]?.toUpperCase()}
+    </div>
+  )}
+  <span className="top-bar-username">{user?.username}</span>
+  <button className="top-bar-logout" onClick={logout} title="Log out">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+    </svg>
+  </button>
+</div>
         </div>
       </div>
 
