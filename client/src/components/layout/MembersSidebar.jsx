@@ -56,11 +56,15 @@ const offline = members.filter(m => !onlineUsers.map(id => String(id)).includes(
             {offline.map(m => (
               <button key={m.id} className="member-item offline" onClick={() => setViewProfile(m.username)}>
                 <div className="member-avatar-wrapper">
-                  <div className="member-avatar" style={{ background: m.avatar_color }}>
-                    {m.username[0].toUpperCase()}
-                  </div>
-                  <span className="status-dot offline" />
-                </div>
+  {m.avatar_url ? (
+    <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
+  ) : (
+    <div className="member-avatar" style={{ background: m.avatar_color }}>
+      {m.username[0].toUpperCase()}
+    </div>
+  )}
+  <span className="status-dot offline" />
+</div>
                 <span className="member-name">{m.username}</span>
               </button>
             ))}
