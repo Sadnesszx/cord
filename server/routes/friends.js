@@ -164,6 +164,15 @@ router.delete('/:friendId', auth, async (req, res) => {
        AND status = 'accepted'`,
       [req.user.id, req.params.friendId]
     );
+
+    try {
+      const io = global.getIO?.();
+      if (io) {
+        io.to(`user_${req.params.friendId}`).emit('friend_removed', { userId: req.user.id });
+        io.to(`user_${req.user.id}`).emit('friend_removed', { userId: req.params.friendId });
+      }
+    } catch (e) { console.error('socket notify error:', e); }
+
     res.json({ message: 'Unfriended' });
   } catch (err) {
     console.error(err);

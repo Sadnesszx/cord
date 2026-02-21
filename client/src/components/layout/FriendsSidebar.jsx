@@ -36,17 +36,21 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
   api.get('/api/friends/requests').then(({ data }) => setRequests(data));
 });
   socket.on('friend_request_accepted', (newFriend) => {
-    setFriends(prev => {
-      if (prev.find(f => f.id === newFriend.id)) return prev;
-      return [...prev, newFriend];
-    });
-    setRequests(prev => prev.filter(r => r.id !== newFriend.id));
+  setFriends(prev => {
+    if (prev.find(f => f.id === newFriend.id)) return prev;
+    return [...prev, newFriend];
   });
-  return () => {
-    socket.off('online_users');
-    socket.off('new_friend_request');
-    socket.off('friend_request_accepted');
-  };
+  setRequests(prev => prev.filter(r => r.id !== newFriend.id));
+});
+socket.on('friend_removed', ({ userId }) => {
+  setFriends(prev => prev.filter(f => String(f.id) !== String(userId)));
+});
+return () => {
+  socket.off('online_users');
+  socket.off('new_friend_request');
+  socket.off('friend_request_accepted');
+  socket.off('friend_removed');
+};
 }, []);
 
   const sendRequest = async (e) => {
