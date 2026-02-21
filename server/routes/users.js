@@ -28,6 +28,10 @@ router.patch('/avatar-image', auth, async (req, res) => {
   const { avatar_url } = req.body;
   try {
     await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.user.id]);
+    const io = global.getIO?.();
+    if (io) {
+      io.emit('user_avatar_updated', { userId: req.user.id, avatar_url });
+    }
     res.json({ success: true });
   } catch (err) {
     console.error(err);

@@ -60,7 +60,21 @@ useEffect(() => {
     login(token, updatedUser);
     setAvatarClearedMessage(`Your profile picture has been removed by an admin.\nReason: ${reason}`);
   });
-  return () => socket.off('avatar_cleared');
+  return () => socket.off('avatar_cleared');  
+}, []);
+
+ useEffect(() => {
+  const socket = getSocket();
+  socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
+    if (String(userId) === String(user?.id)) {
+      const token = localStorage.getItem('sadlounge_token');
+      const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
+      const updatedUser = { ...currentUser, avatar_url };
+      localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
+      login(token, updatedUser);
+    }
+  });
+  return () => socket.off('user_avatar_updated');
 }, []);
 
   useEffect(() => {
