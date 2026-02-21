@@ -28,16 +28,24 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
 
   useEffect(() => { load(); }, []);
 
-  useEffect(() => {
+ useEffect(() => {
   const socket = getSocket();
   socket.emit('get_online_users');
   socket.on('online_users', (users) => setOnlineUsers(users));
   socket.on('new_friend_request', (request) => {
     setRequests(prev => [...prev, request]);
   });
+  socket.on('friend_request_accepted', (newFriend) => {
+    setFriends(prev => {
+      if (prev.find(f => f.id === newFriend.id)) return prev;
+      return [...prev, newFriend];
+    });
+    setRequests(prev => prev.filter(r => r.id !== newFriend.id));
+  });
   return () => {
     socket.off('online_users');
     socket.off('new_friend_request');
+    socket.off('friend_request_accepted');
   };
 }, []);
 

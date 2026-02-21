@@ -82,6 +82,37 @@ router.post('/requests/:id/respond', auth, async (req, res) => {
       [action === 'accept' ? 'accepted' : 'declined', req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Request not found' });
+
+    if (action === 'accept') {
+      try {
+        const io = global.getIO?.();
+        if (io) {
+          const { rows: accepterInfo } = await pool.query(
+            'SELECT id, username, avatar_color, avatar_url FROM users WHERE id = $1',
+            [req.user.id]
+          );
+          const { rows: senderInfo } = await pool.query(
+            'SELECT id, username, avatar_color, avatar_url FROM users WHERE id = $1',
+            [rows[0].sender_id]
+          );
+          // Notify sender their request was accepted
+          io.to(`user_${rows[0].sender_id}`).emit('friend_request_accepted', {
+            id: accepterInfo[0].id,
+            username: accepterInfo[0].username,
+            avatar_color: accepterInfo[0].avatar_color,
+            avatar_url: accepterInfo[0].avatar_url,
+          });
+          // Notify accepter to refresh their friends list
+          io.to(`user_${req.user.id}`).emit('friend_request_accepted', {
+            id: senderInfo[0].id,
+            username: senderInfo[0].username,
+            avatar_color: senderInfo[0].avatar_color,
+            avatar_url: senderInfo[0].avatar_url,
+          });
+        }
+      } catch (e) { console.error('socket notify error:', e); }
+    }
+
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
