@@ -5,7 +5,7 @@ import { getSocket } from '../../lib/socket';
 import ProfileModal from '../ui/ProfileModal';
 import './FriendsSidebar.css';
 
-export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
+export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs = {} }) {
   const { user } = useAuth();
   const isAdmin = user?.username === 'Sadness';
   const [friends, setFriends] = useState([]);
@@ -106,6 +106,7 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
                     <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) ? 'online' : 'offline'}`} />
                   </div>
                   <span>{f.username}</span>
+                  {unreadDMs[f.id] && <span className="unread-badge" />}
                 </button>
                 <button className="view-profile-btn" onClick={() => setViewProfile(f.username)} title="View profile">👤</button>
                 <button className="unfriend-btn" onClick={() => unfriend(f.id)} title="Unfriend">✕</button>

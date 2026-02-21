@@ -488,3 +488,13 @@
 
 .reaction-btn:hover { background: #2a2a2a; color: #e8e8e8; }
 .reaction-btn.reacted { background: #2a2a3a; border-color: #5865f2; color: #e8e8e8; }
+
+.unread-badge {
+  width: 8px;
+  height: 8px;
+  background: #ed4245;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
