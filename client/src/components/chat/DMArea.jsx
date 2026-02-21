@@ -3,7 +3,6 @@ import { getSocket } from '../../lib/socket';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import ProfileModal from '../ui/ProfileModal';
-import 'emoji-picker-element';
 import './ChatArea.css';
 
 const formatTime = (ts) => {
@@ -35,18 +34,23 @@ const playNotification = () => {
 };
 
 function EmojiPicker({ onPick }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const handler = (e) => {
-      e.stopPropagation();
-      onPick(e.detail.unicode);
-    };
-    el.addEventListener('emoji-click', handler);
-    return () => el.removeEventListener('emoji-click', handler);
-  }, []);
-  return <emoji-picker ref={ref} class="light" />;
+  const emojis = [
+    '😀','😂','🥹','😍','🥰','😎','🤩','😭','😤','🤔',
+    '😴','🥳','😅','😬','🤯','😱','🥺','😏','🙄','😇',
+    '❤️','🔥','✨','💀','👍','👎','🙏','👏','🎉','💯',
+    '😈','👻','🤝','💪','🫶','👀','🫠','🤣','😆','😋',
+    '🐶','🐱','🐸','🐔','🦋','🌸','🌙','⭐','🌈','🍕',
+    '🍔','🍟','🎮','🎵','🏆','💎','🚀','💡','❓','‼️'
+  ];
+  return (
+    <div className="emoji-grid">
+      {emojis.map((emoji, i) => (
+        <button key={i} className="emoji-grid-btn" onMouseDown={e => { e.preventDefault(); onPick(emoji); }}>
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function DMArea({ friend }) {
@@ -150,8 +154,8 @@ export default function DMArea({ friend }) {
       </div>
 
       {showEmoji && (
-    <div className="emoji-picker-wrapper" onClick={e => e.stopPropagation()}>
-      <EmojiPicker onPick={(emoji) => {
+        <div className="emoji-picker-wrapper">
+          <EmojiPicker onPick={(emoji) => {
             setInput(prev => prev + emoji);
             setShowEmoji(false);
           }} />
@@ -176,7 +180,7 @@ export default function DMArea({ friend }) {
             placeholder={`Message ${friend.username}`}
             rows={1}
           />
-          <button type="button" className="emoji-btn" onClick={() => setShowEmoji(!showEmoji)}>
+          <button type="button" className="emoji-btn" onMouseDown={e => { e.preventDefault(); setShowEmoji(!showEmoji); }}>
             😊
           </button>
           <button className="chat-send-btn" type="button" onClick={() => {
