@@ -48,7 +48,8 @@ export default function AppLayout() {
   });
   socket.on('avatar_cleared', () => {
   const token = localStorage.getItem('sadlounge_token');
-  const updatedUser = { ...user, avatar_url: null };
+  const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
+  const updatedUser = { ...currentUser, avatar_url: null };
   localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
   login(token, updatedUser);
 });
