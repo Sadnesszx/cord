@@ -82,7 +82,13 @@ router.patch('/me/banner', auth, async (req, res) => {
 router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
   if (req.user.username !== 'Sadness') return res.status(403).json({ error: 'Forbidden' });
   try {
-    await pool.query('UPDATE users SET avatar_url = NULL WHERE username = $1', [req.params.username]);
+    const { rows } = await pool.query('UPDATE users SET avatar_url = NULL WHERE username = $1 RETURNING id', [req.params.username]);
+    if (rows.length) {
+      const io = global.getIO?.();
+      if (io) {
+        io.to(`user_${rows[0].id}`).emit('avatar_cleared');
+      }
+    }
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

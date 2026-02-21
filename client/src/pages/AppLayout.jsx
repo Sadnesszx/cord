@@ -41,13 +41,20 @@ export default function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const socket = getSocket();
-    socket.on('force_logout', ({ reason }) => {
-      logout();
-      setBanMessage(reason);
-    });
-    return () => socket.off('force_logout');
-  }, []);
+  const socket = getSocket();
+  socket.on('force_logout', ({ reason }) => {
+    logout();
+    setBanMessage(reason);
+  });
+  socket.on('avatar_cleared', () => {
+    const token = localStorage.getItem('sadlounge_token');
+    login(token, { ...user, avatar_url: null });
+  });
+  return () => {
+    socket.off('force_logout');
+    socket.off('avatar_cleared');
+  };
+}, [user]);
 
   useEffect(() => {
     const checkServer = async () => {
