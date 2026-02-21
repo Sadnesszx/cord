@@ -50,6 +50,15 @@ const groupMessages = (messages) => {
   return groups;
 };
 
+const renderContent = (content) => {
+  const parts = content.split(/(@\w+)/g);
+  return parts.map((part, i) =>
+    part.startsWith('@') ? (
+      <span key={i} className="mention-highlight">{part}</span>
+    ) : part
+  );
+};
+
 export default function ChatArea({ channel }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -59,6 +68,9 @@ export default function ChatArea({ channel }) {
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [showMentions, setShowMentions] = useState(false);
+  const [members, setMembers] = useState([]);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -79,6 +91,11 @@ export default function ChatArea({ channel }) {
     });
 
     socket.emit('join_channel', channel.id);
+
+    useEffect(() => {
+  if (!channel?.server_id) return;
+  api.get(`/api/servers/${channel.server_id}/members`).then(({ data }) => setMembers(data));
+}, [channel?.id]);
 
     const onMessage = (msg) => setMessages(prev => [...prev, msg]);
     const onTypingStart = ({ username }) => {
@@ -175,7 +192,7 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                    <p className="msg-text">{msg.content}</p>
+                    <p className="msg-text">{renderContent(msg.content)}</p>
                     {msg.user_id === user?.id && (
                       <button
                         className="msg-delete-btn"
@@ -205,6 +222,26 @@ export default function ChatArea({ channel }) {
 
         <div ref={bottomRef} />
       </div>
+
+      {showMentions && (
+  <div className="mention-picker">
+    {members
+      .filter(m => m.username.toLowerCase().startsWith(mentionSearch.toLowerCase()))
+      .slice(0, 5)
+      .map(m => (
+        <button key={m.id} className="mention-item" onClick={() => {
+          const atIndex = input.lastIndexOf('@');
+          setInput(input.slice(0, atIndex) + `@${m.username} `);
+          setShowMentions(false);
+        }}>
+          <div className="mention-avatar" style={{ background: m.avatar_color }}>
+            {m.username[0].toUpperCase()}
+          </div>
+          <span>{m.username}</span>
+        </button>
+      ))}
+  </div>
+)}
 
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={sendMessage}>
