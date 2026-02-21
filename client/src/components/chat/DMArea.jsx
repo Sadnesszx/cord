@@ -77,8 +77,8 @@ export default function DMArea({ friend }) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      formData.append('upload_preset', 'ptdhsvtb');
+      const res = await fetch(`https://api.cloudinary.com/v1_1/interienn/image/upload`, {
         method: 'POST',
         body: formData,
       });

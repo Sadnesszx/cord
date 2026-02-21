@@ -107,16 +107,17 @@ export default function ChatArea({ channel }) {
   };
 
   const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await res.json();
-    return data.secure_url;
-  };
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'ptdhsvtb');
+  const res = await fetch(`https://api.cloudinary.com/v1_1/interienn/image/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await res.json();
+  console.log('Cloudinary response:', data);
+  return data.secure_url;
+};
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
