@@ -65,6 +65,23 @@ export default function AppLayout() {
   return () => clearInterval(interval);
 }, []);
 
+useEffect(() => {
+  const checkVersion = async () => {
+    try {
+      const res = await fetch('/version.json?t=' + Date.now());
+      const data = await res.json();
+      const stored = localStorage.getItem('app_version');
+      if (stored && stored !== data.version) {
+        window.location.reload();
+      }
+      localStorage.setItem('app_version', data.version);
+    } catch (err) {}
+  };
+  checkVersion();
+  const interval = setInterval(checkVersion, 60000);
+  return () => clearInterval(interval);
+}, []);
+
   const loadServers = () => {
     if (!serversLoaded) {
       api.get('/api/servers').then(({ data }) => {
