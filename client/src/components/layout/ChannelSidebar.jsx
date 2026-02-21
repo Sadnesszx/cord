@@ -81,9 +81,7 @@ const renameServer = async (e) => {
       {server && (
   <div className="channel-header">
     <span className="channel-server-name">{server.name}</span>
-    <button className="channel-copy-id" onClick={() => { navigator.clipboard.writeText(server.id); alert('Server ID copied!'); }}>
-      Copy ID
-    </button>
+
     {isOwner && (
       <>
         <button className="channel-rename-server" onClick={() => setShowRename(!showRename)}>
