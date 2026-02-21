@@ -39,6 +39,7 @@ export default function AppLayout() {
   const [unreadServers, setUnreadServers] = useState({});
   const [unreadDMs, setUnreadDMs] = useState({});
   const navigate = useNavigate();
+  const [avatarClearedMessage, setAvatarClearedMessage] = useState('');
 
   useEffect(() => {
   const socket = getSocket();
@@ -52,7 +53,7 @@ export default function AppLayout() {
   const updatedUser = { ...currentUser, avatar_url: null };
   localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
   login(token, updatedUser);
-  setBanMessage(`Your profile picture has been removed by an admin. Reason: ${reason}`);
+  setAvatarClearedMessage(`Your profile picture has been removed by an admin.\nReason: ${reason}`);
 });
   return () => {
     socket.off('force_logout');
@@ -308,6 +309,13 @@ export default function AppLayout() {
           onClose={() => setShowBrowser(false)}
         />
       )}
+
+      {avatarClearedMessage && (
+  <WarningModal
+    message={avatarClearedMessage}
+    onClose={() => setAvatarClearedMessage('')}
+  />
+)}
 
       <ToastNotification />
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
