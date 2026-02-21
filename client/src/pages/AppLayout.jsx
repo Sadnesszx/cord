@@ -47,20 +47,21 @@ export default function AppLayout() {
     logout();
     setBanMessage(reason);
   });
+  return () => socket.off('force_logout');
+}, []);
+
+useEffect(() => {
+  const socket = getSocket();
   socket.on('avatar_cleared', ({ reason }) => {
-  console.log('avatar_cleared received', reason);
-  const token = localStorage.getItem('sadlounge_token');
-  const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
-  const updatedUser = { ...currentUser, avatar_url: null };
-  localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
-  login(token, updatedUser);
-  setAvatarClearedMessage(`Your profile picture has been removed by an admin.\nReason: ${reason}`);
-});
-  return () => {
-    socket.off('force_logout');
-    socket.off('avatar_cleared');
-  };
-}, [user]);
+    const token = localStorage.getItem('sadlounge_token');
+    const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
+    const updatedUser = { ...currentUser, avatar_url: null };
+    localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
+    login(token, updatedUser);
+    setAvatarClearedMessage(`Your profile picture has been removed by an admin.\nReason: ${reason}`);
+  });
+  return () => socket.off('avatar_cleared');
+}, []);
 
   useEffect(() => {
     const checkServer = async () => {
