@@ -47,9 +47,11 @@ export default function AppLayout() {
     setBanMessage(reason);
   });
   socket.on('avatar_cleared', () => {
-    const token = localStorage.getItem('sadlounge_token');
-    login(token, { ...user, avatar_url: null });
-  });
+  const token = localStorage.getItem('sadlounge_token');
+  const updatedUser = { ...user, avatar_url: null };
+  localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
+  login(token, updatedUser);
+});
   return () => {
     socket.off('force_logout');
     socket.off('avatar_cleared');
