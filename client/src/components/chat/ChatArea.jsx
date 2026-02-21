@@ -109,7 +109,7 @@ export default function ChatArea({ channel }) {
   const uploadImage = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', 'ptdhsvtb');
+  formData.append('upload_preset', 'k57oh6ur');
   const res = await fetch(`https://api.cloudinary.com/v1_1/interienn/image/upload`, {
     method: 'POST',
     body: formData,
