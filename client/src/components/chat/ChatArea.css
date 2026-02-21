@@ -358,3 +358,26 @@
 }
 
 .emoji-btn:hover { color: var(--white); }
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  padding: 10px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  width: 320px;
+}
+
+.emoji-grid-btn {
+  background: none;
+  font-size: 20px;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+  line-height: 1;
+}
+
+.emoji-grid-btn:hover { background: #2a2a2a; }
