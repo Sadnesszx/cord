@@ -149,6 +149,22 @@ export default function ProfileModal({ username, onClose }) {
 
                   <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
 
+                  <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
+
+                  <button
+                    className="admin-ban-btn"
+                    style={{ width: '100%', marginTop: 8 }}
+                    onClick={async () => {
+                     try {
+                         await api.patch(`/api/users/admin/clear-avatar/${username}`);
+                         setResetMsg('Profile picture removed!');
+                         setTimeout(() => setResetMsg(''), 3000);
+                         } catch (err) { setResetMsg('Error'); }
+                      }}
+                 >
+                    🗑️ Remove Profile Picture
+                 </button>
+
                   {resetMsg && <p className="profile-reset-msg">{resetMsg}</p>}
                 </div>
               )}

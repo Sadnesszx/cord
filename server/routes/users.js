@@ -92,4 +92,15 @@ router.patch('/me/banner', auth, async (req, res) => {
   }
 }); 
 
+// Admin: delete user's profile picture
+router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
+  if (req.user.username !== 'Sadness') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    await pool.query('UPDATE users SET avatar_url = NULL WHERE username = $1', [req.params.username]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
