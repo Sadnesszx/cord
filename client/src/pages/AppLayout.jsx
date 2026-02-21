@@ -19,7 +19,7 @@ import ProfileModal from '../components/ui/ProfileModal';
 import ServerDown from '../components/ui/ServerDown';
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, login } = useAuth();
   const [servers, setServers] = useState([]);
   const [serversLoaded, setServersLoaded] = useState(false);
   const [activeServer, setActiveServer] = useState(null);
