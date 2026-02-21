@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import ProfileModal from '../ui/ProfileModal';
 import './ChatArea.css';
+import ImageLightbox from '../ui/ImageLightbox';
 
 const formatTime = (ts) => {
   const date = new Date(ts);
@@ -95,6 +96,7 @@ export default function DMArea({ friend }) {
   const typingTimeout = useRef(null);
   const [viewProfile, setViewProfile] = useState(null);
   const socket = getSocket();
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const deleteDM = async (messageId) => {
     try {
@@ -233,7 +235,7 @@ export default function DMArea({ friend }) {
               </div>
               <div className="msg-text-wrapper">
                 {msg.content.startsWith('[img]') && msg.content.endsWith('[/img]') ? (
-                  <img src={msg.content.slice(5, -6)} alt="uploaded" className="msg-image" />
+                  <img src={msg.content.slice(5, -6)} alt="uploaded" className="msg-image" style={{ cursor: 'zoom-in' }} onClick={() => setLightboxUrl(msg.content.slice(5, -6))} />
                 ) : (
                   <p className="msg-text">{renderDMContent(msg.content)}</p>
                 )}
@@ -337,6 +339,7 @@ export default function DMArea({ friend }) {
       </div>
 
       {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
+        {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </div>
   );
 }

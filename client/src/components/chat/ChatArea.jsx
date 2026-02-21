@@ -4,11 +4,12 @@ import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
 import ProfileModal from '../ui/ProfileModal';
 import './ChatArea.css';
+import ImageLightbox from '../ui/ImageLightbox';
 
-const renderContent = (content, onMentionClick) => {
+const renderContent = (content, onMentionClick, onImageClick) => {
   if (content.startsWith('[img]') && content.endsWith('[/img]')) {
     const url = content.slice(5, -6);
-    return <img src={url} alt="uploaded" className="msg-image" />;
+    return <img src={url} alt="uploaded" className="msg-image" style={{ cursor: 'zoom-in' }} onClick={() => onImageClick(url)} />;
   }
   const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -129,6 +130,7 @@ export default function ChatArea({ channel }) {
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -301,7 +303,7 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                    <p className="msg-text">{renderContent(msg.content, (username) => setViewProfile(username))}</p>
+                    <p className="msg-text">{renderContent(msg.content, (username) => setViewProfile(username), (url) => setLightboxUrl(url))}</p>
                     <div className="msg-actions">
                       <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
                         😑
@@ -414,6 +416,7 @@ export default function ChatArea({ channel }) {
           </button>
         </form>
       </div>
+      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
 
       {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
     </div>
