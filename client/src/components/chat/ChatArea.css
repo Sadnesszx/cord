@@ -385,3 +385,25 @@
 }
 
 .emoji-grid-btn:hover { background: #2a2a2a; }
+
+.msg-image {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  margin-top: 4px;
+  cursor: pointer;
+  object-fit: cover;
+}
+
+.image-upload-btn {
+  background: none;
+  color: var(--gray-2);
+  font-size: 18px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.image-upload-btn:hover { color: var(--white); }
