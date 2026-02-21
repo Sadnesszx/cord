@@ -9,12 +9,19 @@ const renderContent = (content) => {
     const url = content.slice(5, -6);
     return <img src={url} alt="uploaded" className="msg-image" />;
   }
-  const parts = content.split(/(@\w+)/g);
-  return parts.map((part, i) =>
-    part.startsWith('@') ? (
-      <span key={i} className="mention-highlight">{part}</span>
-    ) : part
-  );
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const mentionRegex = /(@\w+)/g;
+  const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
+  const parts = content.split(combinedRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="msg-link">{part}</a>;
+    }
+    if (part.match(mentionRegex)) {
+      return <span key={i} className="mention-highlight">{part}</span>;
+    }
+    return part;
+  });
 };
 
 const Avatar = ({ username, color }) => (
@@ -242,7 +249,7 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                    <p className="msg-text">{renderContent(msg.content)}</p>
+                   <p className="msg-text">{renderDMContent(msg.content)}</p>
                     {msg.user_id === user?.id && (
                       <button
                         className="msg-delete-btn"

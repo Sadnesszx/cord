@@ -407,3 +407,11 @@
 }
 
 .image-upload-btn:hover { color: var(--white); }
+
+.msg-link {
+  color: #5865f2;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.msg-link:hover { color: #7289da; }

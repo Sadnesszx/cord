@@ -53,6 +53,22 @@ function EmojiPicker({ onPick }) {
   );
 }
 
+const renderDMContent = (content) => {
+  const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const mentionRegex = /(@\w+)/g;
+  const parts = content.split(combinedRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="msg-link">{part}</a>;
+    }
+    if (part.match(mentionRegex)) {
+      return <span key={i} className="mention-highlight">{part}</span>;
+    }
+    return part;
+  });
+};
+
 export default function DMArea({ friend }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
