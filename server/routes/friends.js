@@ -28,6 +28,24 @@ router.post('/request', auth, async (req, res) => {
       'INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, $2)',
       [req.user.id, receiverId]
     );
+
+// Notify receiver in real time
+try {
+  const io = global.getIO?.();
+  if (io) {
+    const { rows: senderInfo } = await pool.query(
+      'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    io.to(`user_${receiverId}`).emit('new_friend_request', {
+      id: req.user.id,
+      username: senderInfo[0].username,
+      avatar_color: senderInfo[0].avatar_color,
+      avatar_url: senderInfo[0].avatar_url,
+    });
+  }
+} catch (e) { console.error('socket notify error:', e); }
+
     res.json({ message: 'Friend request sent!' });
   } catch (err) {
     console.error(err);
