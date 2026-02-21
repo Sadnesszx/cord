@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
-import './ChatArea.css';
 import ProfileModal from '../ui/ProfileModal';
+import './ChatArea.css';
 
 const renderContent = (content, onMentionClick) => {
   if (content.startsWith('[img]') && content.endsWith('[/img]')) {
@@ -100,6 +100,19 @@ function EmojiPicker({ onPick }) {
   );
 }
 
+function ReactionPicker({ onPick }) {
+  const emojis = ['👍','👎','❤️','😂','😮','😢','🔥','💯','🎉','👏'];
+  return (
+    <div className="reaction-picker">
+      {emojis.map((emoji, i) => (
+        <button key={i} className="reaction-picker-btn" onMouseDown={e => { e.preventDefault(); onPick(emoji); }}>
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function ChatArea({ channel }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -110,10 +123,12 @@ export default function ChatArea({ channel }) {
   const [mentionSearch, setMentionSearch] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [reactions, setReactions] = useState({});
+  const [activeReactionPicker, setActiveReactionPicker] = useState(null);
+  const [viewProfile, setViewProfile] = useState(null);
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
-  const [viewProfile, setViewProfile] = useState(null);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -147,13 +162,40 @@ export default function ChatArea({ channel }) {
     }
   };
 
+  const toggleReaction = async (messageId, emoji) => {
+    try {
+      await api.post(`/api/messages/${messageId}/react`, { emoji });
+      const { data } = await api.get(`/api/channels/${channel.id}/reactions`);
+      const grouped = {};
+      data.forEach(r => {
+        if (!grouped[r.message_id]) grouped[r.message_id] = {};
+        if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = [];
+        grouped[r.message_id][r.emoji].push(r.username);
+      });
+      setReactions(grouped);
+      setActiveReactionPicker(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     if (!channel) return;
     setMessages([]);
+    setReactions({});
     setLoading(true);
     api.get(`/api/channels/${channel.id}/messages`).then(({ data }) => {
       setMessages(data);
       setLoading(false);
+    });
+    api.get(`/api/channels/${channel.id}/reactions`).then(({ data }) => {
+      const grouped = {};
+      data.forEach(r => {
+        if (!grouped[r.message_id]) grouped[r.message_id] = {};
+        if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = [];
+        grouped[r.message_id][r.emoji].push(r.username);
+      });
+      setReactions(grouped);
     });
 
     socket.emit('join_channel', channel.id);
@@ -251,7 +293,7 @@ export default function ChatArea({ channel }) {
           }
           return (
             <div key={`group-${i}`} className="msg-group fade-in">
-             <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} onClick={() => setViewProfile(group.username)} />
+              <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} onClick={() => setViewProfile(group.username)} />
               <div className="msg-content">
                 <div className="msg-meta">
                   <span className="msg-author">{group.username}</span>
@@ -260,14 +302,30 @@ export default function ChatArea({ channel }) {
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
                     <p className="msg-text">{renderContent(msg.content, (username) => setViewProfile(username))}</p>
-                    {msg.user_id === user?.id && (
-                      <button
-                        className="msg-delete-btn"
-                        onClick={() => deleteMessage(msg.id)}
-                        title="Delete message"
-                      >
-                        ✕
+                    <div className="msg-actions">
+                      <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
+                        😑
                       </button>
+                      {msg.user_id === user?.id && (
+                        <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">✕</button>
+                      )}
+                    </div>
+                    {activeReactionPicker === msg.id && (
+                      <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                    )}
+                    {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
+                      <div className="msg-reactions">
+                        {Object.entries(reactions[msg.id]).map(([emoji, users]) => (
+                          <button
+                            key={emoji}
+                            className={`reaction-btn ${users.includes(user.username) ? 'reacted' : ''}`}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                            title={users.join(', ')}
+                          >
+                            {emoji} {users.length}
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -355,8 +413,9 @@ export default function ChatArea({ channel }) {
             </svg>
           </button>
         </form>
-        {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
       </div>
+
+      {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
     </div>
   );
 }

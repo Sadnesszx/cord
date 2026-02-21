@@ -415,3 +415,76 @@
 }
 
 .msg-link:hover { color: #7289da; }
+
+.msg-actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  right: 8px;
+  top: 0;
+}
+
+.msg-text-wrapper:hover .msg-actions {
+  display: flex;
+}
+
+.msg-react-btn {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  font-size: 13px;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: #aaa;
+  transition: all 0.15s;
+}
+
+.msg-react-btn:hover { background: #2a2a2a; color: #e8e8e8; }
+
+.reaction-picker {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  max-width: 220px;
+}
+
+.reaction-picker-btn {
+  background: none;
+  font-size: 18px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.reaction-picker-btn:hover { background: #2a2a2a; }
+
+.msg-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.reaction-btn {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #aaa;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reaction-btn:hover { background: #2a2a2a; color: #e8e8e8; }
+.reaction-btn.reacted { background: #2a2a3a; border-color: #5865f2; color: #e8e8e8; }

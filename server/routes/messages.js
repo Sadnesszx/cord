@@ -52,4 +52,45 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
   }
 });
 
+// Get reactions for a channel's messages
+router.get('/channels/:channelId/reactions', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT mr.message_id, mr.emoji, mr.user_id, u.username
+       FROM message_reactions mr
+       JOIN users u ON mr.user_id = u.id
+       WHERE mr.message_id IN (
+         SELECT id FROM messages WHERE channel_id = $1
+       )`,
+      [req.params.channelId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Toggle reaction
+router.post('/messages/:messageId/react', auth, async (req, res) => {
+  const { emoji } = req.body;
+  try {
+    const { rows: existing } = await pool.query(
+      'SELECT id FROM message_reactions WHERE message_id = $1 AND user_id = $2 AND emoji = $3',
+      [req.params.messageId, req.user.id, emoji]
+    );
+    if (existing.length) {
+      await pool.query('DELETE FROM message_reactions WHERE id = $1', [existing[0].id]);
+      res.json({ action: 'removed' });
+    } else {
+      await pool.query(
+        'INSERT INTO message_reactions (message_id, user_id, emoji) VALUES ($1, $2, $3)',
+        [req.params.messageId, req.user.id, emoji]
+      );
+      res.json({ action: 'added' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
