@@ -46,12 +46,13 @@ export default function AppLayout() {
     logout();
     setBanMessage(reason);
   });
-  socket.on('avatar_cleared', () => {
+  socket.on('avatar_cleared', ({ reason }) => {
   const token = localStorage.getItem('sadlounge_token');
   const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
   const updatedUser = { ...currentUser, avatar_url: null };
   localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
   login(token, updatedUser);
+  setBanMessage(`Your profile picture has been removed by an admin. Reason: ${reason}`);
 });
   return () => {
     socket.off('force_logout');

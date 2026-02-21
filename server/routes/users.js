@@ -86,7 +86,7 @@ router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
     if (rows.length) {
       const io = global.getIO?.();
       if (io) {
-        io.to(`user_${rows[0].id}`).emit('avatar_cleared');
+        io.to(`user_${rows[0].id}`).emit('avatar_cleared', { reason: req.body.reason || 'No reason provided' });
       }
     }
     res.json({ success: true });
