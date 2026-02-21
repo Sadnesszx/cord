@@ -101,6 +101,10 @@ const setupSocket = (io) => {
       }
     });
 
+    socket.on('get_online_users', () => {
+    socket.emit('online_users', Array.from(onlineUsers));
+    });
+
     socket.on('disconnect', () => {
       console.log(`❌ ${socket.user.username} disconnected`);
       onlineUsers.delete(socket.user.id);
