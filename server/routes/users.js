@@ -23,12 +23,14 @@ router.patch('/me/avatar', auth, async (req, res) => {
   }
 });
 
-router.patch('/avatar-image', authenticateToken, async (req, res) => {
+// Update avatar image
+router.patch('/avatar-image', auth, async (req, res) => {
   const { avatar_url } = req.body;
   try {
     await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.user.id]);
     res.json({ success: true });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to update avatar' });
   }
 });
@@ -69,23 +71,13 @@ router.patch('/me/bio', auth, async (req, res) => {
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, bio, created_at, banned FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, avatar_url, bio, created_at, banned FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
-  }
-});
-
-router.patch('/avatar-image', authenticateToken, async (req, res) => {
-  const { avatar_url } = req.body;
-  try {
-    await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.user.id]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update avatar' });
   }
 });
 
