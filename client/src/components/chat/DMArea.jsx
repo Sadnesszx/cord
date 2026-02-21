@@ -69,11 +69,26 @@ function EmojiPicker({ onPick }) {
   );
 }
 
+function ReactionPicker({ onPick }) {
+  const emojis = ['👍','👎','❤️','😂','😮','😢','🔥','💯','🎉','👏'];
+  return (
+    <div className="reaction-picker">
+      {emojis.map((emoji, i) => (
+        <button key={i} className="reaction-picker-btn" onMouseDown={e => { e.preventDefault(); onPick(emoji); }}>
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function DMArea({ friend }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [reactions, setReactions] = useState({});
+  const [activeReactionPicker, setActiveReactionPicker] = useState(null);
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -106,14 +121,38 @@ export default function DMArea({ friend }) {
     }
   };
 
+  const loadReactions = async () => {
+    if (!friend) return;
+    const { data } = await api.get(`/api/friends/dm/${friend.id}/reactions`);
+    const grouped = {};
+    data.forEach(r => {
+      if (!grouped[r.message_id]) grouped[r.message_id] = {};
+      if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = [];
+      grouped[r.message_id][r.emoji].push(r.username);
+    });
+    setReactions(grouped);
+  };
+
+  const toggleReaction = async (messageId, emoji) => {
+    try {
+      await api.post(`/api/friends/dm/message/${messageId}/react`, { emoji });
+      await loadReactions();
+      setActiveReactionPicker(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     if (!friend) return;
     setMessages([]);
+    setReactions({});
     setTyping(false);
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => {
       setMessages(data);
       setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
     });
+    loadReactions();
 
     const onDM = (msg) => {
       if (
@@ -198,14 +237,30 @@ export default function DMArea({ friend }) {
                 ) : (
                   <p className="msg-text">{renderDMContent(msg.content)}</p>
                 )}
-                {msg.sender_id === user?.id && (
-                  <button
-                    className="msg-delete-btn"
-                    onClick={() => deleteDM(msg.id)}
-                    title="Delete message"
-                  >
-                    ✕
+                <div className="msg-actions">
+                  <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
+                    😑
                   </button>
+                  {msg.sender_id === user?.id && (
+                    <button className="msg-delete-btn" onClick={() => deleteDM(msg.id)} title="Delete message">✕</button>
+                  )}
+                </div>
+                {activeReactionPicker === msg.id && (
+                  <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                )}
+                {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
+                  <div className="msg-reactions">
+                    {Object.entries(reactions[msg.id]).map(([emoji, users]) => (
+                      <button
+                        key={emoji}
+                        className={`reaction-btn ${users.includes(user.username) ? 'reacted' : ''}`}
+                        onClick={() => toggleReaction(msg.id, emoji)}
+                        title={users.join(', ')}
+                      >
+                        {emoji} {users.length}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

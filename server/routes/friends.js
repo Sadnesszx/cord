@@ -173,4 +173,47 @@ router.delete('/dm/message/:messageId', auth, async (req, res) => {
   }
 });
 
+// Get reactions for DM messages
+router.get('/dm/:friendId/reactions', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT dr.message_id, dr.emoji, dr.user_id, u.username
+       FROM dm_reactions dr
+       JOIN users u ON dr.user_id = u.id
+       WHERE dr.message_id IN (
+         SELECT id FROM dm_messages
+         WHERE (sender_id = $1 AND receiver_id = $2)
+         OR (sender_id = $2 AND receiver_id = $1)
+       )`,
+      [req.user.id, req.params.friendId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Toggle DM reaction
+router.post('/dm/message/:messageId/react', auth, async (req, res) => {
+  const { emoji } = req.body;
+  try {
+    const { rows: existing } = await pool.query(
+      'SELECT id FROM dm_reactions WHERE message_id = $1 AND user_id = $2 AND emoji = $3',
+      [req.params.messageId, req.user.id, emoji]
+    );
+    if (existing.length) {
+      await pool.query('DELETE FROM dm_reactions WHERE id = $1', [existing[0].id]);
+      res.json({ action: 'removed' });
+    } else {
+      await pool.query(
+        'INSERT INTO dm_reactions (message_id, user_id, emoji) VALUES ($1, $2, $3)',
+        [req.params.messageId, req.user.id, emoji]
+      );
+      res.json({ action: 'added' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
