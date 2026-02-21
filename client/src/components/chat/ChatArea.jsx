@@ -1,8 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
 import './ChatArea.css';
+
+const renderContent = (content) => {
+  const parts = content.split(/(@\w+)/g);
+  return parts.map((part, i) =>
+    part.startsWith('@') ? (
+      <span key={i} className="mention-highlight">{part}</span>
+    ) : part
+  );
+};
 
 const Avatar = ({ username, color }) => (
   <div className="msg-avatar" style={{ background: color || '#9898b8' }}>
@@ -50,27 +59,18 @@ const groupMessages = (messages) => {
   return groups;
 };
 
-const renderContent = (content) => {
-  const parts = content.split(/(@\w+)/g);
-  return parts.map((part, i) =>
-    part.startsWith('@') ? (
-      <span key={i} className="mention-highlight">{part}</span>
-    ) : part
-  );
-};
-
 export default function ChatArea({ channel }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [showMentions, setShowMentions] = useState(false);
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
-  const [mentionSearch, setMentionSearch] = useState('');
-  const [showMentions, setShowMentions] = useState(false);
-  const [members, setMembers] = useState([]);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -92,11 +92,6 @@ export default function ChatArea({ channel }) {
 
     socket.emit('join_channel', channel.id);
 
-    useEffect(() => {
-  if (!channel?.server_id) return;
-  api.get(`/api/servers/${channel.server_id}/members`).then(({ data }) => setMembers(data));
-}, [channel?.id]);
-
     const onMessage = (msg) => setMessages(prev => [...prev, msg]);
     const onTypingStart = ({ username }) => {
       if (username !== user.username)
@@ -116,6 +111,11 @@ export default function ChatArea({ channel }) {
       socket.off('user_stop_typing', onTypingStop);
       setTyping([]);
     };
+  }, [channel?.id]);
+
+  useEffect(() => {
+    if (!channel?.server_id) return;
+    api.get(`/api/servers/${channel.server_id}/members`).then(({ data }) => setMembers(data));
   }, [channel?.id]);
 
   useEffect(() => {
@@ -224,31 +224,44 @@ export default function ChatArea({ channel }) {
       </div>
 
       {showMentions && (
-  <div className="mention-picker">
-    {members
-      .filter(m => m.username.toLowerCase().startsWith(mentionSearch.toLowerCase()))
-      .slice(0, 5)
-      .map(m => (
-        <button key={m.id} className="mention-item" onClick={() => {
-          const atIndex = input.lastIndexOf('@');
-          setInput(input.slice(0, atIndex) + `@${m.username} `);
-          setShowMentions(false);
-        }}>
-          <div className="mention-avatar" style={{ background: m.avatar_color }}>
-            {m.username[0].toUpperCase()}
-          </div>
-          <span>{m.username}</span>
-        </button>
-      ))}
-  </div>
-)}
+        <div className="mention-picker">
+          {members
+            .filter(m => m.username.toLowerCase().startsWith(mentionSearch.toLowerCase()))
+            .slice(0, 5)
+            .map(m => (
+              <button key={m.id} className="mention-item" onClick={() => {
+                const atIndex = input.lastIndexOf('@');
+                setInput(input.slice(0, atIndex) + `@${m.username} `);
+                setShowMentions(false);
+              }}>
+                <div className="mention-avatar" style={{ background: m.avatar_color }}>
+                  {m.username[0].toUpperCase()}
+                </div>
+                <span>{m.username}</span>
+              </button>
+            ))}
+        </div>
+      )}
 
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={sendMessage}>
           <textarea
             className="chat-input"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => {
+              const val = e.target.value;
+              setInput(val);
+              const atIndex = val.lastIndexOf('@');
+              if (atIndex !== -1 && atIndex === val.length - 1) {
+                setShowMentions(true);
+                setMentionSearch('');
+              } else if (atIndex !== -1 && val.slice(atIndex).match(/^@\w*$/)) {
+                setShowMentions(true);
+                setMentionSearch(val.slice(atIndex + 1));
+              } else {
+                setShowMentions(false);
+              }
+            }}
             onKeyDown={handleKeyDown}
             placeholder={`Message #${channel.name}`}
             rows={1}
