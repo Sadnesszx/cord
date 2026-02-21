@@ -48,18 +48,22 @@ export default function AppLayout() {
   }, []);
 
   useEffect(() => {
-    const checkServer = async () => {
-      try {
-        await fetch('https://sadlounge.onrender.com/health');
-        setServerDown(false);
-      } catch (err) {
+  const checkServer = async () => {
+    try {
+      const res = await fetch('https://sadlounge.onrender.com/fakeroute123');
+      if (!res.ok) {
         setServerDown(true);
+      } else {
+        setServerDown(false);
       }
-    };
-    checkServer();
-    const interval = setInterval(checkServer, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    } catch (err) {
+      setServerDown(true);
+    }
+  };
+  checkServer();
+  const interval = setInterval(checkServer, 30000);
+  return () => clearInterval(interval);
+}, []);
 
   if (serverDown) return <ServerDown />;
 
