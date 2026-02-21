@@ -1,0 +1,39 @@
+.server-down {
+  position: fixed;
+  inset: 0;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 9999;
+}
+
+.server-down-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  opacity: 0.8;
+}
+
+.server-down h1 {
+  font-family: 'Space Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: #e8e8e8;
+  letter-spacing: 2px;
+}
+
+.server-down p {
+  font-size: 14px;
+  color: #888;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+}
+
+.server-down-sub {
+  font-size: 12px !important;
+  color: #444 !important;
+  font-family: 'Space Mono', monospace !important;
+}

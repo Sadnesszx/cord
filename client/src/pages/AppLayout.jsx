@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import WarningModal from '../components/ui/WarningModal';
 import SettingsModal from '../components/ui/SettingsModal';
 import ProfileModal from '../components/ui/ProfileModal';
+import ServerDown from '../components/ui/ServerDown';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -32,18 +33,35 @@ export default function AppLayout() {
   const [joinId, setJoinId] = useState('');
   const [showBrowser, setShowBrowser] = useState(false);
   const [banMessage, setBanMessage] = useState('');
-  const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   const [viewOwnProfile, setViewOwnProfile] = useState(false);
+  const [serverDown, setServerDown] = useState(false);
+  const navigate = useNavigate();
 
-useEffect(() => {
-  const socket = getSocket();
-  socket.on('force_logout', ({ reason }) => {
-    logout();
-    setBanMessage(reason);
-  });
-  return () => socket.off('force_logout');
-}, []);
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on('force_logout', ({ reason }) => {
+      logout();
+      setBanMessage(reason);
+    });
+    return () => socket.off('force_logout');
+  }, []);
+
+  useEffect(() => {
+    const checkServer = async () => {
+      try {
+        await fetch('https://sadlounge.onrender.com/health');
+        setServerDown(false);
+      } catch (err) {
+        setServerDown(true);
+      }
+    };
+    checkServer();
+    const interval = setInterval(checkServer, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (serverDown) return <ServerDown />;
 
   const loadServers = () => {
     if (!serversLoaded) {
@@ -61,12 +79,12 @@ useEffect(() => {
     setView('servers');
   };
 
-const handleDMs = () => {
-  setView('dms');
-  setActiveServer(null);
-  setActiveChannel(null);
-  setActiveFriend(null);
-};
+  const handleDMs = () => {
+    setView('dms');
+    setActiveServer(null);
+    setActiveChannel(null);
+    setActiveFriend(null);
+  };
 
   const createServer = async (e) => {
     e.preventDefault();
@@ -89,12 +107,10 @@ const handleDMs = () => {
     } catch { alert('Server not found'); }
   };
 
-  // Load servers on mount
   useState(() => { loadServers(); }, []);
 
   return (
     <div className="app-layout">
-      {/* TOP BAR */}
       <div className="top-bar">
         <span className="top-bar-logo" onClick={handleDMs} style={{ cursor: 'pointer' }}>SadLounge</span>
 
@@ -123,8 +139,8 @@ const handleDMs = () => {
         <div className="top-bar-actions">
           <button className="top-bar-settings" onClick={() => setShowSettings(true)} title="Settings">
             ⚙️
-           </button>
-          <div className="top-bar-user" onClick={() => setViewOwnProfile(true)} style={{cursor:"pointer"}} title="View profile">
+          </button>
+          <div className="top-bar-user" onClick={() => setViewOwnProfile(true)} style={{ cursor: 'pointer' }} title="View profile">
             <div className="top-bar-avatar" style={{ background: user?.avatar_color || '#555' }}>
               {user?.username?.[0]?.toUpperCase()}
             </div>
@@ -138,43 +154,40 @@ const handleDMs = () => {
         </div>
       </div>
 
-      {/* LEFT PANEL */}
       <div className="left-panel">
         {view === 'dms' ? (
           <FriendsSidebar activeFriend={activeFriend} onSelectFriend={setActiveFriend} />
         ) : (
-<ChannelSidebar
-  server={activeServer}
-  activeChannel={activeChannel}
-  onSelectChannel={setActiveChannel}
-  onServerDeleted={(id) => {
-    setServers(servers.filter(s => s.id !== id));
-    setActiveServer(null);
-    setActiveChannel(null);
-    setView('dms');
-  }}
-  onServerRenamed={(updated) => {
-    setServers(servers.map(s => s.id === updated.id ? updated : s));
-    setActiveServer(updated);
-  }}
-/>
+          <ChannelSidebar
+            server={activeServer}
+            activeChannel={activeChannel}
+            onSelectChannel={setActiveChannel}
+            onServerDeleted={(id) => {
+              setServers(servers.filter(s => s.id !== id));
+              setActiveServer(null);
+              setActiveChannel(null);
+              setView('dms');
+            }}
+            onServerRenamed={(updated) => {
+              setServers(servers.map(s => s.id === updated.id ? updated : s));
+              setActiveServer(updated);
+            }}
+          />
         )}
       </div>
 
-      {/* MAIN PANEL */}
       <div className="main-panel">
-       {view === 'dms' ? (
-  activeFriend ? (
-    <DMArea friend={activeFriend} />
-  ) : (
-    <HomePage onSelectFriend={setActiveFriend} />
-  )
-) : (
-  <ChatArea channel={activeChannel} />
-)}
+        {view === 'dms' ? (
+          activeFriend ? (
+            <DMArea friend={activeFriend} />
+          ) : (
+            <HomePage onSelectFriend={setActiveFriend} />
+          )
+        ) : (
+          <ChatArea channel={activeChannel} />
+        )}
       </div>
 
-      {/* CREATE SERVER MODAL */}
       {showCreate && (
         <div className="modal-overlay" onClick={() => setShowCreate(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -190,7 +203,6 @@ const handleDMs = () => {
         </div>
       )}
 
-      {/* JOIN SERVER MODAL */}
       {showJoin && (
         <div className="modal-overlay" onClick={() => setShowJoin(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -205,30 +217,32 @@ const handleDMs = () => {
           </div>
         </div>
       )}
+
       {showAvatarPicker && <AvatarPicker onClose={() => setShowAvatarPicker(false)} />}
 
-      {/* RIGHT PANEL */}
       <div className="right-panel">
         {view === 'servers' && <MembersSidebar server={activeServer} />}
       </div>
+
       {showBrowser && (
-  <ServerBrowser
-    onJoin={(server) => {
-      if (!servers.find(s => s.id === server.id)) setServers([...servers, server]);
-      handleSelectServer(server);
-    }}
-    onClose={() => setShowBrowser(false)}
-  />
-)}
-<ToastNotification />
-{showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-{viewOwnProfile && <ProfileModal username={user?.username} onClose={() => setViewOwnProfile(false)} />}
-{banMessage && (
-  <WarningModal
-    message={banMessage}
-    onClose={() => { setBanMessage(''); navigate('/'); }}
-  />
-)}
+        <ServerBrowser
+          onJoin={(server) => {
+            if (!servers.find(s => s.id === server.id)) setServers([...servers, server]);
+            handleSelectServer(server);
+          }}
+          onClose={() => setShowBrowser(false)}
+        />
+      )}
+
+      <ToastNotification />
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {viewOwnProfile && <ProfileModal username={user?.username} onClose={() => setViewOwnProfile(false)} />}
+      {banMessage && (
+        <WarningModal
+          message={banMessage}
+          onClose={() => { setBanMessage(''); navigate('/'); }}
+        />
+      )}
     </div>
   );
 }
