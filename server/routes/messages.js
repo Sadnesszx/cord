@@ -11,7 +11,7 @@ router.get('/channels/:channelId/messages', auth, async (req, res) => {
 
   try {
     let query = `
-      SELECT m.*, u.username, u.avatar_color
+      SELECT m.*, u.username, u.avatar_color, u.avatar_url
       FROM messages m
       JOIN users u ON m.user_id = u.id
       WHERE m.channel_id = $1

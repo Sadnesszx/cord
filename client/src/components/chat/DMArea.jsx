@@ -151,11 +151,15 @@ export default function DMArea({ friend }) {
   return (
     <div className="chat-area">
       <div className="chat-header">
-        <div className="msg-avatar" style={{ background: friend.avatar_color, width: 26, height: 26, fontSize: 11, borderRadius: 4 }}>
-          {friend.username[0].toUpperCase()}
-        </div>
-        <span className="chat-header-name">{friend.username}</span>
-      </div>
+  {friend.avatar_url ? (
+    <img src={friend.avatar_url} className="msg-avatar" style={{ objectFit: 'cover', width: 26, height: 26, borderRadius: 4 }} alt={friend.username} />
+  ) : (
+    <div className="msg-avatar" style={{ background: friend.avatar_color, width: 26, height: 26, fontSize: 11, borderRadius: 4 }}>
+      {friend.username[0].toUpperCase()}
+    </div>
+  )}
+  <span className="chat-header-name">{friend.username}</span>
+</div>
 
       <div className="chat-messages" ref={containerRef}>
         <div style={{ flex: 1 }} />

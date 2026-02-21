@@ -38,9 +38,13 @@ export default function HomePage({ onSelectFriend }) {
         <div className="home-friends-grid">
           {friends.map(f => (
             <button key={f.id} className="home-friend-card" onClick={() => onSelectFriend(f)}>
-              <div className="home-friend-avatar" style={{ background: f.avatar_color }}>
-                {f.username[0].toUpperCase()}
-              </div>
+              {f.avatar_url ? (
+  <img src={f.avatar_url} className="home-friend-avatar" style={{ objectFit: 'cover' }} alt={f.username} />
+) : (
+  <div className="home-friend-avatar" style={{ background: f.avatar_color }}>
+    {f.username[0].toUpperCase()}
+  </div>
+)}
               <span>{f.username}</span>
             </button>
           ))}

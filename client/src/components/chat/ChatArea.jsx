@@ -24,10 +24,14 @@ const renderContent = (content) => {
   });
 };
 
-const Avatar = ({ username, color }) => (
-  <div className="msg-avatar" style={{ background: color || '#9898b8' }}>
-    {username?.[0]?.toUpperCase()}
-  </div>
+const Avatar = ({ username, color, avatarUrl }) => (
+  avatarUrl ? (
+    <img src={avatarUrl} className="msg-avatar" style={{ objectFit: 'cover' }} alt={username} />
+  ) : (
+    <div className="msg-avatar" style={{ background: color || '#9898b8' }}>
+      {username?.[0]?.toUpperCase()}
+    </div>
+  )
 );
 
 const formatTime = (ts) => {
@@ -63,6 +67,7 @@ const groupMessages = (messages) => {
         user_id: msg.user_id,
         username: msg.username,
         avatar_color: msg.avatar_color,
+        avatar_url: msg.avatar_url,
         messages: [msg],
       });
     }
@@ -240,7 +245,7 @@ export default function ChatArea({ channel }) {
           }
           return (
             <div key={`group-${i}`} className="msg-group fade-in">
-              <Avatar username={group.username} color={group.avatar_color} />
+              <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} />
               <div className="msg-content">
                 <div className="msg-meta">
                   <span className="msg-author">{group.username}</span>

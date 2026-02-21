@@ -39,7 +39,7 @@ router.post('/request', auth, async (req, res) => {
 router.get('/requests', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT fr.id, u.username, u.avatar_color, fr.created_at
+      `SELECT fr.id, u.username, u.avatar_color, u.avatar_url, fr.created_at
        FROM friend_requests fr
        JOIN users u ON fr.sender_id = u.id
        WHERE fr.receiver_id = $1 AND fr.status = 'pending'`,
@@ -70,7 +70,7 @@ router.post('/requests/:id/respond', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT u.id, u.username, u.avatar_color FROM users u
+      `SELECT u.id, u.username, u.avatar_color, u.avatar_url FROM users u
        JOIN friend_requests fr ON (
          (fr.sender_id = u.id AND fr.receiver_id = $1) OR
          (fr.receiver_id = u.id AND fr.sender_id = $1)
@@ -88,7 +88,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/dm/:friendId', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT dm.*, u.username, u.avatar_color FROM dm_messages dm
+      `SELECT dm.*, u.username, u.avatar_color, u.avatar_url FROM dm_messages dm
        JOIN users u ON dm.sender_id = u.id
        WHERE (dm.sender_id = $1 AND dm.receiver_id = $2)
           OR (dm.sender_id = $2 AND dm.receiver_id = $1)
@@ -122,7 +122,7 @@ router.delete('/:friendId', auth, async (req, res) => {
 router.get('/inbox/all', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT DISTINCT ON (u.id) u.id, u.username, u.avatar_color, dm.content as last_message, dm.created_at
+      `SELECT DISTINCT ON (u.id) u.id, u.username, u.avatar_color, u.avatar_url, dm.content as last_message, dm.created_at
        FROM dm_messages dm
        JOIN users u ON (
          CASE WHEN dm.sender_id = $1 THEN dm.receiver_id = u.id
@@ -148,8 +148,8 @@ router.post('/dm/send', auth, async (req, res) => {
       `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
       [req.user.id, receiverId, content.trim()]
     );
-    const { rows: users } = await pool.query('SELECT username, avatar_color FROM users WHERE id = $1', [req.user.id]);
-    res.json({ ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color });
+    const { rows: users } = await pool.query('SELECT username, avatar_color, avatar_url FROM users WHERE id = $1', [req.user.id]);
+    res.json({ ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
