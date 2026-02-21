@@ -72,6 +72,23 @@ export default function DMArea({ friend }) {
     }
   };
 
+  const uploadAndSendImage = async (file) => {
+    if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.secure_url}[/img]` });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     if (!friend) return;
     setMessages([]);
@@ -136,7 +153,11 @@ export default function DMArea({ friend }) {
                 <span className="msg-time">{formatTime(msg.created_at)}</span>
               </div>
               <div className="msg-text-wrapper">
-                <p className="msg-text">{msg.content}</p>
+                {msg.content.startsWith('[img]') && msg.content.endsWith('[/img]') ? (
+                  <img src={msg.content.slice(5, -6)} alt="uploaded" className="msg-image" />
+                ) : (
+                  <p className="msg-text">{msg.content}</p>
+                )}
                 {msg.sender_id === user?.id && (
                   <button
                     className="msg-delete-btn"
@@ -180,6 +201,13 @@ export default function DMArea({ friend }) {
             placeholder={`Message ${friend.username}`}
             rows={1}
           />
+          <label className="image-upload-btn" title="Upload image">
+            🖼️
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+              const file = e.target.files[0];
+              if (file) uploadAndSendImage(file);
+            }} />
+          </label>
           <button type="button" className="emoji-btn" onMouseDown={e => { e.preventDefault(); setShowEmoji(!showEmoji); }}>
             😊
           </button>

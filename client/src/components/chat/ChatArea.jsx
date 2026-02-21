@@ -5,6 +5,10 @@ import api from '../../lib/api';
 import './ChatArea.css';
 
 const renderContent = (content) => {
+  if (content.startsWith('[img]') && content.endsWith('[/img]')) {
+    const url = content.slice(5, -6);
+    return <img src={url} alt="uploaded" className="msg-image" />;
+  }
   const parts = content.split(/(@\w+)/g);
   return parts.map((part, i) =>
     part.startsWith('@') ? (
@@ -97,6 +101,30 @@ export default function ChatArea({ channel }) {
     try {
       await api.delete(`/api/messages/${messageId}`);
       setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    return data.secure_url;
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+    try {
+      const url = await uploadImage(file);
+      socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]` });
     } catch (err) {
       console.error(err);
     }
@@ -297,6 +325,10 @@ export default function ChatArea({ channel }) {
             placeholder={`Message #${channel.name}`}
             rows={1}
           />
+          <label className="image-upload-btn" title="Upload image">
+            🖼️
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+          </label>
           <button type="button" className="emoji-btn" onMouseDown={e => { e.preventDefault(); setShowEmoji(!showEmoji); }}>
             😊
           </button>
