@@ -74,6 +74,14 @@ const setupSocket = (io) => {
       socket.to(channelId).emit('user_stop_typing', { username: socket.user.username });
     });
 
+    socket.on('dm_typing_start', ({ receiverId }) => {
+     io.to(`user_${receiverId}`).emit('dm_user_typing', { username: socket.user.username });
+    });
+
+    socket.on('dm_typing_stop', ({ receiverId }) => {
+     io.to(`user_${receiverId}`).emit('dm_user_stop_typing', { username: socket.user.username });
+    });
+
     socket.on('send_dm', async ({ receiverId, content }) => {
       if (!content?.trim() || !receiverId) return;
       try {

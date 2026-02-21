@@ -57,9 +57,11 @@ export default function DMArea({ friend }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
+  const [typing, setTyping] = useState(false);
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
+  const typingTimeout = useRef(null);
   const [viewProfile, setViewProfile] = useState(null);
   const socket = getSocket();
 
@@ -73,25 +75,25 @@ export default function DMArea({ friend }) {
   };
 
   const uploadAndSendImage = async (file) => {
-  if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
-  try {
-    const formData = new FormData();
-    formData.append('image', file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await res.json();
-    console.log('ImgBB response:', data);
-    socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.data.url}[/img]` });
-  } catch (err) {
-    console.error(err);
-  }
-};
+    if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.data.url}[/img]` });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (!friend) return;
     setMessages([]);
+    setTyping(false);
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => {
       setMessages(data);
       setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
@@ -108,9 +110,17 @@ export default function DMArea({ friend }) {
       }
     };
 
+    const onTypingStart = () => setTyping(true);
+    const onTypingStop = () => setTyping(false);
+
     socket.on('new_dm', onDM);
+    socket.on('dm_user_typing', onTypingStart);
+    socket.on('dm_user_stop_typing', onTypingStop);
+
     return () => {
       socket.off('new_dm', onDM);
+      socket.off('dm_user_typing', onTypingStart);
+      socket.off('dm_user_stop_typing', onTypingStop);
     };
   }, [friend?.id]);
 
@@ -171,6 +181,16 @@ export default function DMArea({ friend }) {
             </div>
           </div>
         ))}
+
+        {typing && (
+          <div className="typing-indicator fade-in">
+            <div className="typing-dots">
+              <span /><span /><span />
+            </div>
+            <span className="typing-text">{friend.username} is typing...</span>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -188,12 +208,20 @@ export default function DMArea({ friend }) {
           <textarea
             className="chat-input"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => {
+              setInput(e.target.value);
+              socket.emit('dm_typing_start', { receiverId: friend.id });
+              clearTimeout(typingTimeout.current);
+              typingTimeout.current = setTimeout(() => {
+                socket.emit('dm_typing_stop', { receiverId: friend.id });
+              }, 2000);
+            }}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 if (!input.trim()) return;
                 socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+                socket.emit('dm_typing_stop', { receiverId: friend.id });
                 setInput('');
                 setShowEmoji(false);
               }
@@ -214,6 +242,7 @@ export default function DMArea({ friend }) {
           <button className="chat-send-btn" type="button" onClick={() => {
             if (!input.trim()) return;
             socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+            socket.emit('dm_typing_stop', { receiverId: friend.id });
             setInput('');
             setShowEmoji(false);
           }}>
