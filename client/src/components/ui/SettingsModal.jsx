@@ -25,6 +25,7 @@ export default function SettingsModal({ onClose }) {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const showMsg = (m, isError = false) => {
     if (isError) setError(m);
@@ -40,6 +41,42 @@ export default function SettingsModal({ onClose }) {
       showMsg('Avatar updated!');
     } catch (err) {
       showMsg('Error updating avatar', true);
+    }
+  };
+
+  const uploadProfilePicture = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return showMsg('Image must be under 5MB', true);
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      const url = data.data.url;
+      await api.patch('/api/users/avatar-image', { avatar_url: url });
+      const token = localStorage.getItem('sadlounge_token');
+      login(token, { ...user, avatar_url: url });
+      showMsg('Profile picture updated!');
+    } catch (err) {
+      showMsg('Error uploading photo', true);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const removeProfilePicture = async () => {
+    try {
+      await api.patch('/api/users/avatar-image', { avatar_url: null });
+      const token = localStorage.getItem('sadlounge_token');
+      login(token, { ...user, avatar_url: null });
+      showMsg('Profile picture removed!');
+    } catch (err) {
+      showMsg('Error removing photo', true);
     }
   };
 
@@ -77,10 +114,27 @@ export default function SettingsModal({ onClose }) {
         </div>
 
         <div className="settings-profile-preview">
-          <div className="settings-avatar" style={{ background: selectedColor }}>
-            {user?.username?.[0]?.toUpperCase()}
-          </div>
+          {user?.avatar_url ? (
+            <img src={user.avatar_url} alt="avatar" className="settings-avatar-img" />
+          ) : (
+            <div className="settings-avatar" style={{ background: selectedColor }}>
+              {user?.username?.[0]?.toUpperCase()}
+            </div>
+          )}
           <span className="settings-username">{user?.username}</span>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Profile Picture</p>
+          <div className="settings-photo-row">
+            <label className="btn-primary settings-upload-btn">
+              {uploadingPhoto ? 'Uploading...' : '📷 Upload Photo'}
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProfilePicture} disabled={uploadingPhoto} />
+            </label>
+            {user?.avatar_url && (
+              <button className="btn-ghost" onClick={removeProfilePicture}>Remove</button>
+            )}
+          </div>
         </div>
 
         <div className="settings-section">
@@ -97,7 +151,7 @@ export default function SettingsModal({ onClose }) {
             ))}
           </div>
           <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveAvatar}>
-            Save Avatar
+            Save Avatar Color
           </button>
         </div>
 

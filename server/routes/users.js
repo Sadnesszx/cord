@@ -23,6 +23,16 @@ router.patch('/me/avatar', auth, async (req, res) => {
   }
 });
 
+router.patch('/avatar-image', authenticateToken, async (req, res) => {
+  const { avatar_url } = req.body;
+  try {
+    await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update avatar' });
+  }
+});
+
 // Change password
 router.patch('/me/password', auth, async (req, res) => {
   const { password } = req.body;
@@ -66,6 +76,16 @@ router.get('/:username', auth, async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/avatar-image', authenticateToken, async (req, res) => {
+  const { avatar_url } = req.body;
+  try {
+    await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update avatar' });
   }
 });
 

@@ -60,3 +60,23 @@
 }
 
 .toast-close:hover { color: #e8e8e8; }
+
+.settings-avatar-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.settings-photo-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-upload-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
