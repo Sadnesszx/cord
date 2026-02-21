@@ -420,8 +420,9 @@
   display: none;
   align-items: center;
   gap: 4px;
-  position: relative;
-  margin-top: 2px;
+  position: absolute;
+  right: 8px;
+  top: 0;
 }
 
 .msg-text-wrapper:hover .msg-actions {
