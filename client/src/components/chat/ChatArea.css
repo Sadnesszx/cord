@@ -451,9 +451,8 @@
   max-width: 220px;
   position: absolute;
   bottom: calc(100% + 4px);
-  right: 0;
-  left: auto;
-  margin-bottom: 0;
+  left: 0;
+  right: auto;
   z-index: 100;
 }
 
