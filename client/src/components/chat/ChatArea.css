@@ -366,13 +366,12 @@
 
 .emoji-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 4px;
-  padding: 10px;
-  background: #141414;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  width: 320px;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 8px;
+  width: 280px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .emoji-grid-btn {
