@@ -60,6 +60,18 @@ const groupMessages = (messages) => {
   return groups;
 };
 
+function EmojiPicker({ onPick }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handler = (e) => onPick(e.detail.unicode);
+    el.addEventListener('emoji-click', handler);
+    return () => el.removeEventListener('emoji-click', handler);
+  }, [onPick]);
+  return <emoji-picker ref={ref} />;
+}
+
 export default function ChatArea({ channel }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -73,7 +85,6 @@ export default function ChatArea({ channel }) {
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
-  const emojiPickerRef = useRef(null);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -83,17 +94,6 @@ export default function ChatArea({ channel }) {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-  const picker = emojiPickerRef.current;
-  if (!picker) return;
-  const handler = (e) => {
-    setInput(prev => prev + e.detail.unicode);
-    setShowEmoji(false);
-  };
-  picker.addEventListener('emoji-click', handler);
-  return () => picker.removeEventListener('emoji-click', handler);
-}, [showEmoji]);
 
   useEffect(() => {
     if (!channel) return;
@@ -259,10 +259,13 @@ export default function ChatArea({ channel }) {
       )}
 
       {showEmoji && (
-  <div className="emoji-picker-wrapper">
-    <emoji-picker ref={emojiPickerRef} />
-  </div>
-)}
+        <div className="emoji-picker-wrapper">
+          <EmojiPicker onPick={(emoji) => {
+            setInput(prev => prev + emoji);
+            setShowEmoji(false);
+          }} />
+        </div>
+      )}
 
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={sendMessage}>

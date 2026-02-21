@@ -3,6 +3,7 @@ import { getSocket } from '../../lib/socket';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import ProfileModal from '../ui/ProfileModal';
+import 'emoji-picker-element';
 import './ChatArea.css';
 
 const formatTime = (ts) => {
@@ -10,7 +11,6 @@ const formatTime = (ts) => {
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-
   if (date.toDateString() === now.toDateString()) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } else if (date.toDateString() === yesterday.toDateString()) {
@@ -34,9 +34,22 @@ const playNotification = () => {
   oscillator.stop(ctx.currentTime + 0.3);
 };
 
+function EmojiPicker({ onPick }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handler = (e) => onPick(e.detail.unicode);
+    el.addEventListener('emoji-click', handler);
+    return () => el.removeEventListener('emoji-click', handler);
+  }, [onPick]);
+  return <emoji-picker ref={ref} />;
+}
+
 export default function DMArea({ friend }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [showEmoji, setShowEmoji] = useState(false);
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -133,6 +146,15 @@ export default function DMArea({ friend }) {
         <div ref={bottomRef} />
       </div>
 
+      {showEmoji && (
+        <div className="emoji-picker-wrapper">
+          <EmojiPicker onPick={(emoji) => {
+            setInput(prev => prev + emoji);
+            setShowEmoji(false);
+          }} />
+        </div>
+      )}
+
       <div className="chat-input-wrapper">
         <form className="chat-input-form">
           <textarea
@@ -145,15 +167,20 @@ export default function DMArea({ friend }) {
                 if (!input.trim()) return;
                 socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
                 setInput('');
+                setShowEmoji(false);
               }
             }}
             placeholder={`Message ${friend.username}`}
             rows={1}
           />
+          <button type="button" className="emoji-btn" onClick={() => setShowEmoji(!showEmoji)}>
+            😊
+          </button>
           <button className="chat-send-btn" type="button" onClick={() => {
             if (!input.trim()) return;
             socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
             setInput('');
+            setShowEmoji(false);
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>
