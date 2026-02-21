@@ -16,6 +16,19 @@ const COLORS = [
   { color: '#5a4a2d', label: 'Bronze' },
 ];
 
+const BANNER_COLORS = [
+  { color: '#1a1a1a', label: 'Dark' },
+  { color: '#1a0a0a', label: 'Blood' },
+  { color: '#0a1a0a', label: 'Deep Forest' },
+  { color: '#0a0a1a', label: 'Midnight' },
+  { color: '#1a0a1a', label: 'Shadow' },
+  { color: '#1a1a0a', label: 'Swamp' },
+  { color: '#0d1117', label: 'Void' },
+  { color: '#1a1205', label: 'Rust' },
+  { color: '#051a18', label: 'Abyss' },
+  { color: '#12051a', label: 'Dusk' },
+];
+
 export default function SettingsModal({ onClose }) {
   const { user, login } = useAuth();
   const [password, setPassword] = useState('');
@@ -26,6 +39,7 @@ export default function SettingsModal({ onClose }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [selectedBanner, setSelectedBanner] = useState(user?.banner_color || '#1a1a1a');
 
   const showMsg = (m, isError = false) => {
     if (isError) setError(m);
@@ -43,6 +57,17 @@ export default function SettingsModal({ onClose }) {
       showMsg('Error updating avatar', true);
     }
   };
+
+  const saveBanner = async () => {
+  try {
+    await api.patch('/api/users/me/banner', { banner_color: selectedBanner });
+    const token = localStorage.getItem('sadlounge_token');
+    login(token, { ...user, banner_color: selectedBanner });
+    showMsg('Banner updated!');
+  } catch (err) {
+    showMsg('Error updating banner', true);
+  }
+};
 
   const uploadProfilePicture = async (e) => {
     const file = e.target.files[0];
@@ -150,6 +175,24 @@ export default function SettingsModal({ onClose }) {
               />
             ))}
           </div>
+
+          <div className="settings-section">
+          <p className="settings-label">Banner Color</p>
+          <div className="settings-colors">
+            {BANNER_COLORS.map(({ color, label }) => (
+              <button
+                key={color}
+                className={`settings-color-swatch ${selectedBanner === color ? 'active' : ''}`}
+                style={{ background: color, border: '1px solid #333' }}
+                onClick={() => setSelectedBanner(color)}
+                title={label}
+              />
+            ))}
+          </div>
+          <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveBanner}>
+            Save Banner
+          </button>
+        </div>
           <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveAvatar}>
             Save Avatar Color
           </button>

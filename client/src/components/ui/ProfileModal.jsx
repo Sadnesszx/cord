@@ -93,7 +93,7 @@ export default function ProfileModal({ username, onClose }) {
         {loading && <p className="profile-loading">Loading...</p>}
         {!loading && profile && (
           <>
-            <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : profile.avatar_color }} />
+            <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : (profile.banner_color || profile.avatar_color) }} />
             <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0 }}>
               {profile.banned ? (
                 <span style={{ fontSize: 28 }}>🚫</span>

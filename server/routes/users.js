@@ -71,7 +71,7 @@ router.patch('/me/bio', auth, async (req, res) => {
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url, bio, created_at, banned FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
@@ -80,5 +80,16 @@ router.get('/:username', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Update banner color
+router.patch('/me/banner', auth, async (req, res) => {
+  const { banner_color } = req.body;
+  try {
+    await pool.query('UPDATE users SET banner_color = $1 WHERE id = $2', [banner_color, req.user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update banner' });
+  }
+}); 
 
 module.exports = router;
