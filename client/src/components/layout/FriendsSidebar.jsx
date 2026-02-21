@@ -32,9 +32,9 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
   const socket = getSocket();
   socket.emit('get_online_users');
   socket.on('online_users', (users) => setOnlineUsers(users));
-  socket.on('new_friend_request', (request) => {
-    setRequests(prev => [...prev, request]);
-  });
+  socket.on('new_friend_request', () => {
+  api.get('/api/friends/requests').then(({ data }) => setRequests(data));
+});
   socket.on('friend_request_accepted', (newFriend) => {
     setFriends(prev => {
       if (prev.find(f => f.id === newFriend.id)) return prev;
