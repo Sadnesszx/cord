@@ -91,10 +91,10 @@ const setupSocket = (io) => {
           [socket.user.id, receiverId, content.trim()]
         );
         const { rows: users } = await pool.query(
-          'SELECT username, avatar_color FROM users WHERE id = $1',
+          'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
           [socket.user.id]
         );
-        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color };
+        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url };
         socket.emit('new_dm', fullMsg);
         io.to(`user_${receiverId}`).emit('new_dm', fullMsg);
       } catch (err) {
