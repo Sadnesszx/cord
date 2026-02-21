@@ -420,9 +420,7 @@
   display: none;
   align-items: center;
   gap: 4px;
-  position: absolute;
-  right: 8px;
-  top: 0;
+  position: relative;
 }
 
 .msg-text-wrapper:hover .msg-actions {
@@ -452,9 +450,10 @@
   flex-wrap: wrap;
   max-width: 220px;
   position: absolute;
-  bottom: 100%;
-  left: 0;
-  margin-bottom: 4px;
+  bottom: calc(100% + 4px);
+  right: 0;
+  left: auto;
+  margin-bottom: 0;
   z-index: 100;
 }
 
