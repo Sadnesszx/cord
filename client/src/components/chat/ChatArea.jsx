@@ -5,7 +5,7 @@ import api from '../../lib/api';
 import './ChatArea.css';
 import ProfileModal from '../ui/ProfileModal';
 
-const renderContent = (content) => {
+const renderContent = (content, onMentionClick) => {
   if (content.startsWith('[img]') && content.endsWith('[/img]')) {
     const url = content.slice(5, -6);
     return <img src={url} alt="uploaded" className="msg-image" />;
@@ -19,7 +19,11 @@ const renderContent = (content) => {
       return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="msg-link">{part}</a>;
     }
     if (part.match(mentionRegex)) {
-      return <span key={i} className="mention-highlight">{part}</span>;
+      return (
+        <span key={i} className="mention-highlight" style={{ cursor: 'pointer' }} onClick={() => onMentionClick(part.slice(1))}>
+          {part}
+        </span>
+      );
     }
     return part;
   });
@@ -255,7 +259,7 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                    <p className="msg-text">{renderContent(msg.content)}</p>
+                    <p className="msg-text">{renderContent(msg.content, (username) => setViewProfile(username))}</p>
                     {msg.user_id === user?.id && (
                       <button
                         className="msg-delete-btn"
