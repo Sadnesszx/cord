@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
 import './ChatArea.css';
+import ProfileModal from '../ui/ProfileModal';
 
 const renderContent = (content) => {
   if (content.startsWith('[img]') && content.endsWith('[/img]')) {
@@ -24,11 +25,11 @@ const renderContent = (content) => {
   });
 };
 
-const Avatar = ({ username, color, avatarUrl }) => (
+const Avatar = ({ username, color, avatarUrl, onClick }) => (
   avatarUrl ? (
-    <img src={avatarUrl} className="msg-avatar" style={{ objectFit: 'cover' }} alt={username} />
+    <img src={avatarUrl} className="msg-avatar" style={{ objectFit: 'cover', cursor: 'pointer' }} alt={username} onClick={onClick} />
   ) : (
-    <div className="msg-avatar" style={{ background: color || '#9898b8' }}>
+    <div className="msg-avatar" style={{ background: color || '#9898b8', cursor: 'pointer' }} onClick={onClick}>
       {username?.[0]?.toUpperCase()}
     </div>
   )
@@ -108,6 +109,7 @@ export default function ChatArea({ channel }) {
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
+  const [viewProfile, setViewProfile] = useState(null);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -245,7 +247,7 @@ export default function ChatArea({ channel }) {
           }
           return (
             <div key={`group-${i}`} className="msg-group fade-in">
-              <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} />
+             <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} onClick={() => setViewProfile(group.username)} />
               <div className="msg-content">
                 <div className="msg-meta">
                   <span className="msg-author">{group.username}</span>
@@ -349,6 +351,7 @@ export default function ChatArea({ channel }) {
             </svg>
           </button>
         </form>
+        {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
       </div>
     </div>
   );
