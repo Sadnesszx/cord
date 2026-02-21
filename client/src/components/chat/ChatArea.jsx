@@ -65,11 +65,14 @@ function EmojiPicker({ onPick }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const handler = (e) => onPick(e.detail.unicode);
+    const handler = (e) => {
+      e.stopPropagation();
+      onPick(e.detail.unicode);
+    };
     el.addEventListener('emoji-click', handler);
     return () => el.removeEventListener('emoji-click', handler);
-  }, [onPick]);
-  return <emoji-picker ref={ref} />;
+  }, []);
+  return <emoji-picker ref={ref} class="light" />;
 }
 
 export default function ChatArea({ channel }) {
@@ -258,9 +261,9 @@ export default function ChatArea({ channel }) {
         </div>
       )}
 
-      {showEmoji && (
-        <div className="emoji-picker-wrapper">
-          <EmojiPicker onPick={(emoji) => {
+     {showEmoji && (
+         <div className="emoji-picker-wrapper" onClick={e => e.stopPropagation()}>
+           <EmojiPicker onPick={(emoji) => {
             setInput(prev => prev + emoji);
             setShowEmoji(false);
           }} />
