@@ -50,7 +50,7 @@ export default function AppLayout() {
   useEffect(() => {
     const checkServer = async () => {
       try {
-        await fetch('https://sadlounge.onrender.com/health');
+        await fetch('https://sadlounge.onrender.com/fakeroute123');
         setServerDown(false);
       } catch (err) {
         setServerDown(true);
