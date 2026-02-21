@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../lib/socket';
 import api from '../../lib/api';
-import './ChatArea.css';
 import 'emoji-picker-element';
+import './ChatArea.css';
 
 const renderContent = (content) => {
   const parts = content.split(/(@\w+)/g);
@@ -69,10 +69,10 @@ export default function ChatArea({ channel }) {
   const [members, setMembers] = useState([]);
   const [mentionSearch, setMentionSearch] = useState('');
   const [showMentions, setShowMentions] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
-  const [showEmoji, setShowEmoji] = useState(false);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -129,6 +129,7 @@ export default function ChatArea({ channel }) {
     if (!input.trim() || !channel) return;
     socket.emit('send_message', { channelId: channel.id, content: input.trim() });
     setInput('');
+    setShowEmoji(false);
     socket.emit('typing_stop', { channelId: channel.id });
   };
 
@@ -225,15 +226,6 @@ export default function ChatArea({ channel }) {
         <div ref={bottomRef} />
       </div>
 
-      {showEmoji && (
-  <div className="emoji-picker-wrapper">
-    <emoji-picker onEmojiClick={(e) => {
-      setInput(prev => prev + e.detail.unicode);
-      setShowEmoji(false);
-    }} />
-  </div>
-)}
-
       {showMentions && (
         <div className="mention-picker">
           {members
@@ -251,6 +243,15 @@ export default function ChatArea({ channel }) {
                 <span>{m.username}</span>
               </button>
             ))}
+        </div>
+      )}
+
+      {showEmoji && (
+        <div className="emoji-picker-wrapper">
+          <emoji-picker onEmojiClick={(e) => {
+            setInput(prev => prev + e.detail.unicode);
+            setShowEmoji(false);
+          }} />
         </div>
       )}
 
@@ -278,8 +279,8 @@ export default function ChatArea({ channel }) {
             rows={1}
           />
           <button type="button" className="emoji-btn" onClick={() => setShowEmoji(!showEmoji)}>
-  😊
-</button>
+            😊
+          </button>
           <button className="chat-send-btn" type="submit" disabled={!input.trim()}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
