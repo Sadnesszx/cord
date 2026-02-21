@@ -336,7 +336,7 @@ export default function ChatArea({ channel }) {
             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
           </label>
           <button type="button" className="emoji-btn" onMouseDown={e => { e.preventDefault(); setShowEmoji(!showEmoji); }}>
-            😊
+            😑
           </button>
           <button className="chat-send-btn" type="submit" disabled={!input.trim()}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

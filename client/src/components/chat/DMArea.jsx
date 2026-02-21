@@ -253,7 +253,7 @@ export default function DMArea({ friend }) {
             }} />
           </label>
           <button type="button" className="emoji-btn" onMouseDown={e => { e.preventDefault(); setShowEmoji(!showEmoji); }}>
-            😊
+            😑
           </button>
           <button className="chat-send-btn" type="button" onClick={() => {
             if (!input.trim()) return;
