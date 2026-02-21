@@ -48,6 +48,7 @@ export default function AppLayout() {
     setBanMessage(reason);
   });
   socket.on('avatar_cleared', ({ reason }) => {
+  console.log('avatar_cleared received', reason);
   const token = localStorage.getItem('sadlounge_token');
   const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
   const updatedUser = { ...currentUser, avatar_url: null };
