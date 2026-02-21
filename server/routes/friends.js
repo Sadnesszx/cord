@@ -37,12 +37,16 @@ try {
       'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
       [req.user.id]
     );
-    io.to(`user_${receiverId}`).emit('new_friend_request', {
-      id: req.user.id,
-      username: senderInfo[0].username,
-      avatar_color: senderInfo[0].avatar_color,
-      avatar_url: senderInfo[0].avatar_url,
-    });
+    const { rows: reqRow } = await pool.query(
+  'SELECT id FROM friend_requests WHERE sender_id = $1 AND receiver_id = $2',
+  [req.user.id, receiverId]
+);
+io.to(`user_${receiverId}`).emit('new_friend_request', {
+  id: reqRow[0].id,
+  username: senderInfo[0].username,
+  avatar_color: senderInfo[0].avatar_color,
+  avatar_url: senderInfo[0].avatar_url,
+});
   }
 } catch (e) { console.error('socket notify error:', e); }
 
