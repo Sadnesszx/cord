@@ -64,7 +64,7 @@ export default function HomePage({ onSelectFriend }) {
         </button>
       </div>
 
-      {showTOS && <TOSPage onClose={() => setShowTOS(false)} />}
+      {showTOS && <TOSPage onClose={() => setShowTOS(false)} onAccept={() => setShowTOS(false)} />}
     </div>
   );
 }
