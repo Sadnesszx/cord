@@ -67,20 +67,6 @@ router.patch('/me/bio', auth, async (req, res) => {
   }
 });
 
-// Get user profile
-router.get('/:username', auth, async (req, res) => {
-  try {
-    const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned FROM users WHERE username = $1',
-      [req.params.username]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'User not found' });
-    res.json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Update banner color
 router.patch('/me/banner', auth, async (req, res) => {
   const { banner_color } = req.body;
@@ -90,7 +76,7 @@ router.patch('/me/banner', auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to update banner' });
   }
-}); 
+});
 
 // Admin: delete user's profile picture
 router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
@@ -98,6 +84,20 @@ router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
   try {
     await pool.query('UPDATE users SET avatar_url = NULL WHERE username = $1', [req.params.username]);
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get user profile (keep this LAST since it's a wildcard route)
+router.get('/:username', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned FROM users WHERE username = $1',
+      [req.params.username]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'User not found' });
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
