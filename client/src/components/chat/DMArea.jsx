@@ -73,21 +73,21 @@ export default function DMArea({ friend }) {
   };
 
   const uploadAndSendImage = async (file) => {
-    if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'k57oh6ur');
-      const res = await fetch(`https://api.cloudinary.com/v1_1/interienn/image/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.secure_url}[/img]` });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    console.log('ImgBB response:', data);
+    socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.data.url}[/img]` });
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   useEffect(() => {
     if (!friend) return;

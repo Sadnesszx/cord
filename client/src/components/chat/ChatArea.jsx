@@ -108,15 +108,14 @@ export default function ChatArea({ channel }) {
 
   const uploadImage = async (file) => {
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'k57oh6ur');
-  const res = await fetch(`https://api.cloudinary.com/v1_1/interienn/image/upload`, {
+  formData.append('image', file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
     method: 'POST',
     body: formData,
   });
   const data = await res.json();
-  console.log('Cloudinary response:', data);
-  return data.secure_url;
+  console.log('ImgBB response:', data);
+  return data.data.url;
 };
 
   const handleImageUpload = async (e) => {
