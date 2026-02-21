@@ -169,15 +169,22 @@ export default function DMArea({ friend }) {
 
     const onTypingStart = () => setTyping(true);
     const onTypingStop = () => setTyping(false);
+    const onAvatarUpdated = ({ userId, avatar_url }) => {
+      setMessages(prev => prev.map(m =>
+        String(m.sender_id) === String(userId) ? { ...m, avatar_url } : m
+      ));
+    };
 
     socket.on('new_dm', onDM);
     socket.on('dm_user_typing', onTypingStart);
     socket.on('dm_user_stop_typing', onTypingStop);
+    socket.on('user_avatar_updated', onAvatarUpdated);
 
     return () => {
       socket.off('new_dm', onDM);
       socket.off('dm_user_typing', onTypingStart);
       socket.off('dm_user_stop_typing', onTypingStop);
+      socket.off('user_avatar_updated', onAvatarUpdated);
     };
   }, [friend?.id]);
 
@@ -240,16 +247,18 @@ export default function DMArea({ friend }) {
                   <p className="msg-text">{renderDMContent(msg.content)}</p>
                 )}
                 <div className="msg-actions">
-                  <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
-                    😑
-                  </button>
+                  <div style={{ position: 'relative' }}>
+                    <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
+                      😑
+                    </button>
+                    {activeReactionPicker === msg.id && (
+                      <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                    )}
+                  </div>
                   {msg.sender_id === user?.id && (
                     <button className="msg-delete-btn" onClick={() => deleteDM(msg.id)} title="Delete message">🗑️</button>
                   )}
                 </div>
-                {activeReactionPicker === msg.id && (
-                  <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
-                )}
                 {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
                   <div className="msg-reactions">
                     {Object.entries(reactions[msg.id]).map(([emoji, users]) => (
@@ -339,7 +348,7 @@ export default function DMArea({ friend }) {
       </div>
 
       {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
-        {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
+      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </div>
   );
 }

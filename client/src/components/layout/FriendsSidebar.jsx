@@ -28,30 +28,36 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
 
   useEffect(() => { load(); }, []);
 
- useEffect(() => {
-  const socket = getSocket();
-  socket.emit('get_online_users');
-  socket.on('online_users', (users) => setOnlineUsers(users));
-  socket.on('new_friend_request', () => {
-  api.get('/api/friends/requests').then(({ data }) => setRequests(data));
-});
-  socket.on('friend_request_accepted', (newFriend) => {
-  setFriends(prev => {
-    if (prev.find(f => f.id === newFriend.id)) return prev;
-    return [...prev, newFriend];
-  });
-  setRequests(prev => prev.filter(r => r.id !== newFriend.id));
-});
-socket.on('friend_removed', ({ userId }) => {
-  setFriends(prev => prev.filter(f => String(f.id) !== String(userId)));
-});
-return () => {
-  socket.off('online_users');
-  socket.off('new_friend_request');
-  socket.off('friend_request_accepted');
-  socket.off('friend_removed');
-};
-}, []);
+  useEffect(() => {
+    const socket = getSocket();
+    socket.emit('get_online_users');
+    socket.on('online_users', (users) => setOnlineUsers(users));
+    socket.on('new_friend_request', () => {
+      api.get('/api/friends/requests').then(({ data }) => setRequests(data));
+    });
+    socket.on('friend_request_accepted', (newFriend) => {
+      setFriends(prev => {
+        if (prev.find(f => f.id === newFriend.id)) return prev;
+        return [...prev, newFriend];
+      });
+      setRequests(prev => prev.filter(r => r.id !== newFriend.id));
+    });
+    socket.on('friend_removed', ({ userId }) => {
+      setFriends(prev => prev.filter(f => String(f.id) !== String(userId)));
+    });
+    socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
+      setFriends(prev => prev.map(f =>
+        String(f.id) === String(userId) ? { ...f, avatar_url } : f
+      ));
+    });
+    return () => {
+      socket.off('online_users');
+      socket.off('new_friend_request');
+      socket.off('friend_request_accepted');
+      socket.off('friend_removed');
+      socket.off('user_avatar_updated');
+    };
+  }, []);
 
   const sendRequest = async (e) => {
     e.preventDefault();

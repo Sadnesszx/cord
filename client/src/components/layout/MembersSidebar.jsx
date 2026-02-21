@@ -15,16 +15,24 @@ export default function MembersSidebar({ server }) {
   }, [server?.id]);
 
   useEffect(() => {
-  const socket = getSocket();
-  socket.emit('get_online_users');
-  socket.on('online_users', (users) => setOnlineUsers(users));
-  return () => socket.off('online_users');
-}, [server?.id]);
+    const socket = getSocket();
+    socket.emit('get_online_users');
+    socket.on('online_users', (users) => setOnlineUsers(users));
+    socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
+      setMembers(prev => prev.map(m =>
+        String(m.id) === String(userId) ? { ...m, avatar_url } : m
+      ));
+    });
+    return () => {
+      socket.off('online_users');
+      socket.off('user_avatar_updated');
+    };
+  }, [server?.id]);
 
   if (!server) return null;
 
-const online = members.filter(m => onlineUsers.map(id => String(id)).includes(String(m.id)));
-const offline = members.filter(m => !onlineUsers.map(id => String(id)).includes(String(m.id)));
+  const online = members.filter(m => onlineUsers.map(id => String(id)).includes(String(m.id)));
+  const offline = members.filter(m => !onlineUsers.map(id => String(id)).includes(String(m.id)));
 
   return (
     <div className="members-sidebar">
@@ -37,12 +45,12 @@ const offline = members.filter(m => !onlineUsers.map(id => String(id)).includes(
               <button key={m.id} className="member-item" onClick={() => setViewProfile(m.username)}>
                 <div className="member-avatar-wrapper">
                   {m.avatar_url ? (
-  <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
-) : (
-  <div className="member-avatar" style={{ background: m.avatar_color }}>
-    {m.username[0].toUpperCase()}
-  </div>
-)}
+                    <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
+                  ) : (
+                    <div className="member-avatar" style={{ background: m.avatar_color }}>
+                      {m.username[0].toUpperCase()}
+                    </div>
+                  )}
                   <span className="status-dot online" />
                 </div>
                 <span className="member-name">{m.username}</span>
@@ -56,15 +64,15 @@ const offline = members.filter(m => !onlineUsers.map(id => String(id)).includes(
             {offline.map(m => (
               <button key={m.id} className="member-item offline" onClick={() => setViewProfile(m.username)}>
                 <div className="member-avatar-wrapper">
-  {m.avatar_url ? (
-    <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
-  ) : (
-    <div className="member-avatar" style={{ background: m.avatar_color }}>
-      {m.username[0].toUpperCase()}
-    </div>
-  )}
-  <span className="status-dot offline" />
-</div>
+                  {m.avatar_url ? (
+                    <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
+                  ) : (
+                    <div className="member-avatar" style={{ background: m.avatar_color }}>
+                      {m.username[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span className="status-dot offline" />
+                </div>
                 <span className="member-name">{m.username}</span>
               </button>
             ))}

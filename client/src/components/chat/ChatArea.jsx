@@ -210,15 +210,22 @@ export default function ChatArea({ channel }) {
     const onTypingStop = ({ username }) => {
       setTyping(prev => prev.filter(u => u !== username));
     };
+    const onAvatarUpdated = ({ userId, avatar_url }) => {
+      setMessages(prev => prev.map(m =>
+        String(m.user_id) === String(userId) ? { ...m, avatar_url } : m
+      ));
+    };
 
     socket.on('new_message', onMessage);
     socket.on('user_typing', onTypingStart);
     socket.on('user_stop_typing', onTypingStop);
+    socket.on('user_avatar_updated', onAvatarUpdated);
 
     return () => {
       socket.off('new_message', onMessage);
       socket.off('user_typing', onTypingStart);
       socket.off('user_stop_typing', onTypingStop);
+      socket.off('user_avatar_updated', onAvatarUpdated);
       setTyping([]);
     };
   }, [channel?.id]);
@@ -305,18 +312,18 @@ export default function ChatArea({ channel }) {
                   <div key={msg.id} className="msg-text-wrapper">
                     <p className="msg-text">{renderContent(msg.content, (username) => setViewProfile(username), (url) => setLightboxUrl(url))}</p>
                     <div className="msg-actions">
-  <div style={{ position: 'relative' }}>
-    <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
-      😑
-    </button>
-    {activeReactionPicker === msg.id && (
-      <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
-    )}
-  </div>
-  {msg.user_id === user?.id && (
-    <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">🗑️</button>
-  )}
-</div>
+                      <div style={{ position: 'relative' }}>
+                        <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
+                          😑
+                        </button>
+                        {activeReactionPicker === msg.id && (
+                          <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                        )}
+                      </div>
+                      {msg.user_id === user?.id && (
+                        <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">🗑️</button>
+                      )}
+                    </div>
                     {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
                       <div className="msg-reactions">
                         {Object.entries(reactions[msg.id]).map(([emoji, users]) => (
@@ -418,8 +425,8 @@ export default function ChatArea({ channel }) {
           </button>
         </form>
       </div>
-      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
 
+      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
       {viewProfile && <ProfileModal username={viewProfile} onClose={() => setViewProfile(null)} />}
     </div>
   );
