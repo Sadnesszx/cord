@@ -309,7 +309,7 @@ export default function ChatArea({ channel }) {
                         😑
                       </button>
                       {msg.user_id === user?.id && (
-                        <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">✕</button>
+                        <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">🗑️</button>
                       )}
                     </div>
                     {activeReactionPicker === msg.id && (

@@ -244,7 +244,7 @@ export default function DMArea({ friend }) {
                     😑
                   </button>
                   {msg.sender_id === user?.id && (
-                    <button className="msg-delete-btn" onClick={() => deleteDM(msg.id)} title="Delete message">✕</button>
+                    <button className="msg-delete-btn" onClick={() => deleteDM(msg.id)} title="Delete message">🗑️</button>
                   )}
                 </div>
                 {activeReactionPicker === msg.id && (
