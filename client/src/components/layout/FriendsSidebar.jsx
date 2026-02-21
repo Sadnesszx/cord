@@ -29,10 +29,11 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    const socket = getSocket();
-    socket.on('online_users', (users) => setOnlineUsers(users));
-    return () => socket.off('online_users');
-  }, []);
+  const socket = getSocket();
+  socket.emit('get_online_users');
+  socket.on('online_users', (users) => setOnlineUsers(users));
+  return () => socket.off('online_users');
+}, []);
 
   const sendRequest = async (e) => {
     e.preventDefault();
