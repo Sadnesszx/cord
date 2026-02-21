@@ -33,6 +33,22 @@ const playNotification = () => {
   oscillator.stop(ctx.currentTime + 0.3);
 };
 
+const renderDMContent = (content) => {
+  const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const mentionRegex = /(@\w+)/g;
+  const parts = content.split(combinedRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="msg-link">{part}</a>;
+    }
+    if (part.match(mentionRegex)) {
+      return <span key={i} className="mention-highlight">{part}</span>;
+    }
+    return part;
+  });
+};
+
 function EmojiPicker({ onPick }) {
   const emojis = [
     '😀','😂','🥹','😍','🥰','😎','🤩','😭','😤','🤔',
@@ -52,22 +68,6 @@ function EmojiPicker({ onPick }) {
     </div>
   );
 }
-
-const renderDMContent = (content) => {
-  const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const mentionRegex = /(@\w+)/g;
-  const parts = content.split(combinedRegex);
-  return parts.map((part, i) => {
-    if (part.match(urlRegex)) {
-      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="msg-link">{part}</a>;
-    }
-    if (part.match(mentionRegex)) {
-      return <span key={i} className="mention-highlight">{part}</span>;
-    }
-    return part;
-  });
-};
 
 export default function DMArea({ friend }) {
   const [messages, setMessages] = useState([]);
@@ -182,7 +182,7 @@ export default function DMArea({ friend }) {
                 {msg.content.startsWith('[img]') && msg.content.endsWith('[/img]') ? (
                   <img src={msg.content.slice(5, -6)} alt="uploaded" className="msg-image" />
                 ) : (
-                  <p className="msg-text">{msg.content}</p>
+                  <p className="msg-text">{renderDMContent(msg.content)}</p>
                 )}
                 {msg.sender_id === user?.id && (
                   <button

@@ -9,9 +9,9 @@ const renderContent = (content) => {
     const url = content.slice(5, -6);
     return <img src={url} alt="uploaded" className="msg-image" />;
   }
+  const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const mentionRegex = /(@\w+)/g;
-  const combinedRegex = /(https?:\/\/[^\s]+|@\w+)/g;
   const parts = content.split(combinedRegex);
   return parts.map((part, i) => {
     if (part.match(urlRegex)) {
@@ -114,16 +114,15 @@ export default function ChatArea({ channel }) {
   };
 
   const uploadImage = async (file) => {
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
-    method: 'POST',
-    body: formData,
-  });
-  const data = await res.json();
-  console.log('ImgBB response:', data);
-  return data.data.url;
-};
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    return data.data.url;
+  };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -249,7 +248,7 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                   <p className="msg-text">{renderDMContent(msg.content)}</p>
+                    <p className="msg-text">{renderContent(msg.content)}</p>
                     {msg.user_id === user?.id && (
                       <button
                         className="msg-delete-btn"
