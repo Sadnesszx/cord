@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
     if (user.banned) return res.status(403).json({ error: `You are banned. Reason: ${user.ban_reason}` });
 
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, username: user.username, avatar_color: user.avatar_color, warning: user.warning } });
+    res.json({ token, user: { id: user.id, username: user.username, avatar_color: user.avatar_color, avatar_url: user.avatar_url, warning: user.warning } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

@@ -19,9 +19,13 @@ export default function HomePage({ onSelectFriend }) {
   return (
     <div className="home-page">
       <div className="home-greeting">
-        <div className="home-avatar" style={{ background: user?.avatar_color || '#555' }}>
-          {user?.username?.[0]?.toUpperCase()}
-        </div>
+        {user?.avatar_url ? (
+  <img src={user.avatar_url} className="home-avatar" style={{ objectFit: 'cover' }} alt={user.username} />
+) : (
+  <div className="home-avatar" style={{ background: user?.avatar_color || '#555' }}>
+    {user?.username?.[0]?.toUpperCase()}
+  </div>
+)}
         <div className="home-greeting-text">
           <h1>{greeting}, <span>{user?.username}</span></h1>
           <p>What's on your mind today?</p>
@@ -71,4 +75,4 @@ export default function HomePage({ onSelectFriend }) {
       {showTOS && <TOSPage onClose={() => setShowTOS(false)} onAccept={() => setShowTOS(false)} />}
     </div>
   );
-}
+} 

@@ -151,15 +151,15 @@ export default function DMArea({ friend }) {
   return (
     <div className="chat-area">
       <div className="chat-header">
-  {friend.avatar_url ? (
-    <img src={friend.avatar_url} className="msg-avatar" style={{ objectFit: 'cover', width: 26, height: 26, borderRadius: 4 }} alt={friend.username} />
-  ) : (
-    <div className="msg-avatar" style={{ background: friend.avatar_color, width: 26, height: 26, fontSize: 11, borderRadius: 4 }}>
-      {friend.username[0].toUpperCase()}
-    </div>
-  )}
-  <span className="chat-header-name">{friend.username}</span>
-</div>
+        {friend.avatar_url ? (
+          <img src={friend.avatar_url} className="msg-avatar" style={{ objectFit: 'cover', width: 26, height: 26, borderRadius: 4 }} alt={friend.username} />
+        ) : (
+          <div className="msg-avatar" style={{ background: friend.avatar_color, width: 26, height: 26, fontSize: 11, borderRadius: 4 }}>
+            {friend.username[0].toUpperCase()}
+          </div>
+        )}
+        <span className="chat-header-name">{friend.username}</span>
+      </div>
 
       <div className="chat-messages" ref={containerRef}>
         <div style={{ flex: 1 }} />
@@ -170,13 +170,23 @@ export default function DMArea({ friend }) {
         )}
         {messages.map((msg) => (
           <div key={msg.id} className="msg-group fade-in">
-            <div
-              className="msg-avatar"
-              style={{ background: msg.avatar_color, cursor: 'pointer' }}
-              onClick={() => setViewProfile(msg.username)}
-            >
-              {msg.username[0].toUpperCase()}
-            </div>
+            {msg.avatar_url ? (
+              <img
+                src={msg.avatar_url}
+                className="msg-avatar"
+                style={{ objectFit: 'cover', cursor: 'pointer' }}
+                onClick={() => setViewProfile(msg.username)}
+                alt={msg.username}
+              />
+            ) : (
+              <div
+                className="msg-avatar"
+                style={{ background: msg.avatar_color, cursor: 'pointer' }}
+                onClick={() => setViewProfile(msg.username)}
+              >
+                {msg.username[0].toUpperCase()}
+              </div>
+            )}
             <div className="msg-content">
               <div className="msg-meta">
                 <span className="msg-author">{msg.username}</span>

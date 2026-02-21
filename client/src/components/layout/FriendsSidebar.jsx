@@ -29,11 +29,11 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-  const socket = getSocket();
-  socket.emit('get_online_users');
-  socket.on('online_users', (users) => setOnlineUsers(users));
-  return () => socket.off('online_users');
-}, []);
+    const socket = getSocket();
+    socket.emit('get_online_users');
+    socket.on('online_users', (users) => setOnlineUsers(users));
+    return () => socket.off('online_users');
+  }, []);
 
   const sendRequest = async (e) => {
     e.preventDefault();
@@ -96,9 +96,13 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
               <div key={f.id} className={`friend-item ${activeFriend?.id === f.id ? 'active' : ''}`}>
                 <button className="friend-item-main" onClick={() => onSelectFriend(f)}>
                   <div className="friend-avatar-wrapper">
-                    <div className="friend-avatar" style={{ background: f.avatar_color }}>
-                      {f.username[0].toUpperCase()}
-                    </div>
+                    {f.avatar_url ? (
+                      <img src={f.avatar_url} className="friend-avatar" style={{ objectFit: 'cover' }} alt={f.username} />
+                    ) : (
+                      <div className="friend-avatar" style={{ background: f.avatar_color }}>
+                        {f.username[0].toUpperCase()}
+                      </div>
+                    )}
                     <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) ? 'online' : 'offline'}`} />
                   </div>
                   <span>{f.username}</span>
@@ -114,7 +118,11 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
             {requests.length === 0 && <p className="friends-empty">No pending requests</p>}
             {requests.map(r => (
               <div key={r.id} className="request-item">
-                <div className="friend-avatar" style={{ background: r.avatar_color }}>{r.username[0].toUpperCase()}</div>
+                {r.avatar_url ? (
+                  <img src={r.avatar_url} className="friend-avatar" style={{ objectFit: 'cover' }} alt={r.username} />
+                ) : (
+                  <div className="friend-avatar" style={{ background: r.avatar_color }}>{r.username[0].toUpperCase()}</div>
+                )}
                 <span>{r.username}</span>
                 <div className="request-actions">
                   <button className="accept-btn" onClick={() => respond(r.id, 'accept')}>✓</button>
@@ -130,9 +138,13 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend }) {
             {inbox.map(u => (
               <button key={u.id} className={`friend-item-main ${activeFriend?.id === u.id ? 'active' : ''}`} onClick={() => onSelectFriend(u)}>
                 <div className="friend-avatar-wrapper">
-                  <div className="friend-avatar" style={{ background: u.avatar_color }}>
-                    {u.username[0].toUpperCase()}
-                  </div>
+                  {u.avatar_url ? (
+                    <img src={u.avatar_url} className="friend-avatar" style={{ objectFit: 'cover' }} alt={u.username} />
+                  ) : (
+                    <div className="friend-avatar" style={{ background: u.avatar_color }}>
+                      {u.username[0].toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ fontSize: 13, color: 'var(--white)' }}>{u.username}</div>
