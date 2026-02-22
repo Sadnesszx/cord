@@ -17,16 +17,16 @@ const COLORS = [
 ];
 
 const BANNER_COLORS = [
-  { color: '#1a1a1a', label: 'Dark' },
-  { color: '#1a0a0a', label: 'Blood' },
-  { color: '#0a1a0a', label: 'Deep Forest' },
-  { color: '#0a0a1a', label: 'Midnight' },
-  { color: '#1a0a1a', label: 'Shadow' },
-  { color: '#1a1a0a', label: 'Swamp' },
-  { color: '#0d1117', label: 'Void' },
-  { color: '#1a1205', label: 'Rust' },
-  { color: '#051a18', label: 'Abyss' },
-  { color: '#12051a', label: 'Dusk' },
+  { color: '#5865f2', label: 'Blurple' },
+  { color: '#eb459e', label: 'Pink' },
+  { color: '#ed4245', label: 'Red' },
+  { color: '#f0b132', label: 'Yellow' },
+  { color: '#23a55a', label: 'Green' },
+  { color: '#3ba1cc', label: 'Blue' },
+  { color: '#9b59b6', label: 'Purple' },
+  { color: '#e67e22', label: 'Orange' },
+  { color: '#1abc9c', label: 'Teal' },
+  { color: '#e91e63', label: 'Rose' },
 ];
 
 const STATUSES = [
