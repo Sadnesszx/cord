@@ -9,6 +9,7 @@ const getStatusColor = (status) => {
     case 'dnd': return '#f23f43';
     case 'idle': return '#f0b132';
     case 'invisible': return '#80848e';
+    case 'offline': return '#80848e';
     default: return '#23a55a';
   }
 };
