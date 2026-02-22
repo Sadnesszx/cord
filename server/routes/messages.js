@@ -11,9 +11,13 @@ router.get('/channels/:channelId/messages', auth, async (req, res) => {
 
   try {
     let query = `
-      SELECT m.*, u.username, u.avatar_color, u.avatar_url
+      SELECT m.*, u.username, u.avatar_color, u.avatar_url,
+        rm.content as reply_content,
+        ru.username as reply_username
       FROM messages m
       JOIN users u ON m.user_id = u.id
+      LEFT JOIN messages rm ON m.reply_to = rm.id
+      LEFT JOIN users ru ON rm.user_id = ru.id
       WHERE m.channel_id = $1
     `;
     const params = [req.params.channelId];
@@ -43,7 +47,6 @@ router.delete('/messages/:messageId', auth, async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Message not found' });
     if (rows[0].user_id !== req.user.id) return res.status(403).json({ error: 'Not your message' });
-
     await pool.query('DELETE FROM messages WHERE id = $1', [req.params.messageId]);
     res.json({ message: 'Deleted' });
   } catch (err) {

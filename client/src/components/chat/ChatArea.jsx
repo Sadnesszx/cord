@@ -59,17 +59,17 @@ const groupMessages = (messages) => {
   const groups = [];
   let lastDate = null;
   messages.forEach((msg) => {
-  if (msg.system) {
-    groups.push({ type: 'system', content: msg.content, id: msg.id });
-    return;
-  }
-  const date = new Date(msg.created_at).toDateString();
+    if (msg.system) {
+      groups.push({ type: 'system', content: msg.content, id: msg.id });
+      return;
+    }
+    const date = new Date(msg.created_at).toDateString();
     if (date !== lastDate) {
       groups.push({ type: 'divider', date: msg.created_at });
       lastDate = date;
     }
     const last = groups[groups.length - 1];
-    if (last?.type === 'group' && last.user_id === msg.user_id) {
+    if (last?.type === 'group' && last.user_id === msg.user_id && !msg.reply_to) {
       last.messages.push(msg);
     } else {
       groups.push({
@@ -133,6 +133,7 @@ export default function ChatArea({ channel }) {
   const [viewProfile, setViewProfile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
@@ -185,7 +186,8 @@ export default function ChatArea({ channel }) {
     if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
     try {
       const url = await uploadImage(file);
-      socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]` });
+      socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]`, replyTo: replyTo?.id || null });
+      setReplyTo(null);
     } catch (err) {
       console.error(err);
     }
@@ -212,6 +214,7 @@ export default function ChatArea({ channel }) {
     if (!channel) return;
     setMessages([]);
     setReactions({});
+    setReplyTo(null);
     setLoading(true);
     api.get(`/api/channels/${channel.id}/messages`).then(({ data }) => {
       setMessages(data);
@@ -245,22 +248,23 @@ export default function ChatArea({ channel }) {
     const onMessageEdited = ({ messageId, content }) => {
       setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content, edited: true } : m));
     };
+    const onMemberJoined = ({ member, serverId }) => {
+      if (channel?.server_id === serverId) {
+        setMessages(prev => [...prev, {
+          id: `join-${member.id}-${Date.now()}`,
+          content: `${member.username} has joined the server!`,
+          system: true,
+          created_at: new Date().toISOString(),
+        }]);
+      }
+    };
 
     socket.on('new_message', onMessage);
     socket.on('user_typing', onTypingStart);
     socket.on('user_stop_typing', onTypingStop);
     socket.on('user_avatar_updated', onAvatarUpdated);
     socket.on('message_edited', onMessageEdited);
-    socket.on('member_joined', ({ member, serverId }) => {
-  if (channel?.server_id === serverId) {
-    setMessages(prev => [...prev, {
-      id: `join-${member.id}-${Date.now()}`,
-      content: `${member.username} has joined the server!`,
-      system: true,
-      created_at: new Date().toISOString(),
-    }]);
-  }
-});
+    socket.on('member_joined', onMemberJoined);
 
     return () => {
       socket.off('new_message', onMessage);
@@ -268,7 +272,7 @@ export default function ChatArea({ channel }) {
       socket.off('user_stop_typing', onTypingStop);
       socket.off('user_avatar_updated', onAvatarUpdated);
       socket.off('message_edited', onMessageEdited);
-      socket.off('member_joined');
+      socket.off('member_joined', onMemberJoined);
       setTyping([]);
     };
   }, [channel?.id]);
@@ -285,15 +289,20 @@ export default function ChatArea({ channel }) {
   const sendMessage = (e) => {
     e.preventDefault();
     if (!input.trim() || !channel) return;
-    socket.emit('send_message', { channelId: channel.id, content: input.trim() });
+    socket.emit('send_message', { channelId: channel.id, content: input.trim(), replyTo: replyTo?.id || null });
     setInput('');
     setShowEmoji(false);
+    setReplyTo(null);
     socket.emit('typing_stop', { channelId: channel.id });
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       sendMessage(e);
+      return;
+    }
+    if (e.key === 'Escape' && replyTo) {
+      setReplyTo(null);
       return;
     }
     socket.emit('typing_start', { channelId: channel.id });
@@ -334,14 +343,14 @@ export default function ChatArea({ channel }) {
         )}
 
         {groups.map((group, i) => {
-  if (group.type === 'system') {
-    return (
-      <div key={`system-${i}`} className="system-message">
-        🎉 {group.content}
-      </div>
-    );
-  }
-  if (group.type === 'divider') {
+          if (group.type === 'system') {
+            return (
+              <div key={`system-${i}`} className="system-message">
+                🎉 {group.content}
+              </div>
+            );
+          }
+          if (group.type === 'divider') {
             return (
               <div key={`divider-${i}`} className="msg-date-divider">
                 <div className="msg-date-line" />
@@ -360,6 +369,14 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
+                    {msg.reply_to && msg.reply_username && (
+                      <div className="msg-reply-preview">
+                        <span className="msg-reply-author">↩ {msg.reply_username}</span>
+                        <span className="msg-reply-content">
+                          {msg.reply_content?.startsWith('[img]') ? '🖼️ Image' : msg.reply_content}
+                        </span>
+                      </div>
+                    )}
                     {editingId === msg.id ? (
                       <div className="msg-edit-wrapper">
                         <textarea
@@ -392,6 +409,9 @@ export default function ChatArea({ channel }) {
                               <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
                             )}
                           </div>
+                          <button className="msg-reply-btn" onClick={() => setReplyTo({ id: msg.id, username: msg.username, content: msg.content })} title="Reply">
+                            ↩
+                          </button>
                           {msg.user_id === user?.id && (
                             <>
                               <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
@@ -465,6 +485,13 @@ export default function ChatArea({ channel }) {
         </div>
       )}
 
+      {replyTo && (
+        <div className="reply-bar">
+          <span>↩ Replying to <strong>{replyTo.username}</strong>: {replyTo.content?.startsWith('[img]') ? '🖼️ Image' : replyTo.content?.slice(0, 50)}</span>
+          <button onClick={() => setReplyTo(null)}>✕</button>
+        </div>
+      )}
+
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={sendMessage}>
           <textarea
@@ -485,7 +512,7 @@ export default function ChatArea({ channel }) {
               }
             }}
             onKeyDown={handleKeyDown}
-            placeholder={`Message #${channel.name}`}
+            placeholder={replyTo ? `Reply to ${replyTo.username}...` : `Message #${channel.name}`}
             rows={1}
           />
           <label className="image-upload-btn" title="Upload image">

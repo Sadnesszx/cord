@@ -22,32 +22,45 @@ const setupSocket = (io) => {
     io.emit('online_users', Array.from(onlineUsers));
 
     socket.on('join_channel', (channelId) => {
-  socket.rooms.forEach((room) => {
-    if (room !== socket.id && room !== `user_${socket.user.id}` && !room.startsWith('server_')) {
-      socket.leave(room);
-    }
-  });
-  socket.join(channelId);
-});
+      socket.rooms.forEach((room) => {
+        if (room !== socket.id && room !== `user_${socket.user.id}` && !room.startsWith('server_')) {
+          socket.leave(room);
+        }
+      });
+      socket.join(channelId);
+    });
 
-    socket.on('send_message', async ({ channelId, content }) => {
+    socket.on('send_message', async ({ channelId, content, replyTo }) => {
       if (!content?.trim() || !channelId) return;
       try {
         const { rows } = await pool.query(
-          `INSERT INTO messages (channel_id, user_id, content)
-           VALUES ($1, $2, $3) RETURNING *`,
-          [channelId, socket.user.id, content.trim()]
+          `INSERT INTO messages (channel_id, user_id, content, reply_to)
+           VALUES ($1, $2, $3, $4) RETURNING *`,
+          [channelId, socket.user.id, content.trim(), replyTo || null]
         );
         const message = rows[0];
         const { rows: users } = await pool.query(
           `SELECT username, avatar_color, avatar_url FROM users WHERE id = $1`,
-           [socket.user.id]
+          [socket.user.id]
         );
+        let reply_content = null, reply_username = null;
+        if (replyTo) {
+          const { rows: replyRows } = await pool.query(
+            `SELECT m.content, u.username FROM messages m JOIN users u ON m.user_id = u.id WHERE m.id = $1`,
+            [replyTo]
+          );
+          if (replyRows.length) {
+            reply_content = replyRows[0].content;
+            reply_username = replyRows[0].username;
+          }
+        }
         const fullMessage = {
-       ...message,
-           username: users[0].username,
-           avatar_color: users[0].avatar_color,
-           avatar_url: users[0].avatar_url,
+          ...message,
+          username: users[0].username,
+          avatar_color: users[0].avatar_color,
+          avatar_url: users[0].avatar_url,
+          reply_content,
+          reply_username,
         };
         io.to(channelId).emit('new_message', fullMessage);
       } catch (err) {
@@ -76,25 +89,43 @@ const setupSocket = (io) => {
     });
 
     socket.on('dm_typing_start', ({ receiverId }) => {
-     io.to(`user_${receiverId}`).emit('dm_user_typing', { username: socket.user.username });
+      io.to(`user_${receiverId}`).emit('dm_user_typing', { username: socket.user.username });
     });
 
     socket.on('dm_typing_stop', ({ receiverId }) => {
-     io.to(`user_${receiverId}`).emit('dm_user_stop_typing', { username: socket.user.username });
+      io.to(`user_${receiverId}`).emit('dm_user_stop_typing', { username: socket.user.username });
     });
 
-    socket.on('send_dm', async ({ receiverId, content }) => {
+    socket.on('send_dm', async ({ receiverId, content, replyTo }) => {
       if (!content?.trim() || !receiverId) return;
       try {
         const { rows } = await pool.query(
-          `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
-          [socket.user.id, receiverId, content.trim()]
+          `INSERT INTO dm_messages (sender_id, receiver_id, content, reply_to) VALUES ($1, $2, $3, $4) RETURNING *`,
+          [socket.user.id, receiverId, content.trim(), replyTo || null]
         );
         const { rows: users } = await pool.query(
           'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
           [socket.user.id]
         );
-        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url };
+        let reply_content = null, reply_username = null;
+        if (replyTo) {
+          const { rows: replyRows } = await pool.query(
+            `SELECT dm.content, u.username FROM dm_messages dm JOIN users u ON dm.sender_id = u.id WHERE dm.id = $1`,
+            [replyTo]
+          );
+          if (replyRows.length) {
+            reply_content = replyRows[0].content;
+            reply_username = replyRows[0].username;
+          }
+        }
+        const fullMsg = {
+          ...rows[0],
+          username: users[0].username,
+          avatar_color: users[0].avatar_color,
+          avatar_url: users[0].avatar_url,
+          reply_content,
+          reply_username,
+        };
         socket.emit('new_dm', fullMsg);
         io.to(`user_${receiverId}`).emit('new_dm', fullMsg);
       } catch (err) {
@@ -103,11 +134,11 @@ const setupSocket = (io) => {
     });
 
     socket.on('get_online_users', () => {
-    socket.emit('online_users', Array.from(onlineUsers));
+      socket.emit('online_users', Array.from(onlineUsers));
     });
 
     socket.on('join_server', (serverId) => {
-    socket.join(`server_${serverId}`);
+      socket.join(`server_${serverId}`);
     });
 
     socket.on('disconnect', () => {

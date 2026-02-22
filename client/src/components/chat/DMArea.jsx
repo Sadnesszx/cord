@@ -92,6 +92,7 @@ export default function DMArea({ friend }) {
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -140,7 +141,8 @@ export default function DMArea({ friend }) {
         body: formData,
       });
       const data = await res.json();
-      socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.data.url}[/img]` });
+      socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.data.url}[/img]`, replyTo: replyTo?.id || null });
+      setReplyTo(null);
     } catch (err) {
       console.error(err);
     }
@@ -173,6 +175,7 @@ export default function DMArea({ friend }) {
     setMessages([]);
     setReactions({});
     setTyping(false);
+    setReplyTo(null);
     api.get(`/api/friends/dm/${friend.id}`).then(({ data }) => {
       setMessages(data);
       setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
@@ -259,6 +262,14 @@ export default function DMArea({ friend }) {
                 <span className="msg-time">{formatTime(msg.created_at)}</span>
               </div>
               <div className="msg-text-wrapper">
+                {msg.reply_to && msg.reply_username && (
+                  <div className="msg-reply-preview">
+                    <span className="msg-reply-author">↩ {msg.reply_username}</span>
+                    <span className="msg-reply-content">
+                      {msg.reply_content?.startsWith('[img]') ? '🖼️ Image' : msg.reply_content}
+                    </span>
+                  </div>
+                )}
                 {editingId === msg.id ? (
                   <div className="msg-edit-wrapper">
                     <textarea
@@ -295,6 +306,9 @@ export default function DMArea({ friend }) {
                           <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
                         )}
                       </div>
+                      <button className="msg-reply-btn" onClick={() => setReplyTo({ id: msg.id, username: msg.username, content: msg.content })} title="Reply">
+                        ↩
+                      </button>
                       {msg.sender_id === user?.id && (
                         <>
                           <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
@@ -344,6 +358,13 @@ export default function DMArea({ friend }) {
         </div>
       )}
 
+      {replyTo && (
+        <div className="reply-bar">
+          <span>↩ Replying to <strong>{replyTo.username}</strong>: {replyTo.content?.startsWith('[img]') ? '🖼️ Image' : replyTo.content?.slice(0, 50)}</span>
+          <button onClick={() => setReplyTo(null)}>✕</button>
+        </div>
+      )}
+
       <div className="chat-input-wrapper">
         <form className="chat-input-form">
           <textarea
@@ -358,16 +379,18 @@ export default function DMArea({ friend }) {
               }, 2000);
             }}
             onKeyDown={e => {
+              if (e.key === 'Escape' && replyTo) { setReplyTo(null); return; }
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 if (!input.trim()) return;
-                socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+                socket.emit('send_dm', { receiverId: friend.id, content: input.trim(), replyTo: replyTo?.id || null });
                 socket.emit('dm_typing_stop', { receiverId: friend.id });
                 setInput('');
                 setShowEmoji(false);
+                setReplyTo(null);
               }
             }}
-            placeholder={`Message ${friend.username}`}
+            placeholder={replyTo ? `Reply to ${replyTo.username}...` : `Message ${friend.username}`}
             rows={1}
           />
           <label className="image-upload-btn" title="Upload image">
@@ -382,10 +405,11 @@ export default function DMArea({ friend }) {
           </button>
           <button className="chat-send-btn" type="button" onClick={() => {
             if (!input.trim()) return;
-            socket.emit('send_dm', { receiverId: friend.id, content: input.trim() });
+            socket.emit('send_dm', { receiverId: friend.id, content: input.trim(), replyTo: replyTo?.id || null });
             socket.emit('dm_typing_stop', { receiverId: friend.id });
             setInput('');
             setShowEmoji(false);
+            setReplyTo(null);
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>
