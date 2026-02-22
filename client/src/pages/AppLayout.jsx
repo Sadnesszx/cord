@@ -161,12 +161,14 @@ useEffect(() => {
   }
 };
   const handleSelectServer = (server) => {
-    setActiveServer(server);
-    setActiveChannel(null);
-    setActiveFriend(null);
-    setView('servers');
-    setUnreadServers(prev => ({ ...prev, [server.id]: false }));
-  };
+  setActiveServer(server);
+  setActiveChannel(null);
+  setActiveFriend(null);
+  setView('servers');
+  setUnreadServers(prev => ({ ...prev, [server.id]: false }));
+  const socket = getSocket();
+  socket.emit('join_server', server.id);
+};
 
   const handleDMs = () => {
     setView('dms');
@@ -201,7 +203,7 @@ useEffect(() => {
     } catch { alert('Server not found'); }
   };
 
-  useState(() => { loadServers(); }, []);
+  useEffect(() => { loadServers(); }, []);
 
   if (serverDown) return <ServerDown />;
 
