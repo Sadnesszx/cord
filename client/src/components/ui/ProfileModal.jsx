@@ -1,7 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
+import { getSocket } from '../../lib/socket';
 import './ProfileModal.css';
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'dnd': return '#f23f43';
+    case 'idle': return '#f0b132';
+    case 'invisible': return '#80848e';
+    default: return '#23a55a';
+  }
+};
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'dnd': return 'Do Not Disturb';
+    case 'idle': return 'Idle';
+    case 'invisible': return 'Invisible';
+    default: return 'Online';
+  }
+};
 
 export default function ProfileModal({ username, onClose }) {
   const { user } = useAuth();
@@ -11,6 +30,7 @@ export default function ProfileModal({ username, onClose }) {
   const [resetMsg, setResetMsg] = useState('');
   const [friendStatus, setFriendStatus] = useState('none');
   const [friendMsg, setFriendMsg] = useState('');
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const isAdmin = user?.username === 'Sadness';
   const isOwnProfile = user?.username === username;
 
@@ -58,6 +78,11 @@ export default function ProfileModal({ username, onClose }) {
         }
       });
     }
+
+    const socket = getSocket();
+    socket.emit('get_online_users');
+    socket.on('online_users', (users) => setOnlineUsers(users));
+    return () => socket.off('online_users');
   }, [username]);
 
   const joined = profile ? new Date(profile.created_at).toLocaleDateString([], { month: 'long', year: 'numeric' }) : '';
@@ -86,6 +111,8 @@ export default function ProfileModal({ username, onClose }) {
     }
   };
 
+  const isOnline = profile ? onlineUsers.map(id => String(id)).includes(String(profile.id)) : false;
+
   return (
     <div className="profile-overlay" onClick={onClose}>
       <div className="profile-modal" onClick={e => e.stopPropagation()}>
@@ -94,7 +121,7 @@ export default function ProfileModal({ username, onClose }) {
         {!loading && profile && (
           <>
             <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : (profile.banner_color || profile.avatar_color) }} />
-            <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0 }}>
+            <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0, position: 'relative' }}>
               {profile.banned ? (
                 <span style={{ fontSize: 28 }}>🚫</span>
               ) : profile.avatar_url ? (
@@ -102,10 +129,27 @@ export default function ProfileModal({ username, onClose }) {
               ) : (
                 profile.username[0].toUpperCase()
               )}
+              {!profile.banned && (
+                <span style={{
+                  position: 'absolute', bottom: 2, right: 2,
+                  width: 14, height: 14, borderRadius: '50%',
+                  background: getStatusColor(isOnline ? profile.status : 'offline'),
+                  border: '2px solid #1a1a2e',
+                  display: 'block',
+                }} />
+              )}
             </div>
             <div className="profile-body">
               <div className="profile-top-row">
-                <h2 className="profile-username">{profile.banned ? 'Account Banned' : profile.username}</h2>
+                <div>
+                  <h2 className="profile-username">{profile.banned ? 'Account Banned' : profile.username}</h2>
+                  {!profile.banned && (
+                    <p style={{ fontSize: 12, color: getStatusColor(isOnline ? profile.status : 'offline'), margin: '2px 0 0 0' }}>
+                      ● {isOnline ? getStatusLabel(profile.status) : 'Offline'}
+                      {isOnline && profile.custom_status && ` — ${profile.custom_status}`}
+                    </p>
+                  )}
+                </div>
                 {!isOwnProfile && (
                   <button
                     className={`add-friend-btn ${friendStatus !== 'none' ? 'disabled' : ''}`}
@@ -149,22 +193,20 @@ export default function ProfileModal({ username, onClose }) {
 
                   <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
 
-                  <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
-
-                 <form onSubmit={async (e) => {
-                   e.preventDefault();
-                   const reason = e.target.reason.value || 'No reason provided';
-                   try {
-                     await api.patch(`/api/users/admin/clear-avatar/${username}`, { reason });
-                     setResetMsg('Profile picture removed!');
-                     setTimeout(() => setResetMsg(''), 3000);
-                     } catch (err) { setResetMsg('Error'); }
-                   }}>
-                     <input name="reason" type="text" placeholder="Reason for removing pfp" />
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const reason = e.target.reason.value || 'No reason provided';
+                    try {
+                      await api.patch(`/api/users/admin/clear-avatar/${username}`, { reason });
+                      setResetMsg('Profile picture removed!');
+                      setTimeout(() => setResetMsg(''), 3000);
+                    } catch (err) { setResetMsg('Error'); }
+                  }}>
+                    <input name="reason" type="text" placeholder="Reason for removing pfp" />
                     <button type="submit" className="admin-ban-btn" style={{ width: '100%', marginTop: 8 }}>
                       🗑️ Remove Profile Picture
-                  </button>
-                </form>
+                    </button>
+                  </form>
 
                   {resetMsg && <p className="profile-reset-msg">{resetMsg}</p>}
                 </div>
