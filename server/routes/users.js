@@ -124,6 +124,41 @@ router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
   }
 });
 
+// Send feedback to owner
+router.post('/feedback', auth, async (req, res) => {
+  const { message } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
+  try {
+    const { rows } = await pool.query('SELECT id FROM users WHERE username = $1', ['Sadness']);
+    if (!rows.length) return res.status(404).json({ error: 'Owner not found' });
+    const ownerId = rows[0].id;
+    await pool.query(
+      'INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)',
+      [req.user.id, ownerId, `📝 Feedback: ${message.trim()}`]
+    );
+    const io = global.getIO?.();
+    if (io) {
+      const { rows: senderInfo } = await pool.query(
+        'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
+        [req.user.id]
+      );
+      io.to(`user_${ownerId}`).emit('new_dm', {
+        sender_id: req.user.id,
+        receiver_id: ownerId,
+        content: `📝 Feedback: ${message.trim()}`,
+        username: senderInfo[0].username,
+        avatar_color: senderInfo[0].avatar_color,
+        avatar_url: senderInfo[0].avatar_url,
+        created_at: new Date().toISOString(),
+      });
+    }
+    res.json({ message: 'Feedback sent!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get user profile (keep this LAST since it's a wildcard route)
 router.get('/:username', auth, async (req, res) => {
   try {
