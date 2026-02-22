@@ -47,11 +47,15 @@ export default function MembersSidebar({ server }) {
         return [...prev, member];
       });
     });
+    socket.on('member_left', ({ userId }) => {
+      setMembers(prev => prev.filter(m => String(m.id) !== String(userId)));
+    });
     return () => {
       socket.off('online_users');
       socket.off('user_avatar_updated');
       socket.off('user_status_updated');
       socket.off('member_joined');
+      socket.off('member_left');
     };
   }, [server?.id]);
 

@@ -191,6 +191,10 @@ router.post('/:id/leave', auth, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Server not found' });
     if (rows[0].owner_id === req.user.id) return res.status(400).json({ error: "You can't leave a server you own — delete it instead" });
     await pool.query('DELETE FROM server_members WHERE server_id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+    const io = global.getIO?.();
+    if (io) {
+      io.to(`server_${req.params.id}`).emit('member_left', { userId: req.user.id, serverId: req.params.id });
+    }
     res.json({ message: 'Left server' });
   } catch (err) {
     console.error(err);
@@ -283,6 +287,7 @@ router.delete('/:id/members/:userId', auth, async (req, res) => {
     const io = global.getIO?.();
     if (io) {
       io.to(`user_${req.params.userId}`).emit('kicked_from_server', { serverId: req.params.id });
+      io.to(`server_${req.params.id}`).emit('member_left', { userId: req.params.userId, serverId: req.params.id });
     }
     res.json({ message: 'Kicked' });
   } catch (err) {
