@@ -257,4 +257,23 @@ router.post('/invite/:code/join', auth, async (req, res) => {
   }
 });
 
+// Kick a member
+router.delete('/:id/members/:userId', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Server not found' });
+    if (rows[0].owner_id !== req.user.id) return res.status(403).json({ error: 'Not the owner' });
+    if (req.params.userId === req.user.id) return res.status(400).json({ error: "You can't kick yourself" });
+    await pool.query('DELETE FROM server_members WHERE server_id = $1 AND user_id = $2', [req.params.id, req.params.userId]);
+    const io = global.getIO?.();
+    if (io) {
+      io.to(`user_${req.params.userId}`).emit('kicked_from_server', { serverId: req.params.id });
+    }
+    res.json({ message: 'Kicked' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

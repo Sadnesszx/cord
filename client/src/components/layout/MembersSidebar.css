@@ -91,3 +91,22 @@
 
 .status-dot.online { background: #27ae60; }
 .status-dot.offline { background: #444; }
+
+.member-kick-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.member-item:hover .member-kick-btn {
+  opacity: 1;
+}
+
+.member-kick-btn:hover {
+  background: #2a2a2a;
+}

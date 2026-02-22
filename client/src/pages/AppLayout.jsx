@@ -63,6 +63,19 @@ useEffect(() => {
   return () => socket.off('avatar_cleared');  
 }, []);
 
+useEffect(() => {
+  const socket = getSocket();
+  socket.on('kicked_from_server', ({ serverId }) => {
+    setServers(prev => prev.filter(s => s.id !== serverId));
+    if (activeServer?.id === serverId) {
+      setActiveServer(null);
+      setActiveChannel(null);
+      setView('dms');
+    }
+  });
+  return () => socket.off('kicked_from_server');
+}, [activeServer]);
+
  useEffect(() => {
   const socket = getSocket();
   socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
