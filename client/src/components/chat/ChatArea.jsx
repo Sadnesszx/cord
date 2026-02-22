@@ -69,7 +69,7 @@ const groupMessages = (messages) => {
       lastDate = date;
     }
     const last = groups[groups.length - 1];
-    if (last?.type === 'group' && last.user_id === msg.user_id && !msg.reply_to) {
+    if (last?.type === 'group' && last.user_id === msg.user_id) {
       last.messages.push(msg);
     } else {
       groups.push({
@@ -133,7 +133,6 @@ export default function ChatArea({ channel }) {
   const [viewProfile, setViewProfile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
-  const [replyTo, setReplyTo] = useState(null);
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
@@ -186,8 +185,7 @@ export default function ChatArea({ channel }) {
     if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
     try {
       const url = await uploadImage(file);
-      socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]`, replyTo: replyTo?.id || null });
-      setReplyTo(null);
+      socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]` });
     } catch (err) {
       console.error(err);
     }
@@ -214,7 +212,6 @@ export default function ChatArea({ channel }) {
     if (!channel) return;
     setMessages([]);
     setReactions({});
-    setReplyTo(null);
     setLoading(true);
     api.get(`/api/channels/${channel.id}/messages`).then(({ data }) => {
       setMessages(data);
@@ -289,20 +286,15 @@ export default function ChatArea({ channel }) {
   const sendMessage = (e) => {
     e.preventDefault();
     if (!input.trim() || !channel) return;
-    socket.emit('send_message', { channelId: channel.id, content: input.trim(), replyTo: replyTo?.id || null });
+    socket.emit('send_message', { channelId: channel.id, content: input.trim() });
     setInput('');
     setShowEmoji(false);
-    setReplyTo(null);
     socket.emit('typing_stop', { channelId: channel.id });
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       sendMessage(e);
-      return;
-    }
-    if (e.key === 'Escape' && replyTo) {
-      setReplyTo(null);
       return;
     }
     socket.emit('typing_start', { channelId: channel.id });
@@ -369,14 +361,6 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                    {msg.reply_to && msg.reply_username && (
-                      <div className="msg-reply-preview">
-                        <span className="msg-reply-author">↩ {msg.reply_username}</span>
-                        <span className="msg-reply-content">
-                          {msg.reply_content?.startsWith('[img]') ? '🖼️ Image' : msg.reply_content}
-                        </span>
-                      </div>
-                    )}
                     {editingId === msg.id ? (
                       <div className="msg-edit-wrapper">
                         <textarea
@@ -409,9 +393,6 @@ export default function ChatArea({ channel }) {
                               <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
                             )}
                           </div>
-                          <button className="msg-reply-btn" onClick={() => setReplyTo({ id: msg.id, username: msg.username, content: msg.content })} title="Reply">
-                            ↩
-                          </button>
                           {msg.user_id === user?.id && (
                             <>
                               <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
@@ -485,13 +466,6 @@ export default function ChatArea({ channel }) {
         </div>
       )}
 
-      {replyTo && (
-        <div className="reply-bar">
-          <span>↩ Replying to <strong>{replyTo.username}</strong>: {replyTo.content?.startsWith('[img]') ? '🖼️ Image' : replyTo.content?.slice(0, 50)}</span>
-          <button onClick={() => setReplyTo(null)}>✕</button>
-        </div>
-      )}
-
       <div className="chat-input-wrapper">
         <form className="chat-input-form" onSubmit={sendMessage}>
           <textarea
@@ -512,7 +486,7 @@ export default function ChatArea({ channel }) {
               }
             }}
             onKeyDown={handleKeyDown}
-            placeholder={replyTo ? `Reply to ${replyTo.username}...` : `Message #${channel.name}`}
+            placeholder={`Message #${channel.name}`}
             rows={1}
           />
           <label className="image-upload-btn" title="Upload image">
