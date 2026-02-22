@@ -82,6 +82,31 @@ router.patch('/me/banner', auth, async (req, res) => {
   }
 });
 
+// Update status
+router.patch('/me/status', auth, async (req, res) => {
+  const { status, custom_status } = req.body;
+  const validStatuses = ['online', 'idle', 'dnd', 'invisible'];
+  if (status && !validStatuses.includes(status))
+    return res.status(400).json({ error: 'Invalid status' });
+  try {
+    await pool.query(
+      'UPDATE users SET status = $1, custom_status = $2 WHERE id = $3',
+      [status || 'online', custom_status || null, req.user.id]
+    );
+    const io = global.getIO?.();
+    if (io) {
+      io.emit('user_status_updated', {
+        userId: req.user.id,
+        status: status || 'online',
+        custom_status: custom_status || null,
+      });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Admin: delete user's profile picture
 router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
   if (req.user.username !== 'Sadness') return res.status(403).json({ error: 'Forbidden' });
@@ -103,7 +128,7 @@ router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned, status, custom_status FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });

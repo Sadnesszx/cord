@@ -5,6 +5,16 @@ import { getSocket } from '../../lib/socket';
 import ProfileModal from '../ui/ProfileModal';
 import './FriendsSidebar.css';
 
+const getStatusColor = (isOnline, status) => {
+  if (!isOnline) return '#80848e';
+  switch (status) {
+    case 'dnd': return '#f23f43';
+    case 'idle': return '#f0b132';
+    case 'invisible': return '#80848e';
+    default: return '#23a55a';
+  }
+};
+
 export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs = {} }) {
   const { user } = useAuth();
   const isAdmin = user?.username === 'Sadness';
@@ -50,12 +60,18 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
         String(f.id) === String(userId) ? { ...f, avatar_url } : f
       ));
     });
+    socket.on('user_status_updated', ({ userId, status, custom_status }) => {
+  setFriends(prev => prev.map(f =>
+    String(f.id) === String(userId) ? { ...f, status, custom_status } : f
+  ));
+});
     return () => {
       socket.off('online_users');
       socket.off('new_friend_request');
       socket.off('friend_request_accepted');
       socket.off('friend_removed');
       socket.off('user_avatar_updated');
+      socket.off('user_status_updated');
     };
   }, []);
 
@@ -127,10 +143,15 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
                         {f.username[0].toUpperCase()}
                       </div>
                     )}
-                    <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) ? 'online' : 'offline'}`} />
+                    <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) ? 'online' : 'offline'}`}
+                      style={{ background: getStatusColor(onlineUsers.map(id => String(id)).includes(String(f.id)), f.status) }}
+                    />
                   </div>
-                  <span>{f.username}</span>
-                  {unreadDMs[f.id] && <span className="unread-badge" />}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                     <span>{f.username}</span>
+                     {f.custom_status && <span style={{ fontSize: 11, color: '#888' }}>{f.custom_status}</span>}
+                 </div>
+                 {unreadDMs[f.id] && <span className="unread-badge" />}
                 </button>
                 <button className="view-profile-btn" onClick={() => setViewProfile(f.username)} title="View profile">👤</button>
                 <button className="unfriend-btn" onClick={() => unfriend(f.id)} title="Unfriend">✕</button>

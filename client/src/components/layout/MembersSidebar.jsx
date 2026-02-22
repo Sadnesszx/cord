@@ -51,7 +51,7 @@ export default function MembersSidebar({ server }) {
                       {m.username[0].toUpperCase()}
                     </div>
                   )}
-                  <span className="status-dot online" />
+                  <span className="status-dot online" style={{ background: getStatusColor(true, m.status) }} />
                 </div>
                 <span className="member-name">{m.username}</span>
               </button>
@@ -71,7 +71,7 @@ export default function MembersSidebar({ server }) {
                       {m.username[0].toUpperCase()}
                     </div>
                   )}
-                  <span className="status-dot offline" />
+                  <span className="status-dot offline" style={{ background: getStatusColor(false, m.status) }} />
                 </div>
                 <span className="member-name">{m.username}</span>
               </button>

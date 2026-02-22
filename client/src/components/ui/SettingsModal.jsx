@@ -29,6 +29,23 @@ const BANNER_COLORS = [
   { color: '#12051a', label: 'Dusk' },
 ];
 
+const STATUSES = [
+  { value: 'online', label: 'Online', color: '#23a55a' },
+  { value: 'idle', label: 'Idle', color: '#f0b132' },
+  { value: 'dnd', label: 'Do Not Disturb', color: '#f23f43' },
+  { value: 'invisible', label: 'Invisible', color: '#80848e' },
+];
+
+const getStatusColor = (isOnline, status) => {
+  if (!isOnline) return '#80848e';
+  switch (status) {
+    case 'dnd': return '#f23f43';
+    case 'idle': return '#f0b132';
+    case 'invisible': return '#80848e';
+    default: return '#23a55a';
+  }
+};
+
 export default function SettingsModal({ onClose }) {
   const { user, login } = useAuth();
   const [password, setPassword] = useState('');
@@ -40,6 +57,8 @@ export default function SettingsModal({ onClose }) {
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(user?.banner_color || '#1a1a1a');
+  const [selectedStatus, setSelectedStatus] = useState(user?.status || 'online');
+  const [customStatus, setCustomStatus] = useState(user?.custom_status || '');
 
   const showMsg = (m, isError = false) => {
     if (isError) setError(m);
@@ -66,6 +85,17 @@ export default function SettingsModal({ onClose }) {
     showMsg('Banner updated!');
   } catch (err) {
     showMsg('Error updating banner', true);
+  }
+};
+
+  const saveStatus = async () => {
+  try {
+    await api.patch('/api/users/me/status', { status: selectedStatus, custom_status: customStatus });
+    const token = localStorage.getItem('sadlounge_token');
+    login(token, { ...user, status: selectedStatus, custom_status: customStatus });
+    showMsg('Status updated!');
+  } catch (err) {
+    showMsg('Error updating status', true);
   }
 };
 
@@ -189,6 +219,37 @@ export default function SettingsModal({ onClose }) {
               />
             ))}
           </div>
+
+            <div className="settings-section">
+  <p className="settings-label">Status</p>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    {STATUSES.map(s => (
+      <button
+        key={s.value}
+        onClick={() => setSelectedStatus(s.value)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: selectedStatus === s.value ? '#2a2a2a' : '#1a1a1a',
+          border: selectedStatus === s.value ? '1px solid #5865f2' : '1px solid #2a2a2a',
+          borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#e8e8e8',
+        }}
+      >
+        <span style={{ width: 12, height: 12, borderRadius: '50%', background: s.color, display: 'inline-block', flexShrink: 0 }} />
+        {s.label}
+      </button>
+    ))}
+  </div>
+  <input
+    style={{ marginTop: 10, width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }}
+    value={customStatus}
+    onChange={e => setCustomStatus(e.target.value)}
+    placeholder="Custom status (optional)"
+    maxLength={60}
+  />
+  <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveStatus}>
+    Save Status
+  </button>
+</div>
           <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveBanner}>
             Save Banner
           </button>

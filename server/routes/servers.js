@@ -116,7 +116,7 @@ router.post('/:serverId/join', auth, async (req, res) => {
 router.get('/:id/members', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT u.id, u.username, u.avatar_color, u.avatar_url FROM users u
+      `SELECT u.id, u.username, u.avatar_color, u.avatar_url, u.status, u.custom_status FROM users u
        JOIN server_members sm ON sm.user_id = u.id
        WHERE sm.server_id = $1
        ORDER BY u.username ASC`,

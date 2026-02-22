@@ -123,7 +123,7 @@ router.post('/requests/:id/respond', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT u.id, u.username, u.avatar_color, u.avatar_url FROM users u
+      `SELECT u.id, u.username, u.avatar_color, u.avatar_url, u.status, u.custom_status FROM users u
        JOIN friend_requests fr ON (
          (fr.sender_id = u.id AND fr.receiver_id = $1) OR
          (fr.receiver_id = u.id AND fr.sender_id = $1)
