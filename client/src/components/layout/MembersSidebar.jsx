@@ -4,6 +4,16 @@ import api from '../../lib/api';
 import ProfileModal from '../ui/ProfileModal';
 import './MembersSidebar.css';
 
+const getStatusColor = (isOnline, status) => {
+  if (!isOnline) return '#80848e';
+  switch (status) {
+    case 'dnd': return '#f23f43';
+    case 'idle': return '#f0b132';
+    case 'invisible': return '#80848e';
+    default: return '#23a55a';
+  }
+};
+
 export default function MembersSidebar({ server }) {
   const [members, setMembers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -23,9 +33,15 @@ export default function MembersSidebar({ server }) {
         String(m.id) === String(userId) ? { ...m, avatar_url } : m
       ));
     });
+    socket.on('user_status_updated', ({ userId, status, custom_status }) => {
+      setMembers(prev => prev.map(m =>
+        String(m.id) === String(userId) ? { ...m, status, custom_status } : m
+      ));
+    });
     return () => {
       socket.off('online_users');
       socket.off('user_avatar_updated');
+      socket.off('user_status_updated');
     };
   }, [server?.id]);
 
