@@ -215,3 +215,24 @@
   color: var(--white);
   font-family: 'Inter', sans-serif;
 }
+
+.channel-invite-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.channel-invite-btn:hover { color: #e8e8e8; background: #2a2a2a; }
+
+.invite-box {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 8px;
+}

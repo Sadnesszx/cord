@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import AppLayout from './pages/AppLayout';
+import InvitePage from './pages/InvitePage';
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<AuthPage />} />
+          <Route path="/invite/:code" element={<InvitePage />} />
           <Route
             path="/"
             element={

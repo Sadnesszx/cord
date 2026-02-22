@@ -216,4 +216,45 @@ router.get('/:channelId', auth, async (req, res) => {
   }
 });
 
+// Generate invite link
+router.post('/:id/invite', auth, async (req, res) => {
+  try {
+    const { rows: member } = await pool.query(
+      'SELECT 1 FROM server_members WHERE server_id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
+    if (!member.length) return res.status(403).json({ error: 'Not a member' });
+
+    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const { rows } = await pool.query(
+      'INSERT INTO server_invites (server_id, code, created_by) VALUES ($1, $2, $3) RETURNING *',
+      [req.params.id, code, req.user.id]
+    );
+    res.json({ code: rows[0].code });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Join via invite code
+router.post('/invite/:code/join', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM server_invites WHERE code = $1 AND expires_at > NOW()',
+      [req.params.code]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Invalid or expired invite' });
+
+    const serverId = rows[0].server_id;
+    await pool.query(
+      'INSERT INTO server_members (server_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [serverId, req.user.id]
+    );
+    const { rows: server } = await pool.query('SELECT * FROM servers WHERE id = $1', [serverId]);
+    res.json(server[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
