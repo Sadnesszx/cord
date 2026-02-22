@@ -15,15 +15,6 @@ const getStatusColor = (isOnline, status) => {
   }
 };
 
-const kickMember = async (userId) => {
-  try {
-    await api.delete(`/api/servers/${server.id}/members/${userId}`);
-    setMembers(prev => prev.filter(m => m.id !== userId));
-  } catch (err) {
-    console.error(err);
-  }
-};
-
 export default function MembersSidebar({ server }) {
   const [members, setMembers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -57,6 +48,15 @@ export default function MembersSidebar({ server }) {
     };
   }, [server?.id]);
 
+  const kickMember = async (userId) => {
+    try {
+      await api.delete(`/api/servers/${server.id}/members/${userId}`);
+      setMembers(prev => prev.filter(m => m.id !== userId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (!server) return null;
 
   const online = members.filter(m => onlineUsers.map(id => String(id)).includes(String(m.id)));
@@ -71,23 +71,23 @@ export default function MembersSidebar({ server }) {
             <p className="members-section-label">Online — {online.length}</p>
             {online.map(m => (
               <button key={m.id} className="member-item" onClick={() => setViewProfile(m.username)}>
-               <div className="member-avatar-wrapper">
-                 {m.avatar_url ? (
-                  <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
-                ) : (
-                  <div className="member-avatar" style={{ background: m.avatar_color }}>
-                    {m.username[0].toUpperCase()}
+                <div className="member-avatar-wrapper">
+                  {m.avatar_url ? (
+                    <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
+                  ) : (
+                    <div className="member-avatar" style={{ background: m.avatar_color }}>
+                      {m.username[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span className="status-dot online" style={{ background: getStatusColor(true, m.status) }} />
                 </div>
-              )}
-              <span className="status-dot online" style={{ background: getStatusColor(true, m.status) }} />
-            </div>
-            <span className="member-name">{m.username}</span>
-            {isOwner && m.id !== user.id && (
-              <button className="member-kick-btn" title="Kick member" onClick={e => { e.stopPropagation(); kickMember(m.id); }}>
-              🥾
-            </button>
-          )}
-        </button>
+                <span className="member-name">{m.username}</span>
+                {isOwner && m.id !== user.id && (
+                  <button className="member-kick-btn" title="Kick member" onClick={e => { e.stopPropagation(); kickMember(m.id); }}>
+                    🥾
+                  </button>
+                )}
+              </button>
             ))}
           </>
         )}
@@ -98,21 +98,21 @@ export default function MembersSidebar({ server }) {
               <button key={m.id} className="member-item offline" onClick={() => setViewProfile(m.username)}>
                 <div className="member-avatar-wrapper">
                   {m.avatar_url ? (
-                   <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
-                 ) : (
-                <div className="member-avatar" style={{ background: m.avatar_color }}>
-        {m.username[0].toUpperCase()}
-      </div>
-    )}
-    <span className="status-dot offline" style={{ background: getStatusColor(false, m.status) }} />
-  </div>
-  <span className="member-name">{m.username}</span>
-  {isOwner && m.id !== user.id && (
-    <button className="member-kick-btn" title="Kick member" onClick={e => { e.stopPropagation(); kickMember(m.id); }}>
-      🥾
-    </button>
-  )}
-</button>
+                    <img src={m.avatar_url} className="member-avatar" style={{ objectFit: 'cover' }} alt={m.username} />
+                  ) : (
+                    <div className="member-avatar" style={{ background: m.avatar_color }}>
+                      {m.username[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span className="status-dot offline" style={{ background: getStatusColor(false, m.status) }} />
+                </div>
+                <span className="member-name">{m.username}</span>
+                {isOwner && m.id !== user.id && (
+                  <button className="member-kick-btn" title="Kick member" onClick={e => { e.stopPropagation(); kickMember(m.id); }}>
+                    🥾
+                  </button>
+                )}
+              </button>
             ))}
           </>
         )}
