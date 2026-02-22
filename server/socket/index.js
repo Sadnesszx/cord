@@ -22,13 +22,13 @@ const setupSocket = (io) => {
     io.emit('online_users', Array.from(onlineUsers));
 
     socket.on('join_channel', (channelId) => {
-      socket.rooms.forEach((room) => {
-        if (room !== socket.id && room !== `user_${socket.user.id}`) {
-          socket.leave(room);
-        }
-      });
-      socket.join(channelId);
-    });
+  socket.rooms.forEach((room) => {
+    if (room !== socket.id && room !== `user_${socket.user.id}` && !room.startsWith('server_')) {
+      socket.leave(room);
+    }
+  });
+  socket.join(channelId);
+});
 
     socket.on('send_message', async ({ channelId, content }) => {
       if (!content?.trim() || !channelId) return;
