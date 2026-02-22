@@ -93,4 +93,29 @@ router.post('/messages/:messageId/react', auth, async (req, res) => {
   }
 });
 
+// Edit a message
+router.patch('/messages/:messageId', auth, async (req, res) => {
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'Content required' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT user_id, channel_id FROM messages WHERE id = $1',
+      [req.params.messageId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Message not found' });
+    if (rows[0].user_id !== req.user.id) return res.status(403).json({ error: 'Not your message' });
+    const { rows: updated } = await pool.query(
+      'UPDATE messages SET content = $1, edited = TRUE WHERE id = $2 RETURNING *',
+      [content.trim(), req.params.messageId]
+    );
+    const io = global.getIO?.();
+    if (io) {
+      io.to(rows[0].channel_id).emit('message_edited', { messageId: req.params.messageId, content: content.trim() });
+    }
+    res.json(updated[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

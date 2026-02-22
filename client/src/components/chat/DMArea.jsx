@@ -90,6 +90,8 @@ export default function DMArea({ friend }) {
   const [typing, setTyping] = useState(false);
   const [reactions, setReactions] = useState({});
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -102,6 +104,27 @@ export default function DMArea({ friend }) {
     try {
       await api.delete(`/api/friends/dm/message/${messageId}`);
       setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const startEdit = (msg) => {
+    setEditingId(msg.id);
+    setEditContent(msg.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditContent('');
+  };
+
+  const saveEdit = async (messageId) => {
+    if (!editContent.trim()) return;
+    try {
+      await api.patch(`/api/friends/dm/message/${messageId}`, { content: editContent.trim() });
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: editContent.trim(), edited: true } : m));
+      cancelEdit();
     } catch (err) {
       console.error(err);
     }
@@ -174,17 +197,22 @@ export default function DMArea({ friend }) {
         String(m.sender_id) === String(userId) ? { ...m, avatar_url } : m
       ));
     };
+    const onDMEdited = ({ messageId, content }) => {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content, edited: true } : m));
+    };
 
     socket.on('new_dm', onDM);
     socket.on('dm_user_typing', onTypingStart);
     socket.on('dm_user_stop_typing', onTypingStop);
     socket.on('user_avatar_updated', onAvatarUpdated);
+    socket.on('dm_edited', onDMEdited);
 
     return () => {
       socket.off('new_dm', onDM);
       socket.off('dm_user_typing', onTypingStart);
       socket.off('dm_user_stop_typing', onTypingStop);
       socket.off('user_avatar_updated', onAvatarUpdated);
+      socket.off('dm_edited', onDMEdited);
     };
   }, [friend?.id]);
 
@@ -219,19 +247,9 @@ export default function DMArea({ friend }) {
         {messages.map((msg) => (
           <div key={msg.id} className="msg-group fade-in">
             {msg.avatar_url ? (
-              <img
-                src={msg.avatar_url}
-                className="msg-avatar"
-                style={{ objectFit: 'cover', cursor: 'pointer' }}
-                onClick={() => setViewProfile(msg.username)}
-                alt={msg.username}
-              />
+              <img src={msg.avatar_url} className="msg-avatar" style={{ objectFit: 'cover', cursor: 'pointer' }} onClick={() => setViewProfile(msg.username)} alt={msg.username} />
             ) : (
-              <div
-                className="msg-avatar"
-                style={{ background: msg.avatar_color, cursor: 'pointer' }}
-                onClick={() => setViewProfile(msg.username)}
-              >
+              <div className="msg-avatar" style={{ background: msg.avatar_color, cursor: 'pointer' }} onClick={() => setViewProfile(msg.username)}>
                 {msg.username[0].toUpperCase()}
               </div>
             )}
@@ -241,24 +259,51 @@ export default function DMArea({ friend }) {
                 <span className="msg-time">{formatTime(msg.created_at)}</span>
               </div>
               <div className="msg-text-wrapper">
-                {msg.content.startsWith('[img]') && msg.content.endsWith('[/img]') ? (
-                  <img src={msg.content.slice(5, -6)} alt="uploaded" className="msg-image" style={{ cursor: 'zoom-in' }} onClick={() => setLightboxUrl(msg.content.slice(5, -6))} />
-                ) : (
-                  <p className="msg-text">{renderDMContent(msg.content)}</p>
-                )}
-                <div className="msg-actions">
-                  <div style={{ position: 'relative' }}>
-                    <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
-                      😑
-                    </button>
-                    {activeReactionPicker === msg.id && (
-                      <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
-                    )}
+                {editingId === msg.id ? (
+                  <div className="msg-edit-wrapper">
+                    <textarea
+                      className="msg-edit-input"
+                      value={editContent}
+                      onChange={e => setEditContent(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msg.id); }
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      autoFocus
+                    />
+                    <div className="msg-edit-actions">
+                      <button className="btn-ghost" onClick={cancelEdit}>Cancel</button>
+                      <button className="btn-primary" onClick={() => saveEdit(msg.id)}>Save</button>
+                    </div>
                   </div>
-                  {msg.sender_id === user?.id && (
-                    <button className="msg-delete-btn" onClick={() => deleteDM(msg.id)} title="Delete message">🗑️</button>
-                  )}
-                </div>
+                ) : (
+                  <>
+                    {msg.content.startsWith('[img]') && msg.content.endsWith('[/img]') ? (
+                      <img src={msg.content.slice(5, -6)} alt="uploaded" className="msg-image" style={{ cursor: 'zoom-in' }} onClick={() => setLightboxUrl(msg.content.slice(5, -6))} />
+                    ) : (
+                      <p className="msg-text">
+                        {renderDMContent(msg.content)}
+                        {msg.edited && <span className="msg-edited">(edited)</span>}
+                      </p>
+                    )}
+                    <div className="msg-actions">
+                      <div style={{ position: 'relative' }}>
+                        <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
+                          😑
+                        </button>
+                        {activeReactionPicker === msg.id && (
+                          <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                        )}
+                      </div>
+                      {msg.sender_id === user?.id && (
+                        <>
+                          <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
+                          <button className="msg-delete-btn" onClick={() => deleteDM(msg.id)} title="Delete message">🗑️</button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
                 {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
                   <div className="msg-reactions">
                     {Object.entries(reactions[msg.id]).map(([emoji, users]) => (

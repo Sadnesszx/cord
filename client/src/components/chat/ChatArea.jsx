@@ -127,6 +127,8 @@ export default function ChatArea({ channel }) {
   const [reactions, setReactions] = useState({});
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
   const [viewProfile, setViewProfile] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const socket = getSocket();
@@ -136,6 +138,27 @@ export default function ChatArea({ channel }) {
     try {
       await api.delete(`/api/messages/${messageId}`);
       setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const startEdit = (msg) => {
+    setEditingId(msg.id);
+    setEditContent(msg.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditContent('');
+  };
+
+  const saveEdit = async (messageId) => {
+    if (!editContent.trim()) return;
+    try {
+      await api.patch(`/api/messages/${messageId}`, { content: editContent.trim() });
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: editContent.trim(), edited: true } : m));
+      cancelEdit();
     } catch (err) {
       console.error(err);
     }
@@ -215,17 +238,22 @@ export default function ChatArea({ channel }) {
         String(m.user_id) === String(userId) ? { ...m, avatar_url } : m
       ));
     };
+    const onMessageEdited = ({ messageId, content }) => {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content, edited: true } : m));
+    };
 
     socket.on('new_message', onMessage);
     socket.on('user_typing', onTypingStart);
     socket.on('user_stop_typing', onTypingStop);
     socket.on('user_avatar_updated', onAvatarUpdated);
+    socket.on('message_edited', onMessageEdited);
 
     return () => {
       socket.off('new_message', onMessage);
       socket.off('user_typing', onTypingStart);
       socket.off('user_stop_typing', onTypingStop);
       socket.off('user_avatar_updated', onAvatarUpdated);
+      socket.off('message_edited', onMessageEdited);
       setTyping([]);
     };
   }, [channel?.id]);
@@ -310,20 +338,47 @@ export default function ChatArea({ channel }) {
                 </div>
                 {group.messages.map((msg) => (
                   <div key={msg.id} className="msg-text-wrapper">
-                    <p className="msg-text">{renderContent(msg.content, (username) => setViewProfile(username), (url) => setLightboxUrl(url))}</p>
-                    <div className="msg-actions">
-                      <div style={{ position: 'relative' }}>
-                        <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
-                          😑
-                        </button>
-                        {activeReactionPicker === msg.id && (
-                          <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
-                        )}
+                    {editingId === msg.id ? (
+                      <div className="msg-edit-wrapper">
+                        <textarea
+                          className="msg-edit-input"
+                          value={editContent}
+                          onChange={e => setEditContent(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msg.id); }
+                            if (e.key === 'Escape') cancelEdit();
+                          }}
+                          autoFocus
+                        />
+                        <div className="msg-edit-actions">
+                          <button className="btn-ghost" onClick={cancelEdit}>Cancel</button>
+                          <button className="btn-primary" onClick={() => saveEdit(msg.id)}>Save</button>
+                        </div>
                       </div>
-                      {msg.user_id === user?.id && (
-                        <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">🗑️</button>
-                      )}
-                    </div>
+                    ) : (
+                      <>
+                        <p className="msg-text">
+                          {renderContent(msg.content, (username) => setViewProfile(username), (url) => setLightboxUrl(url))}
+                          {msg.edited && <span className="msg-edited">(edited)</span>}
+                        </p>
+                        <div className="msg-actions">
+                          <div style={{ position: 'relative' }}>
+                            <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
+                              😑
+                            </button>
+                            {activeReactionPicker === msg.id && (
+                              <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                            )}
+                          </div>
+                          {msg.user_id === user?.id && (
+                            <>
+                              <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
+                              <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">🗑️</button>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    )}
                     {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
                       <div className="msg-reactions">
                         {Object.entries(reactions[msg.id]).map(([emoji, users]) => (

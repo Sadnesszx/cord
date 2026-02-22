@@ -278,4 +278,30 @@ router.post('/dm/message/:messageId/react', auth, async (req, res) => {
   }
 });
 
+// Edit a DM message
+router.patch('/dm/message/:messageId', auth, async (req, res) => {
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'Content required' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT sender_id, receiver_id FROM dm_messages WHERE id = $1',
+      [req.params.messageId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Message not found' });
+    if (rows[0].sender_id !== req.user.id) return res.status(403).json({ error: 'Not your message' });
+    const { rows: updated } = await pool.query(
+      'UPDATE dm_messages SET content = $1, edited = TRUE WHERE id = $2 RETURNING *',
+      [content.trim(), req.params.messageId]
+    );
+    const io = global.getIO?.();
+    if (io) {
+      io.to(`user_${rows[0].sender_id}`).emit('dm_edited', { messageId: req.params.messageId, content: content.trim() });
+      io.to(`user_${rows[0].receiver_id}`).emit('dm_edited', { messageId: req.params.messageId, content: content.trim() });
+    }
+    res.json(updated[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
