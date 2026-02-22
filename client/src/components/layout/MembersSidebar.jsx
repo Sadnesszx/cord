@@ -37,15 +37,15 @@ export default function MembersSidebar({ server }) {
       ));
     });
     socket.on('user_status_updated', ({ userId, status, custom_status }) => {
-      socket.on('member_joined', ({ member }) => {
-  setMembers(prev => {
-    if (prev.find(m => m.id === member.id)) return prev;
-    return [...prev, member];
-  });
-});
       setMembers(prev => prev.map(m =>
         String(m.id) === String(userId) ? { ...m, status, custom_status } : m
       ));
+    });
+    socket.on('member_joined', ({ member }) => {
+      setMembers(prev => {
+        if (prev.find(m => String(m.id) === String(member.id))) return prev;
+        return [...prev, member];
+      });
     });
     return () => {
       socket.off('online_users');
