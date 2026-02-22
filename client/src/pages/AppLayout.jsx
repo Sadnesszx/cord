@@ -151,14 +151,15 @@ useEffect(() => {
   }, [view, activeChannel, activeFriend, activeServer, user]);
 
   const loadServers = () => {
-    if (!serversLoaded) {
-      api.get('/api/servers').then(({ data }) => {
-        setServers(data);
-        setServersLoaded(true);
-      });
-    }
-  };
-
+  if (!serversLoaded) {
+    api.get('/api/servers').then(({ data }) => {
+      setServers(data);
+      setServersLoaded(true);
+      const socket = getSocket();
+      data.forEach(s => socket.emit('join_server', s.id));
+    });
+  }
+};
   const handleSelectServer = (server) => {
     setActiveServer(server);
     setActiveChannel(null);

@@ -105,6 +105,14 @@ router.post('/:serverId/join', auth, async (req, res) => {
       [req.params.serverId, req.user.id]
     );
     const { rows } = await pool.query(`SELECT * FROM servers WHERE id = $1`, [req.params.serverId]);
+    const { rows: userInfo } = await pool.query(
+      'SELECT id, username, avatar_color, avatar_url, status, custom_status FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    const io = global.getIO?.();
+    if (io) {
+      io.to(`server_${req.params.serverId}`).emit('member_joined', { member: userInfo[0], serverId: req.params.serverId });
+    }
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -244,13 +252,20 @@ router.post('/invite/:code/join', auth, async (req, res) => {
       [req.params.code]
     );
     if (!rows.length) return res.status(404).json({ error: 'Invalid or expired invite' });
-
     const serverId = rows[0].server_id;
     await pool.query(
       'INSERT INTO server_members (server_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
       [serverId, req.user.id]
     );
     const { rows: server } = await pool.query('SELECT * FROM servers WHERE id = $1', [serverId]);
+    const { rows: userInfo } = await pool.query(
+      'SELECT id, username, avatar_color, avatar_url, status, custom_status FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    const io = global.getIO?.();
+    if (io) {
+      io.to(`server_${serverId}`).emit('member_joined', { member: userInfo[0], serverId });
+    }
     res.json(server[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

@@ -59,7 +59,11 @@ const groupMessages = (messages) => {
   const groups = [];
   let lastDate = null;
   messages.forEach((msg) => {
-    const date = new Date(msg.created_at).toDateString();
+  if (msg.system) {
+    groups.push({ type: 'system', content: msg.content, id: msg.id });
+    return;
+  }
+  const date = new Date(msg.created_at).toDateString();
     if (date !== lastDate) {
       groups.push({ type: 'divider', date: msg.created_at });
       lastDate = date;
@@ -247,6 +251,16 @@ export default function ChatArea({ channel }) {
     socket.on('user_stop_typing', onTypingStop);
     socket.on('user_avatar_updated', onAvatarUpdated);
     socket.on('message_edited', onMessageEdited);
+    socket.on('member_joined', ({ member, serverId }) => {
+  if (channel?.server_id === serverId) {
+    setMessages(prev => [...prev, {
+      id: `join-${member.id}-${Date.now()}`,
+      content: `${member.username} has joined the server!`,
+      system: true,
+      created_at: new Date().toISOString(),
+    }]);
+  }
+});
 
     return () => {
       socket.off('new_message', onMessage);
@@ -254,6 +268,7 @@ export default function ChatArea({ channel }) {
       socket.off('user_stop_typing', onTypingStop);
       socket.off('user_avatar_updated', onAvatarUpdated);
       socket.off('message_edited', onMessageEdited);
+      socket.off('member_joined');
       setTyping([]);
     };
   }, [channel?.id]);
@@ -319,7 +334,14 @@ export default function ChatArea({ channel }) {
         )}
 
         {groups.map((group, i) => {
-          if (group.type === 'divider') {
+  if (group.type === 'system') {
+    return (
+      <div key={`system-${i}`} className="system-message">
+        🎉 {group.content}
+      </div>
+    );
+  }
+  if (group.type === 'divider') {
             return (
               <div key={`divider-${i}`} className="msg-date-divider">
                 <div className="msg-date-line" />

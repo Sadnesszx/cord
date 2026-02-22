@@ -106,6 +106,10 @@ const setupSocket = (io) => {
     socket.emit('online_users', Array.from(onlineUsers));
     });
 
+    socket.on('join_server', (serverId) => {
+    socket.join(`server_${serverId}`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`❌ ${socket.user.username} disconnected`);
       onlineUsers.delete(socket.user.id);
