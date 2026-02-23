@@ -52,32 +52,6 @@ export default function HomePage({ onSelectFriend }) {
         </div>
       </div>
 
-      {showInstallBanner && (
-  <div style={{
-    background: '#1a1a2e',
-    border: '1px solid #2a2a2a',
-    borderRadius: 10,
-    padding: '12px 16px',
-    marginBottom: 16,
-    fontSize: 13,
-    color: '#aaa',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-  }}>
-    <span>
-      📱 <strong style={{ color: '#e8e8e8' }}>Install SadLounge!</strong>
-      {' '}Chrome/Edge: click the install icon in the URL bar.
-      {' '}Firefox: not supported yet.
-      {' '}iOS Safari: tap Share → Add to Home Screen.
-    </span>
-    <button onClick={() => setShowInstallBanner(false)} style={{
-      background: 'none', border: 'none', color: '#555',
-      cursor: 'pointer', fontSize: 16, flexShrink: 0,
-    }}>✕</button>
-  </div>
-)}
 
       <div className="home-section">
         <div className="home-section-label">Direct Messages</div>
