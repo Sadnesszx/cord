@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sadlounge-v1';
+const CACHE_NAME = 'sadlounge-v2';
 const urlsToCache = [
   '/',
   '/index.html',
