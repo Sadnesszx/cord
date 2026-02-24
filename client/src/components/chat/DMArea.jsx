@@ -169,6 +169,36 @@ export default function DMArea({ friend }) {
   };
 
   useEffect(() => {
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          socket.emit('send_dm', { receiverId: friend.id, content: `[img]${data.data.url}[/img]` });
+        } catch (err) {
+          console.error(err);
+        }
+        break;
+      }
+    }
+  };
+  window.addEventListener('paste', handlePaste);
+  return () => window.removeEventListener('paste', handlePaste);
+}, [friend?.id]);
+
+  useEffect(() => {
     if (!friend) return;
     setMessages([]);
     setReactions({});

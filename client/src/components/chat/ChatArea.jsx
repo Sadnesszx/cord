@@ -280,6 +280,30 @@ export default function ChatArea({ channel }) {
   }, [channel?.id]);
 
   useEffect(() => {
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+        try {
+          const url = await uploadImage(file);
+          socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]` });
+        } catch (err) {
+          console.error(err);
+        }
+        break;
+      }
+    }
+  };
+  window.addEventListener('paste', handlePaste);
+  return () => window.removeEventListener('paste', handlePaste);
+}, [channel?.id]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
