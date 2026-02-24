@@ -118,7 +118,8 @@ export default function AuthPage() {
                 type="date"
                 value={form.birthday}
                 onChange={handle}
-                max={new Date().toISOString().split('T')[0]}
+                min="1946-01-01"
+                max="2025-12-31"
                 required
               />
             </div>
