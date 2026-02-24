@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './HomePage.css';
 import TOSPage from './TOSPage';
+import PrivacyPolicy from './PrivacyPolicy';
 
 export default function HomePage({ onSelectFriend }) {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ export default function HomePage({ onSelectFriend }) {
   const [feedbackMsg, setFeedbackMsg] = useState('');
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -125,13 +127,17 @@ export default function HomePage({ onSelectFriend }) {
       </div>
 
       <div className="home-section">
-        <div className="home-section-label">Legal</div>
-        <button className="home-contact-btn" onClick={() => setShowTOS(true)}>
-          📋 Terms of Service
-        </button>
+         <div className="home-section-label">Legal</div>
+         <button className="home-contact-btn" onClick={() => setShowTOS(true)}>
+           📋 Terms of Service
+         </button>
+         <button className="home-contact-btn" onClick={() => setShowPrivacy(true)} style={{ marginTop: 8 }}>
+           🔒 Privacy Policy
+         </button>
       </div>
 
       {showTOS && <TOSPage onClose={() => setShowTOS(false)} onAccept={() => setShowTOS(false)} />}
+        {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }

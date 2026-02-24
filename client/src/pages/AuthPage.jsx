@@ -5,6 +5,7 @@ import api from '../lib/api';
 import './Auth.css';
 import WarningModal from '../components/ui/WarningModal';
 import TOSPage from '../components/chat/TOSPage';
+import PrivacyPolicy from '../components/chat/PrivacyPolicy';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -17,6 +18,7 @@ export default function AuthPage() {
   const [tosAccepted, setTosAccepted] = useState(false);
   const [showTOS, setShowTOS] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -125,6 +127,19 @@ export default function AuthPage() {
             </div>
           )}
 
+          {mode === 'register' && (
+  <p style={{ fontSize: 12, color: '#888', margin: '-4px 0 4px' }}>
+    By registering you agree to our{' '}
+    <button type="button" onClick={() => setShowTOS(true)} style={{ background: 'none', border: 'none', color: '#5865f2', cursor: 'pointer', fontSize: 12, padding: 0 }}>
+      Terms of Service
+    </button>
+    {' '}and{' '}
+    <button type="button" onClick={() => setShowPrivacy(true)} style={{ background: 'none', border: 'none', color: '#5865f2', cursor: 'pointer', fontSize: 12, padding: 0 }}>
+      Privacy Policy
+    </button>
+  </p>
+)}
+
           {error && <div className="auth-error">{error}</div>}
 
           <button className="auth-btn" type="submit" disabled={loading}>
@@ -160,6 +175,7 @@ export default function AuthPage() {
           setShowTOS(false);
         }} />
       )}
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }
