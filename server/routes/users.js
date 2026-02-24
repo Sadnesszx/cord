@@ -107,6 +107,20 @@ router.patch('/me/status', auth, async (req, res) => {
   }
 });
 
+// Delete account
+router.delete('/me', auth, async (req, res) => {
+  try {
+    // Prevent owner from deleting their account
+    if (req.user.username === 'Sadness')
+      return res.status(403).json({ error: 'Owner account cannot be deleted' });
+    await pool.query('DELETE FROM users WHERE id = $1', [req.user.id]);
+    res.json({ message: 'Account deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Admin: delete user's profile picture
 router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
   if (req.user.username !== 'Sadness') return res.status(403).json({ error: 'Forbidden' });

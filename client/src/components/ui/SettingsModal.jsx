@@ -36,18 +36,8 @@ const STATUSES = [
   { value: 'invisible', label: 'Invisible', color: '#80848e' },
 ];
 
-const getStatusColor = (isOnline, status) => {
-  if (!isOnline) return '#80848e';
-  switch (status) {
-    case 'dnd': return '#f23f43';
-    case 'idle': return '#f0b132';
-    case 'invisible': return '#80848e';
-    default: return '#23a55a';
-  }
-};
-
 export default function SettingsModal({ onClose }) {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [bio, setBio] = useState('');
@@ -59,6 +49,9 @@ export default function SettingsModal({ onClose }) {
   const [selectedBanner, setSelectedBanner] = useState(user?.banner_color || '#1a1a1a');
   const [selectedStatus, setSelectedStatus] = useState(user?.status || 'online');
   const [customStatus, setCustomStatus] = useState(user?.custom_status || '');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const showMsg = (m, isError = false) => {
     if (isError) setError(m);
@@ -78,26 +71,26 @@ export default function SettingsModal({ onClose }) {
   };
 
   const saveBanner = async () => {
-  try {
-    await api.patch('/api/users/me/banner', { banner_color: selectedBanner });
-    const token = localStorage.getItem('sadlounge_token');
-    login(token, { ...user, banner_color: selectedBanner });
-    showMsg('Banner updated!');
-  } catch (err) {
-    showMsg('Error updating banner', true);
-  }
-};
+    try {
+      await api.patch('/api/users/me/banner', { banner_color: selectedBanner });
+      const token = localStorage.getItem('sadlounge_token');
+      login(token, { ...user, banner_color: selectedBanner });
+      showMsg('Banner updated!');
+    } catch (err) {
+      showMsg('Error updating banner', true);
+    }
+  };
 
   const saveStatus = async () => {
-  try {
-    await api.patch('/api/users/me/status', { status: selectedStatus, custom_status: customStatus });
-    const token = localStorage.getItem('sadlounge_token');
-    login(token, { ...user, status: selectedStatus, custom_status: customStatus });
-    showMsg('Status updated!');
-  } catch (err) {
-    showMsg('Error updating status', true);
-  }
-};
+    try {
+      await api.patch('/api/users/me/status', { status: selectedStatus, custom_status: customStatus });
+      const token = localStorage.getItem('sadlounge_token');
+      login(token, { ...user, status: selectedStatus, custom_status: customStatus });
+      showMsg('Status updated!');
+    } catch (err) {
+      showMsg('Error updating status', true);
+    }
+  };
 
   const uploadProfilePicture = async (e) => {
     const file = e.target.files[0];
@@ -160,6 +153,19 @@ export default function SettingsModal({ onClose }) {
     } finally { setSaving(false); }
   };
 
+  const deleteAccount = async () => {
+    if (deleteConfirmText !== user?.username) return showMsg('Username does not match', true);
+    setDeleting(true);
+    try {
+      await api.delete('/api/users/me');
+      logout();
+    } catch (err) {
+      showMsg(err.response?.data?.error || 'Error deleting account', true);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="settings-overlay" onClick={onClose}>
       <div className="settings-modal" onClick={e => e.stopPropagation()}>
@@ -207,53 +213,53 @@ export default function SettingsModal({ onClose }) {
           </div>
 
           <div className="settings-section">
-          <p className="settings-label">Banner Color</p>
-          <div className="settings-colors">
-            {BANNER_COLORS.map(({ color, label }) => (
-              <button
-                key={color}
-                className={`settings-color-swatch ${selectedBanner === color ? 'active' : ''}`}
-                style={{ background: color, border: '1px solid #333' }}
-                onClick={() => setSelectedBanner(color)}
-                title={label}
-              />
-            ))}
-          </div>
+            <p className="settings-label">Banner Color</p>
+            <div className="settings-colors">
+              {BANNER_COLORS.map(({ color, label }) => (
+                <button
+                  key={color}
+                  className={`settings-color-swatch ${selectedBanner === color ? 'active' : ''}`}
+                  style={{ background: color, border: '1px solid #333' }}
+                  onClick={() => setSelectedBanner(color)}
+                  title={label}
+                />
+              ))}
+            </div>
 
             <div className="settings-section">
-  <p className="settings-label">Status</p>
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-    {STATUSES.map(s => (
-      <button
-        key={s.value}
-        onClick={() => setSelectedStatus(s.value)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: selectedStatus === s.value ? '#2a2a2a' : '#1a1a1a',
-          border: selectedStatus === s.value ? '1px solid #5865f2' : '1px solid #2a2a2a',
-          borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#e8e8e8',
-        }}
-      >
-        <span style={{ width: 12, height: 12, borderRadius: '50%', background: s.color, display: 'inline-block', flexShrink: 0 }} />
-        {s.label}
-      </button>
-    ))}
-  </div>
-  <input
-    style={{ marginTop: 10, width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }}
-    value={customStatus}
-    onChange={e => setCustomStatus(e.target.value)}
-    placeholder="Custom status (optional)"
-    maxLength={60}
-  />
-  <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveStatus}>
-    Save Status
-  </button>
-</div>
-          <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveBanner}>
-            Save Banner
-          </button>
-        </div>
+              <p className="settings-label">Status</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {STATUSES.map(s => (
+                  <button
+                    key={s.value}
+                    onClick={() => setSelectedStatus(s.value)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      background: selectedStatus === s.value ? '#2a2a2a' : '#1a1a1a',
+                      border: selectedStatus === s.value ? '1px solid #5865f2' : '1px solid #2a2a2a',
+                      borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#e8e8e8',
+                    }}
+                  >
+                    <span style={{ width: 12, height: 12, borderRadius: '50%', background: s.color, display: 'inline-block', flexShrink: 0 }} />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                style={{ marginTop: 10, width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }}
+                value={customStatus}
+                onChange={e => setCustomStatus(e.target.value)}
+                placeholder="Custom status (optional)"
+                maxLength={60}
+              />
+              <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveStatus}>
+                Save Status
+              </button>
+            </div>
+            <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveBanner}>
+              Save Banner
+            </button>
+          </div>
           <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveAvatar}>
             Save Avatar Color
           </button>
@@ -283,6 +289,54 @@ export default function SettingsModal({ onClose }) {
               {saving ? 'Saving...' : 'Update Password'}
             </button>
           </form>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label" style={{ color: '#f23f43' }}>Danger Zone</p>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                width: '100%', padding: '8px', borderRadius: 8, cursor: 'pointer',
+                background: 'transparent', border: '1px solid #f23f43',
+                color: '#f23f43', fontSize: 13,
+              }}
+            >
+              🗑️ Delete Account
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ fontSize: 13, color: '#aaa', margin: 0 }}>
+                This is permanent and cannot be undone. Type your username <strong style={{ color: '#e8e8e8' }}>{user?.username}</strong> to confirm.
+              </p>
+              <input
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder={`Type "${user?.username}" to confirm`}
+                style={{ background: '#1a1a1a', border: '1px solid #f23f43', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                  className="btn-ghost"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteAccount}
+                  disabled={deleteConfirmText !== user?.username || deleting}
+                  style={{
+                    flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer',
+                    background: deleteConfirmText === user?.username ? '#f23f43' : '#3a1a1a',
+                    border: 'none', color: '#fff', fontSize: 13,
+                  }}
+                >
+                  {deleting ? 'Deleting...' : 'Delete Forever'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {error && <p className="settings-error">{error}</p>}
