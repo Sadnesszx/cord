@@ -79,4 +79,39 @@ router.post('/warn', auth, async (req, res) => {
   }
 });
 
+// Admin: get all users
+router.get('/users', auth, async (req, res) => {
+  if (!await isAdmin(req.user.id)) return res.status(403).json({ error: 'Not authorized' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, username, avatar_color, avatar_url FROM users ORDER BY username ASC'
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Admin: get DM conversation between two users
+router.get('/dms/:user1/:user2', auth, async (req, res) => {
+  if (!await isAdmin(req.user.id)) return res.status(403).json({ error: 'Not authorized' });
+  try {
+    const { rows: u1 } = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.user1]);
+    const { rows: u2 } = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.user2]);
+    if (!u1.length || !u2.length) return res.status(404).json({ error: 'User not found' });
+    const { rows } = await pool.query(
+      `SELECT dm.*, u.username, u.avatar_color, u.avatar_url
+       FROM dm_messages dm
+       JOIN users u ON dm.sender_id = u.id
+       WHERE (dm.sender_id = $1 AND dm.receiver_id = $2)
+          OR (dm.sender_id = $2 AND dm.receiver_id = $1)
+       ORDER BY dm.created_at ASC`,
+      [u1[0].id, u2[0].id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

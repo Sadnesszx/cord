@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import './ProfileModal.css';
+import AdminDMViewer from './AdminDMViewer';
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -34,6 +35,7 @@ export default function ProfileModal({ username, onClose }) {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const isAdmin = user?.username === 'Sadness';
   const isOwnProfile = user?.username === username;
+  const [showDMViewer, setShowDMViewer] = useState(false);
 
   const [warningText, setWarningText] = useState('');
   const [banReason, setBanReason] = useState('');
@@ -194,6 +196,14 @@ export default function ProfileModal({ username, onClose }) {
 
                   <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
 
+                  <button
+                    className="admin-warn-btn"
+                    onClick={() => setShowDMViewer(true)}
+                    style={{ width: '100%', marginTop: 8 }}
+                  >
+                    🔍 View User DMs
+               </button>
+
                   <form onSubmit={async (e) => {
                     e.preventDefault();
                     const reason = e.target.reason.value || 'No reason provided';
@@ -213,6 +223,7 @@ export default function ProfileModal({ username, onClose }) {
                 </div>
               )}
             </div>
+            {showDMViewer && <AdminDMViewer onClose={() => setShowDMViewer(false)} />}
           </>
         )}
       </div>
