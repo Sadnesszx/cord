@@ -8,7 +8,7 @@ import TOSPage from '../components/chat/TOSPage';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({ username: '', password: '', birthday: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -24,27 +24,40 @@ export default function AuthPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    if (mode === 'register' && !tosAccepted) {
-  setLoading(false);
-  setPendingSubmit(true);
-  setShowTOS(true);
-  return;
-}
+
     if (mode === 'register') {
-  if (form.username.length < 3) return setError('Username must be at least 3 characters');
-  if (!/^[a-zA-Z0-9]+$/.test(form.username)) return setError('Username can only contain letters and numbers');
-}
+      if (form.username.length < 3) { setLoading(false); return setError('Username must be at least 3 characters'); }
+      if (!/^[a-zA-Z0-9]+$/.test(form.username)) { setLoading(false); return setError('Username can only contain letters and numbers'); }
+      if (!form.birthday) { setLoading(false); return setError('Please enter your birthday'); }
+
+      // Age check - must be at least 13
+      const today = new Date();
+      const birth = new Date(form.birthday);
+      const age = today.getFullYear() - birth.getFullYear() - (
+        today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0
+      );
+      if (age < 13) { setLoading(false); return setError('You must be at least 13 years old to register'); }
+
+      if (!tosAccepted) {
+        setLoading(false);
+        setPendingSubmit(true);
+        setShowTOS(true);
+        return;
+      }
+    }
+
     try {
       const { data } = await api.post(`/api/auth/${mode}`, {
-  username: form.username,
-  password: form.password,
-});
-login(data.token, data.user);
-if (data.user.warning) {
-  setWarning(data.user.warning);
-} else {
-  navigate('/');
-}
+        username: form.username,
+        password: form.password,
+        birthday: form.birthday || null,
+      });
+      login(data.token, data.user);
+      if (data.user.warning) {
+        setWarning(data.user.warning);
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong');
     } finally {
@@ -97,6 +110,20 @@ if (data.user.warning) {
             />
           </div>
 
+          {mode === 'register' && (
+            <div className="auth-field">
+              <label>Birthday</label>
+              <input
+                name="birthday"
+                type="date"
+                value={form.birthday}
+                onChange={handle}
+                max={new Date().toISOString().split('T')[0]}
+                required
+              />
+            </div>
+          )}
+
           {error && <div className="auth-error">{error}</div>}
 
           <button className="auth-btn" type="submit" disabled={loading}>
@@ -116,22 +143,22 @@ if (data.user.warning) {
         </p>
       </div>
 
-{warning && (
-  <WarningModal
-    message={warning}
-    onClose={() => { setWarning(''); navigate('/'); }}
-  />
-)}
+      {warning && (
+        <WarningModal
+          message={warning}
+          onClose={() => { setWarning(''); navigate('/'); }}
+        />
+      )}
 
-{showTOS && (
-  <TOSPage onClose={() => {
-    setShowTOS(false);
-    setPendingSubmit(false);
-  }} onAccept={() => {
-    setTosAccepted(true);
-    setShowTOS(false);
-  }} />
-)}
+      {showTOS && (
+        <TOSPage onClose={() => {
+          setShowTOS(false);
+          setPendingSubmit(false);
+        }} onAccept={() => {
+          setTosAccepted(true);
+          setShowTOS(false);
+        }} />
+      )}
     </div>
   );
 }

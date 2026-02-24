@@ -3,44 +3,56 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
 
-
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, birthday } = req.body;
   if (!username || !password)
     return res.status(400).json({ error: 'Username and password required' });
 
-if (username.length < 3 || username.length > 32)
+  if (username.length < 3 || username.length > 32)
     return res.status(400).json({ error: 'Username must be 3–32 characters' });
 
-if (!/^[a-zA-Z0-9]+$/.test(username))
+  if (!/^[a-zA-Z0-9]+$/.test(username))
     return res.status(400).json({ error: 'Username can only contain letters and numbers' });
+
+  if (!birthday)
+    return res.status(400).json({ error: 'Birthday is required' });
+
+  // Age check - must be at least 13
+  const today = new Date();
+  const birth = new Date(birthday);
+  const age = today.getFullYear() - birth.getFullYear() - (
+    today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0
+  );
+  if (age < 13)
+    return res.status(400).json({ error: 'You must be at least 13 years old to register' });
 
   try {
     const { rows: existing } = await pool.query(
-  'SELECT id FROM users WHERE LOWER(username) = LOWER($1)',
-  [username]
-);
-if (existing.length) return res.status(409).json({ error: 'Username already taken' });
+      'SELECT id FROM users WHERE LOWER(username) = LOWER($1)',
+      [username]
+    );
+    if (existing.length) return res.status(409).json({ error: 'Username already taken' });
+
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
-      `INSERT INTO users (username, email, password_hash)
-       VALUES ($1, $2, $3) RETURNING id, username, avatar_color`,
-      [username, `${username}@sadlounge.local`, hash]
+      `INSERT INTO users (username, email, password_hash, birthday)
+       VALUES ($1, $2, $3, $4) RETURNING id, username, avatar_color`,
+      [username, `${username}@sadlounge.local`, hash, birthday]
     );
     const user = rows[0];
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-try {
-  const io = global.getIO?.();
-  if (io) {
-    io.emit('new_user', { username: user.username });
-    console.log('Emitted new_user for:', user.username);
-  } else {
-    console.log('IO not available');
-  }
-} catch (e) { console.error('notify error:', e); }
+    try {
+      const io = global.getIO?.();
+      if (io) {
+        io.emit('new_user', { username: user.username });
+        console.log('Emitted new_user for:', user.username);
+      } else {
+        console.log('IO not available');
+      }
+    } catch (e) { console.error('notify error:', e); }
 
     res.status(201).json({ token, user });
   } catch (err) {
