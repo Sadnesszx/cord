@@ -9,7 +9,7 @@ export default function TOSPage({ onClose, onAccept }) {
           <button className="tos-close" onClick={onClose}>✕</button>
         </div>
         <div className="tos-body">
-          <p className="tos-intro">Welcome to SadLounge. By using this platform you agree to the following rules.</p>
+          <p className="tos-intro">Welcome to SadnessChat. By using this platform you agree to the following rules.</p>
 
           <div className="tos-section">
             <h3>⚠️ Warnings</h3>
@@ -54,7 +54,7 @@ export default function TOSPage({ onClose, onAccept }) {
             <p>If you believe you were banned unfairly, you may contact the owner through an alternative account. Appeals are reviewed on a case by case basis.</p>
           </div>
 
-          <p className="tos-footer">These terms may be updated at any time. Continued use of SadLounge means you accept any changes.</p>
+          <p className="tos-footer">These terms may be updated at any time. Continued use of SadnessChat means you accept any changes.</p>
         </div>
 
         <div className="tos-actions">
