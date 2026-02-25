@@ -1,4 +1,4 @@
-# 💬 SadLounge
+# 💬 SadnessChat
 
 A real-time chat app built with React, Node.js, Socket.io, and PostgreSQL. Dark, sleek, bubbly design.
 
@@ -20,7 +20,7 @@ A real-time chat app built with React, Node.js, Socket.io, and PostgreSQL. Dark,
 ### 2. Clone & Install
 ```bash
 git clone <your-repo-url>
-cd SadLounge
+cd SadnessChat
 npm run install:all
 ```
 
@@ -30,7 +30,7 @@ cp server/.env.example server/.env
 ```
 Edit `server/.env`:
 ```
-DATABASE_URL=postgresql://your_user:your_password@localhost:5432/SadLounge
+DATABASE_URL=postgresql://your_user:your_password@localhost:5432/SadnessChat
 JWT_SECRET=pick-a-long-random-string-here
 CLIENT_URL=http://localhost:5173
 PORT=3001
@@ -49,7 +49,7 @@ VITE_SOCKET_URL=http://localhost:3001
 
 ### 5. Create the database
 ```bash
-createdb SadLounge
+createdb SadnessChat
 ```
 The app will auto-create all tables on first run.
 
@@ -93,7 +93,7 @@ Open [http://localhost:5173](http://localhost:5173) 🎉
 ## 📁 Project Structure
 
 ```
-SadLounge/
+SadnessChat/
 ├── client/                   # React frontend
 │   └── src/
 │       ├── components/

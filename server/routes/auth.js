@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO users (username, email, password_hash, birthday)
        VALUES ($1, $2, $3, $4) RETURNING id, username, avatar_color`,
-      [username, `${username}@sadlounge.local`, hash, birthday]
+      [username, `${username}@sadnesschat.local`, hash, birthday]
     );
     const user = rows[0];
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });

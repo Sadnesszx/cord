@@ -12,10 +12,10 @@ export default function PrivacyPolicy({ onClose }) {
           <p className="tos-date">Last updated: February 2026</p>
 
           <h3>1. Who We Are</h3>
-          <p>SadLounge is a free real-time chat platform. This Privacy Policy explains what data we collect, how we use it, and your rights regarding it.</p>
+          <p>SadnessChat is a free real-time chat platform. This Privacy Policy explains what data we collect, how we use it, and your rights regarding it.</p>
 
           <h3>2. Data We Collect</h3>
-          <p>When you register and use SadLounge, we collect the following information:</p>
+          <p>When you register and use SadnessChat, we collect the following information:</p>
           <ul>
             <li><strong>Username</strong> — your public display name</li>
             <li><strong>Password</strong> — stored securely as a hashed value, never in plain text</li>
@@ -28,7 +28,7 @@ export default function PrivacyPolicy({ onClose }) {
           </ul>
 
           <h3>3. How We Use Your Data</h3>
-          <p>Your data is used solely to provide the SadLounge service, including:</p>
+          <p>Your data is used solely to provide the SadnessChat service, including:</p>
           <ul>
             <li>Displaying your profile to other users</li>
             <li>Delivering messages in real time</li>
@@ -49,7 +49,7 @@ export default function PrivacyPolicy({ onClose }) {
           <p>We take reasonable steps to protect your data. Passwords are hashed using bcrypt and are never stored or transmitted in plain text. However, no system is 100% secure and we cannot guarantee absolute security.</p>
 
           <h3>7. Children's Privacy</h3>
-          <p>SadLounge requires users to be at least 13 years old to register. We do not knowingly collect data from children under 13. If you believe a child under 13 has registered, please contact the platform owner.</p>
+          <p>SadnessChat requires users to be at least 13 years old to register. We do not knowingly collect data from children under 13. If you believe a child under 13 has registered, please contact the platform owner.</p>
 
           <h3>8. Your Rights</h3>
           <p>You have the right to:</p>
@@ -60,7 +60,7 @@ export default function PrivacyPolicy({ onClose }) {
           </ul>
 
           <h3>9. Changes to This Policy</h3>
-          <p>We may update this Privacy Policy from time to time. Continued use of SadLounge after changes means you accept the updated policy.</p>
+          <p>We may update this Privacy Policy from time to time. Continued use of SadnessChat after changes means you accept the updated policy.</p>
 
           <h3>10. Contact</h3>
           <p>If you have any questions about this Privacy Policy, contact the platform owner via the Contact Owner option on the homepage.</p>

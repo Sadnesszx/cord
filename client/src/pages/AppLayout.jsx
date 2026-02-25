@@ -53,10 +53,10 @@ export default function AppLayout() {
 useEffect(() => {
   const socket = getSocket();
   socket.on('avatar_cleared', ({ reason }) => {
-    const token = localStorage.getItem('sadlounge_token');
-    const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
+    const token = localStorage.getItem('sadnesschat_token');
+    const currentUser = JSON.parse(localStorage.getItem('sadnesschat_user'));
     const updatedUser = { ...currentUser, avatar_url: null };
-    localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
+    localStorage.setItem('sadnesschat_user', JSON.stringify(updatedUser));
     login(token, updatedUser);
     setAvatarClearedMessage(`Your profile picture has been removed by an admin.\nReason: ${reason}`);
   });
@@ -80,10 +80,10 @@ useEffect(() => {
   const socket = getSocket();
   socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
     if (String(userId) === String(user?.id)) {
-      const token = localStorage.getItem('sadlounge_token');
-      const currentUser = JSON.parse(localStorage.getItem('sadlounge_user'));
+      const token = localStorage.getItem('sadnesschat_token');
+      const currentUser = JSON.parse(localStorage.getItem('sadnesschat_user'));
       const updatedUser = { ...currentUser, avatar_url };
-      localStorage.setItem('sadlounge_user', JSON.stringify(updatedUser));
+      localStorage.setItem('sadnesschat_user', JSON.stringify(updatedUser));
       login(token, updatedUser);
     }
   });
@@ -210,7 +210,7 @@ useEffect(() => {
   return (
     <div className="app-layout">
       <div className="top-bar">
-        <span className="top-bar-logo" onClick={handleDMs} style={{ cursor: 'pointer' }}>SadLounge</span>
+        <span className="top-bar-logo" onClick={handleDMs} style={{ cursor: 'pointer' }}>SadnessChat</span>
 
         <div className="top-bar-servers" onClick={loadServers}>
           <button

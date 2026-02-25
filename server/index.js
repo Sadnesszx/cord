@@ -61,6 +61,6 @@ const PORT = process.env.PORT || 3001;
 
 initDB().then(() => {
   server.listen(PORT, () => {
-    console.log(`🚀 SadLounge server running on port ${PORT}`);
+    console.log(`🚀 SadnessChat server running on port ${PORT}`);
   });
 }).catch(console.error);
