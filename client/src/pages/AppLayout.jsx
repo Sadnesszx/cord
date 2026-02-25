@@ -93,7 +93,7 @@ useEffect(() => {
   useEffect(() => {
     const checkServer = async () => {
       try {
-        const res = await fetch('https://sadlounge.onrender.com/health');
+        const res = await fetch(import.meta.env.VITE_API_URL + '/health')
         if (!res.ok) setServerDown(true);
         else setServerDown(false);
       } catch (err) {
