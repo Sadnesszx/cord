@@ -50,7 +50,7 @@ export default function HomePage({ onSelectFriend }) {
         )}
         <div className="home-greeting-text">
           <h1>{greeting}, <span>{user?.username}</span></h1>
-          <p>What's on your mind today?</p>
+          <p>What's on your mind today? SADLOUNGE WILL NO LONGER RECEIVE UPDATES, WE ARE CURRENTLY WORKING ON A BRAND NEW CHAT APP WTIH WAY MORE FEATURES, THANKS FOR JOINING SADLOUNGE! WE APPRECIATE YOUR SUPPORT </p>
         </div>
       </div>
 
