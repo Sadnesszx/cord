@@ -40,8 +40,12 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
 
   useEffect(() => {
     const socket = getSocket();
-    socket.emit('get_online_users');
-    socket.on('online_users', (users) => setOnlineUsers(users));
+if (socket.connected) {
+  socket.emit('get_online_users');
+} else {
+  socket.once('connect', () => socket.emit('get_online_users'));
+}
+socket.on('online_users', (users) => setOnlineUsers(users));
     socket.on('new_friend_request', () => {
       api.get('/api/friends/requests').then(({ data }) => setRequests(data));
     });

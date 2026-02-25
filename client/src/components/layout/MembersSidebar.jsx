@@ -29,8 +29,12 @@ export default function MembersSidebar({ server }) {
 
   useEffect(() => {
     const socket = getSocket();
-    socket.emit('get_online_users');
-    socket.on('online_users', (users) => setOnlineUsers(users));
+if (socket.connected) {
+  socket.emit('get_online_users');
+} else {
+  socket.once('connect', () => socket.emit('get_online_users'));
+}
+socket.on('online_users', (users) => setOnlineUsers(users));
     socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
       setMembers(prev => prev.map(m =>
         String(m.id) === String(userId) ? { ...m, avatar_url } : m
