@@ -9,14 +9,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 14px 10px;
+  padding: 16px 14px 12px;
   border-bottom: var(--border);
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-4);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.8px;
 }
 
 .friends-add-btn {
@@ -26,12 +25,13 @@
   line-height: 1;
   padding: 0 4px;
   transition: color 0.15s;
+  border-radius: var(--radius-sm);
 }
 
 .friends-add-btn:hover { color: var(--white); }
 
 .friends-add-form {
-  padding: 10px;
+  padding: 10px 10px;
   border-bottom: var(--border);
   display: flex;
   flex-direction: column;
@@ -41,163 +41,155 @@
 .friends-add-form input {
   background: var(--bg-float);
   border: var(--border-bright);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--white);
   transition: border-color 0.2s;
 }
 
-.friends-add-form input:focus { border-color: var(--gray-2); }
+.friends-add-form input:focus { border-color: var(--accent); }
 .friends-add-form input::placeholder { color: var(--gray-2); }
 
 .friends-add-form button {
-  background: var(--bg-float);
-  color: var(--white);
-  font-size: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
   font-weight: 600;
   padding: 8px;
-  border-radius: var(--radius-sm);
-  border: var(--border-bright);
+  border-radius: var(--radius-md);
+  border: none;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
 }
 
-.friends-add-form button:hover { background: var(--bg-active); border-color: var(--gray-1); }
+.friends-add-form button:hover { background: #4752c4; }
 
 .friends-msg {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--gray-4);
   text-align: center;
-  font-family: 'Space Mono', monospace;
 }
 
 .friends-tabs {
   display: flex;
   padding: 8px 8px 4px;
-  gap: 4px;
+  gap: 2px;
 }
 
 .friends-tabs button {
   flex: 1;
   background: none;
   color: var(--gray-3);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  border: var(--border);
+  border-radius: var(--radius-md);
+  border: none;
   transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-family: 'Inter', sans-serif;
 }
 
-.friends-tabs button:hover { background: var(--bg-hover); color: var(--white); border-color: #2a2a2a; }
-.friends-tabs button.active { background: var(--bg-active); color: var(--white); border-color: var(--gray-1); }
+.friends-tabs button:hover { background: var(--bg-hover); color: var(--gray-5); }
+.friends-tabs button.active { background: var(--bg-active); color: var(--white); }
 
 .badge {
-  background: var(--bg-float);
-  color: var(--gray-4);
+  background: var(--accent);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: var(--radius-full);
-  border: var(--border-bright);
+  min-width: 16px;
+  text-align: center;
 }
 
 .friends-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
 }
 
 .friends-empty {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--gray-2);
   text-align: center;
-  padding: 20px 10px;
-  font-family: 'Space Mono', monospace;
-  line-height: 1.6;
+  padding: 24px 10px;
+  line-height: 1.7;
 }
 
 .friend-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--gray-3);
-  font-size: 13px;
-  font-weight: 400;
+  border-radius: var(--radius-md);
   transition: all 0.1s;
-  text-align: left;
 }
 
-.friend-item:hover { background: var(--bg-hover); color: var(--gray-5); }
-.friend-item.active { background: var(--bg-active); color: var(--white); }
+.friend-item:hover { background: var(--bg-hover); }
+.friend-item.active { background: var(--bg-active); }
 
 .friend-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--bg-void);
+  color: var(--white);
   flex-shrink: 0;
-  background: var(--gray-2);
+  overflow: hidden;
 }
 
 .request-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
   color: var(--gray-3);
   font-size: 13px;
+  transition: background 0.1s;
 }
+
+.request-item:hover { background: var(--bg-hover); }
 
 .request-actions { display: flex; gap: 6px; margin-left: auto; }
 
 .accept-btn {
-  background: rgba(39, 174, 96, 0.1);
-  color: #27ae60;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  border: 1px solid rgba(39, 174, 96, 0.2);
+  background: rgba(35,165,90,0.12);
+  color: var(--success);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  border: 1px solid rgba(35,165,90,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
 
-.accept-btn:hover { background: #27ae60; color: var(--bg-void); }
+.accept-btn:hover { background: var(--success); color: #fff; }
 
 .decline-btn {
-  background: rgba(192, 57, 43, 0.1);
-  color: #c0392b;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  border: 1px solid rgba(192, 57, 43, 0.2);
+  background: var(--danger-dim);
+  color: var(--danger);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  border: 1px solid rgba(237,66,69,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
 
-.decline-btn:hover { background: #c0392b; color: var(--white); }
+.decline-btn:hover { background: var(--danger); color: #fff; }
 
 .friend-avatar-wrapper {
   position: relative;
@@ -208,25 +200,10 @@
   position: absolute;
   bottom: -1px;
   right: -1px;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 2px solid #0a0a0a;
-}
-
-.status-dot.online {
-  background: #27ae60;
-}
-
-.status-dot.offline {
-  background: #444;
-}
-
-.friend-item {
-  display: flex;
-  align-items: center;
-  border-radius: var(--radius-sm);
-  transition: all 0.1s;
+  border: 2px solid var(--bg-deep);
 }
 
 .friend-item-main {
@@ -234,13 +211,13 @@
   align-items: center;
   gap: 10px;
   flex: 1;
-  padding: 7px 10px;
+  padding: 8px 10px;
   background: transparent;
   color: var(--gray-3);
   font-size: 13px;
   text-align: left;
-  transition: all 0.1s;
-  border-radius: var(--radius-sm);
+  transition: color 0.1s;
+  border-radius: var(--radius-md);
 }
 
 .friend-item:hover .friend-item-main { color: var(--gray-5); }
@@ -249,14 +226,14 @@
 .view-profile-btn {
   background: none;
   color: transparent;
-  font-size: 11px;
+  font-size: 12px;
   padding: 4px 6px;
   border-radius: var(--radius-sm);
   transition: all 0.15s;
 }
 
 .friend-item:hover .view-profile-btn { color: var(--gray-2); }
-.view-profile-btn:hover { color: var(--white) !important; }
+.view-profile-btn:hover { color: var(--gray-5) !important; }
 
 .unfriend-btn {
   background: none;
@@ -268,4 +245,14 @@
 }
 
 .friend-item:hover .unfriend-btn { color: var(--gray-2); }
-.unfriend-btn:hover { color: #c0392b !important; }
+.unfriend-btn:hover { color: var(--danger) !important; }
+
+.unread-badge {
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 4px;
+  flex-shrink: 0;
+}

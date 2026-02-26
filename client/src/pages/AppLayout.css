@@ -1,7 +1,7 @@
 .app-layout {
   display: grid;
   grid-template-rows: 48px 1fr;
-  grid-template-columns: 220px 1fr 200px;
+  grid-template-columns: 240px 1fr 220px;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -20,21 +20,22 @@
 }
 
 .top-bar-logo {
-  font-family: 'Space Mono', monospace;
-  font-size: 13px;
-  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--gray-5);
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   margin-right: 12px;
-  padding-right: 12px;
+  padding-right: 14px;
   border-right: var(--border-bright);
+  white-space: nowrap;
 }
 
 .top-bar-servers {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
   overflow-x: auto;
   scrollbar-width: none;
@@ -48,76 +49,73 @@
   font-size: 12px;
   font-weight: 500;
   padding: 5px 12px;
-  border-radius: var(--radius-sm);
-  border: var(--border);
+  border-radius: var(--radius-md);
+  border: none;
   white-space: nowrap;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
+  position: relative;
 }
 
 .top-server-btn:hover {
   background: var(--bg-float);
-  color: var(--white);
-  border-color: #2a2a2a;
+  color: var(--gray-5);
 }
 
 .top-server-btn.active {
-  background: var(--bg-float);
-  color: var(--white);
-  border-color: var(--gray-1);
-}
-
-.top-server-btn.dm-btn {
-  color: var(--gray-3);
-}
-
-.top-server-btn.dm-btn.active {
+  background: var(--bg-active);
   color: var(--white);
 }
 
 .top-bar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-left: auto;
 }
 
 .top-bar-new-server {
   background: transparent;
   color: var(--gray-3);
-  font-size: 11px;
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  border: var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: var(--radius-md);
+  border: var(--border-bright);
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
 }
 
 .top-bar-new-server:hover {
   background: var(--bg-float);
   color: var(--white);
+  border-color: var(--gray-1);
 }
 
 .top-bar-user {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: var(--border);
+  padding: 4px 10px 4px 6px;
+  border-radius: var(--radius-lg);
   background: var(--bg-raised);
+  border: var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
+.top-bar-user:hover { background: var(--bg-float); border-color: var(--gray-1); }
+
 .top-bar-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: var(--bg-void);
+  color: var(--white);
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .top-bar-username {
@@ -129,9 +127,10 @@
 .top-bar-logout {
   background: none;
   color: var(--gray-2);
-  padding: 2px;
+  padding: 2px 4px;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-sm);
   transition: color 0.15s;
 }
 
@@ -162,36 +161,32 @@
   background: var(--bg-base);
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
 }
 
 .modal {
   background: var(--bg-raised);
   border: var(--border-bright);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   padding: 24px;
-  width: 360px;
+  width: 380px;
   box-shadow: var(--shadow-lg);
   animation: fadeIn 0.15s ease;
 }
 
 .modal h3 {
-  font-family: 'Space Mono', monospace;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--white);
-  margin-bottom: 16px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  margin-bottom: 18px;
 }
 
 .modal input {
@@ -200,13 +195,13 @@
   border: var(--border-bright);
   border-radius: var(--radius-md);
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--white);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   transition: border-color 0.2s;
 }
 
-.modal input:focus { border-color: var(--gray-2); }
+.modal input:focus { border-color: var(--accent); }
 .modal input::placeholder { color: var(--gray-2); }
 
 .modal-actions {
@@ -217,40 +212,37 @@
 
 .btn-ghost {
   background: transparent;
-  color: var(--gray-3);
-  font-size: 12px;
+  color: var(--gray-4);
+  font-size: 13px;
   font-weight: 500;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: var(--radius-md);
-  border: var(--border);
+  border: none;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
 }
 
 .btn-ghost:hover { background: var(--bg-hover); color: var(--white); }
 
 .btn-primary {
-  background: var(--bg-float);
-  color: var(--white);
-  font-size: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
   font-weight: 600;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: var(--radius-md);
-  border: var(--border-bright);
+  border: none;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
 }
 
-.btn-primary:hover { background: var(--bg-active); border-color: var(--gray-1); }
+.btn-primary:hover { background: #4752c4; }
 
 .top-bar-settings {
   background: none;
-  color: var(--gray-2);
+  color: var(--gray-3);
   font-size: 16px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: var(--radius-md);
   transition: all 0.15s;
 }
 
-.top-bar-settings:hover { color: var(--white); }
+.top-bar-settings:hover { color: var(--white); background: var(--bg-hover); }
