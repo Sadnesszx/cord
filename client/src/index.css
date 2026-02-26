@@ -22,9 +22,9 @@
   --gray-5: #c8c8d8;
   --white: #eeeef4;
 
-  --accent: #5865f2;
-  --accent-dim: rgba(88,101,242,0.15);
-  --accent-glow: rgba(88,101,242,0.08);
+  --accent: #7a7a88;
+  --accent-dim: rgba(122,122,136,0.15);
+  --accent-glow: rgba(122,122,136,0.08);
 
   --danger: #ed4245;
   --danger-dim: rgba(237,66,69,0.12);
