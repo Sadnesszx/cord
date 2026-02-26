@@ -124,7 +124,7 @@ export default function ProfileModal({ username, onClose }) {
         {!loading && profile && (
           <>
             <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : (profile.banner_color || profile.avatar_color) }} />
-            <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0, position: 'relative' }}>
+            <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0 }}>
               {profile.banned ? (
                 <span style={{ fontSize: 28 }}>🚫</span>
               ) : profile.avatar_url ? (
@@ -132,24 +132,30 @@ export default function ProfileModal({ username, onClose }) {
               ) : (
                 profile.username[0].toUpperCase()
               )}
-              {!profile.banned && (
-                <span style={{
-                  position: 'absolute', bottom: 2, right: 2,
-                  width: 14, height: 14, borderRadius: '50%',
-                  background: getStatusColor(isOnline ? profile.status : 'offline'),
-                  border: '2px solid #1a1a2e',
-                  display: 'block',
-                }} />
-              )}
+              
             </div>
             <div className="profile-body">
               <div className="profile-top-row">
                 <div>
                   <h2 className="profile-username">{profile.banned ? 'Account Banned' : profile.username}</h2>
                   {!profile.banned && (
-                    <p style={{ fontSize: 12, color: getStatusColor(isOnline ? profile.status : 'offline'), margin: '2px 0 0 0' }}>
-                      ● {isOnline ? getStatusLabel(profile.status) : 'Offline'}
-                      {isOnline && profile.custom_status && ` — ${profile.custom_status}`}
+                    <p style={{ 
+                       fontSize: 12, 
+                       color: getStatusColor(isOnline ? profile.status : 'offline'), 
+                       margin: '4px 0 0 0',
+                       display: 'flex',
+                       alignItems: 'center',
+                       gap: 5
+                      }}>
+                        <span style={{
+                        width: 10, height: 10, borderRadius: '50%',
+                        background: getStatusColor(isOnline ? profile.status : 'offline'),
+                        display: 'inline-block', flexShrink: 0
+                       }} />
+                      <span style={{ color: '#a0a0b0' }}>
+                       {isOnline ? getStatusLabel(profile.status) : 'Offline'}
+                       {isOnline && profile.custom_status && ` — ${profile.custom_status}`}
+                      </span>
                     </p>
                   )}
                 </div>
