@@ -107,8 +107,15 @@
   border: 2px solid var(--bg-void);
 }
 
-.server-icon.server-danger { color: var(--gray-3); }
-.server-icon.server-danger:hover { background: var(--danger-dim); color: var(--danger); border-color: transparent; }
+.server-icon.server-danger { 
+  color: var(--gray-3);
+  background: transparent;
+}
+.server-icon.server-danger:hover { 
+  background: var(--danger-dim); 
+  color: var(--danger); 
+  border-color: transparent; 
+}
 
 /* Modal */
 .modal-overlay {
