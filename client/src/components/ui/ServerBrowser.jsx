@@ -43,9 +43,13 @@ export default function ServerBrowser({ onJoin, onClose }) {
           )}
           {servers.map(s => (
             <div key={s.id} className="browser-server">
-              <div className="browser-server-icon">
-                {s.name[0].toUpperCase()}
-              </div>
+              <div className="browser-server-icon" style={{ padding: 0, overflow: 'hidden' }}>
+  {s.icon_url ? (
+    <img src={s.icon_url} alt={s.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+  ) : (
+    s.name[0].toUpperCase()
+  )}
+</div>
               <div className="browser-server-info">
                 <span className="browser-server-name">{s.name}</span>
                 <span className="browser-server-meta">{s.member_count} member{s.member_count !== 1 ? 's' : ''} · by {s.owner_name}</span>
