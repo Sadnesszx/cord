@@ -138,6 +138,12 @@ export default function ChatArea({ channel }) {
   const socket = getSocket();
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
+  useEffect(() => {
+  const handler = () => setActiveReactionPicker(null);
+  if (activeReactionPicker) document.addEventListener('mousedown', handler);
+  return () => document.removeEventListener('mousedown', handler);
+}, [activeReactionPicker]);
+
   const deleteMessage = async (messageId) => {
     try {
       await api.delete(`/api/messages/${messageId}`);
@@ -413,9 +419,6 @@ export default function ChatArea({ channel }) {
                             <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
                               😑
                             </button>
-                            {activeReactionPicker === msg.id && (
-                              <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
-                            )}
                           </div>
                           {msg.user_id === user?.id && (
                             <>
@@ -424,6 +427,9 @@ export default function ChatArea({ channel }) {
                             </>
                           )}
                         </div>
+                        {activeReactionPicker === msg.id && (
+                          <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
+                        )}
                       </>
                     )}
                     {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
