@@ -69,13 +69,13 @@
 
 .server-icon.server-add {
   background: #2b2d31;
-  color: var(--success);
+  color: var(--gray-3);
   font-size: 22px;
   font-weight: 400;
 }
 
 .server-icon.server-add:hover {
-  background: var(--success);
+  background: var(--bg-hover);
   color: var(--white);
   border-radius: 30%;
 }
