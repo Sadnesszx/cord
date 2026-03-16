@@ -53,4 +53,33 @@ router.get('/:game', auth, async (req, res) => {
   }
 });
 
+// Get badges for a username
+router.get('/badges/:username', auth, async (req, res) => {
+  try {
+    const { rows: user } = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.username]);
+    if (!user.length) return res.status(404).json({ error: 'User not found' });
+    const userId = user[0].id;
+
+    const games = ['aim', 'type', 'reaction'];
+    const badges = [];
+
+    for (const game of games) {
+      const { rows } = await pool.query(
+        `SELECT user_id FROM minigame_scores WHERE game = $1 ORDER BY score DESC LIMIT 1`,
+        [game]
+      );
+      if (rows.length && String(rows[0].user_id) === String(userId)) {
+        if (game === 'aim') badges.push({ id: 'aim_champion', label: 'Aim Champion', emoji: '🎯', desc: '#1 in Aim Trainer' });
+        if (game === 'type') badges.push({ id: 'speed_typer', label: 'Speed Typer', emoji: '⌨️', desc: '#1 in Type Racer' });
+        if (game === 'reaction') badges.push({ id: 'lightning', label: 'Lightning Reflexes', emoji: '⚡', desc: '#1 in Reaction Test' });
+      }
+    }
+
+    res.json(badges);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

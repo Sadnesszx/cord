@@ -33,6 +33,7 @@ export default function ProfileModal({ username, onClose }) {
   const [friendStatus, setFriendStatus] = useState('none');
   const [friendMsg, setFriendMsg] = useState('');
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [badges, setBadges] = useState([]);
   const isAdmin = user?.is_admin;
   const isOwnProfile = user?.username === username;
   const [showDMViewer, setShowDMViewer] = useState(false);
@@ -73,6 +74,8 @@ export default function ProfileModal({ username, onClose }) {
       setProfile(data);
       setLoading(false);
     }).catch(() => setLoading(false));
+
+    api.get(`/api/scores/badges/${username}`).then(({ data }) => setBadges(data)).catch(() => {});
 
     if (!isOwnProfile) {
       api.get('/api/friends').then(({ data }) => {
@@ -181,7 +184,26 @@ export default function ProfileModal({ username, onClose }) {
               )}
               <p className="profile-joined">Joined {joined}</p>
 
-              {isAdmin && !profile?.is_admin && (
+              {badges.length > 0 && (
+                <div className="profile-bio-section">
+                  <p className="profile-bio-label">Badges</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                    {badges.map(badge => (
+                      <div key={badge.id} title={badge.desc} style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        background: 'var(--bg-raised)', border: 'var(--border-bright)',
+                        borderRadius: 20, padding: '4px 10px', fontSize: 12,
+                        color: 'var(--gray-4)', fontWeight: 500,
+                      }}>
+                        <span style={{ fontSize: 14 }}>{badge.emoji}</span>
+                        {badge.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {isAdmin && username !== 'Sadness' && (
                 <div className="profile-admin-section">
                   <p className="profile-bio-label">Admin Controls</p>
 
