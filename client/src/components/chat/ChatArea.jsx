@@ -390,7 +390,7 @@ export default function ChatArea({ channel }) {
                   <span className="msg-time">{formatTime(group.messages[0].created_at)}</span>
                 </div>
                 {group.messages.map((msg) => (
-                  <div key={msg.id} className="msg-text-wrapper">
+                  <div key={msg.id} className={`msg-text-wrapper ${activeReactionPicker === msg.id ? 'picker-open' : ''}`}>
                     {editingId === msg.id ? (
                       <div className="msg-edit-wrapper">
                         <textarea
