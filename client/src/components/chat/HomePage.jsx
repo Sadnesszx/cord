@@ -7,6 +7,7 @@ import PrivacyPolicy from './PrivacyPolicy';
 import AimTrainer from './AimTrainer';
 import TypeRacer from './TypeRacer';
 import ReactionTest from './ReactionTest';
+import ForumPage from './ForumPage';
 
 export default function HomePage({ onSelectFriend }) {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function HomePage({ onSelectFriend }) {
   const [showAimTrainer, setShowAimTrainer] = useState(false);
   const [showTypeRacer, setShowTypeRacer] = useState(false);
   const [showReactionTest, setShowReactionTest] = useState(false);
+  const [showForum, setShowForum] = useState(false);
 
   useEffect(() => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -82,6 +84,13 @@ export default function HomePage({ onSelectFriend }) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="home-section">
+        <div className="home-section-label">Community</div>
+        <button className="home-contact-btn" onClick={() => setShowForum(true)}>
+          💬 Forums
+        </button>
       </div>
 
       <div className="home-section">
@@ -160,6 +169,7 @@ export default function HomePage({ onSelectFriend }) {
       {showAimTrainer && <AimTrainer onClose={() => setShowAimTrainer(false)} />}
       {showTypeRacer && <TypeRacer onClose={() => setShowTypeRacer(false)} />}
       {showReactionTest && <ReactionTest onClose={() => setShowReactionTest(false)} />}
+      {showForum && <ForumPage onClose={() => setShowForum(false)} />}
     </div>
   );
 }

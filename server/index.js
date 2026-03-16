@@ -55,6 +55,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/scores', require('./routes/scores'));
+app.use('/api/forums', require('./routes/forums'));
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
