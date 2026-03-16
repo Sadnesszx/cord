@@ -259,6 +259,11 @@ export default function ChatArea({ channel }) {
         String(m.user_id) === String(userId) ? { ...m, avatar_url } : m
       ));
     };
+    const onUsernameUpdated = ({ userId, username }) => {
+      setMessages(prev => prev.map(m =>
+        String(m.user_id) === String(userId) ? { ...m, username } : m
+      ));
+    };
     const onMessageEdited = ({ messageId, content }) => {
       setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content, edited: true } : m));
     };
@@ -277,6 +282,7 @@ export default function ChatArea({ channel }) {
     socket.on('user_typing', onTypingStart);
     socket.on('user_stop_typing', onTypingStop);
     socket.on('user_avatar_updated', onAvatarUpdated);
+    socket.on('user_username_updated', onUsernameUpdated);
     socket.on('message_edited', onMessageEdited);
     socket.on('member_joined', onMemberJoined);
 
@@ -285,6 +291,7 @@ export default function ChatArea({ channel }) {
       socket.off('user_typing', onTypingStart);
       socket.off('user_stop_typing', onTypingStop);
       socket.off('user_avatar_updated', onAvatarUpdated);
+      socket.off('user_username_updated', onUsernameUpdated);
       socket.off('message_edited', onMessageEdited);
       socket.off('member_joined', onMemberJoined);
       setTyping([]);

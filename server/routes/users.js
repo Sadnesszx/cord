@@ -24,6 +24,10 @@ router.patch('/me/username', auth, async (req, res) => {
       'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username',
       [username, req.user.id]
     );
+    const io = global.getIO?.();
+    if (io) {
+      io.emit('user_username_updated', { userId: req.user.id, username });
+    }
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -213,4 +217,4 @@ router.get('/:username', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;  

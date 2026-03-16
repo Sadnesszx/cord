@@ -40,6 +40,11 @@ socket.on('online_users', (users) => setOnlineUsers(users));
         String(m.id) === String(userId) ? { ...m, avatar_url } : m
       ));
     });
+    socket.on('user_username_updated', ({ userId, username }) => {
+      setMembers(prev => prev.map(m =>
+        String(m.id) === String(userId) ? { ...m, username } : m
+      ));
+    });
     socket.on('user_status_updated', ({ userId, status, custom_status }) => {
       setMembers(prev => prev.map(m =>
         String(m.id) === String(userId) ? { ...m, status, custom_status } : m
