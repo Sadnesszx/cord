@@ -5,6 +5,7 @@ import api from '../../lib/api';
 import ProfileModal from '../ui/ProfileModal';
 import './ChatArea.css';
 import ImageLightbox from '../ui/ImageLightbox';
+import { createPortal } from 'react-dom';
 
 const renderContent = (content, onMentionClick, onImageClick) => {
   if (content.startsWith('[img]') && content.endsWith('[/img]')) {
@@ -487,11 +488,12 @@ export default function ChatArea({ channel }) {
       </div>
 
       {/* Reaction picker rendered at fixed position outside message flow */}
-      {activeReactionPicker && (
+      {activeReactionPicker && createPortal(
         <ReactionPicker
           onPick={(emoji) => toggleReaction(activeReactionPicker, emoji)}
           position={pickerPosition}
-        />
+        />,
+        document.body
       )}
 
       {showMentions && (
