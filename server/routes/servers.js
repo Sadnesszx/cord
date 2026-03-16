@@ -169,7 +169,7 @@ router.delete('/:serverId/channels/:channelId', auth, async (req, res) => {
 router.get('/browse/all', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT s.id, s.name, s.owner_id, u.username as owner_name,
+      `SELECT s.id, s.name, s.owner_id, s.icon_url, u.username as owner_name,
        COUNT(sm.user_id)::int as member_count
        FROM servers s
        JOIN users u ON s.owner_id = u.id
