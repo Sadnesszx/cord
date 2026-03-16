@@ -30,6 +30,9 @@ router.patch('/me/username', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Update avatar color
+router.patch('/me/avatar', auth, async (req, res) => {
   const { avatar_color } = req.body;
   const validColors = ['#555', '#7a3030', '#2d5a3d', '#2d3d5a', '#5a2d5a', '#5a4a2d', '#2d5a5a', '#3d3d3d', '#6b2737', '#2d4a2d'];
   if (!validColors.includes(avatar_color))
