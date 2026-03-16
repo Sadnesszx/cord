@@ -415,10 +415,7 @@
   border-radius: var(--radius-lg);
   flex-wrap: wrap;
   max-width: 220px;
-  position: relative;
-  bottom: calc(100% + 4px);
-  right: 0;
-  z-index: 100;
+  z-index: 9999;
   box-shadow: var(--shadow-md);
 }
 
