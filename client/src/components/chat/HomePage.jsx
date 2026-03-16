@@ -4,6 +4,7 @@ import api from '../../lib/api';
 import './HomePage.css';
 import TOSPage from './TOSPage';
 import PrivacyPolicy from './PrivacyPolicy';
+import AimTrainer from './AimTrainer';
 
 export default function HomePage({ onSelectFriend }) {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export default function HomePage({ onSelectFriend }) {
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAimTrainer, setShowAimTrainer] = useState(false);
 
   useEffect(() => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -79,6 +81,13 @@ export default function HomePage({ onSelectFriend }) {
       </div>
 
       <div className="home-section">
+        <div className="home-section-label">Minigames</div>
+        <button className="home-contact-btn" onClick={() => setShowAimTrainer(true)}>
+          🎯 Aim Trainer
+        </button>
+      </div>
+
+      <div className="home-section">
         <div className="home-section-label">Feedback</div>
         <p style={{ fontSize: 13, color: '#888', marginBottom: 10 }}>
           Got a suggestion or found a bug? Let us know!
@@ -137,7 +146,8 @@ export default function HomePage({ onSelectFriend }) {
       </div>
 
       {showTOS && <TOSPage onClose={() => setShowTOS(false)} onAccept={() => setShowTOS(false)} />}
-        {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      {showAimTrainer && <AimTrainer onClose={() => setShowAimTrainer(false)} />}
     </div>
   );
 }
