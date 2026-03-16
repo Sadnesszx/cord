@@ -17,7 +17,7 @@ const getStatusColor = (isOnline, status) => {
 
 export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs = {} }) {
   const { user } = useAuth();
-  const isAdmin = user?.username === 'Sadness';
+  const isAdmin = user?.is_admin;
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -62,11 +62,6 @@ socket.on('online_users', (users) => setOnlineUsers(users));
     socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
       setFriends(prev => prev.map(f =>
         String(f.id) === String(userId) ? { ...f, avatar_url } : f
-      ));
-    });
-    socket.on('user_username_updated', ({ userId, username }) => {
-      setFriends(prev => prev.map(f =>
-        String(f.id) === String(userId) ? { ...f, username } : f
       ));
     });
     socket.on('user_status_updated', ({ userId, status, custom_status }) => {

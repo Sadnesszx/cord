@@ -5,6 +5,12 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Helper to check if user is admin
+const isAdmin = async (userId) => {
+  const { rows } = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userId]);
+  return rows[0]?.is_admin === true;
+};
+
 // Change username
 router.patch('/me/username', auth, async (req, res) => {
   const { username } = req.body;
@@ -12,8 +18,6 @@ router.patch('/me/username', auth, async (req, res) => {
     return res.status(400).json({ error: 'Username must be 3–32 characters' });
   if (!/^[a-zA-Z0-9]+$/.test(username))
     return res.status(400).json({ error: 'Username can only contain letters and numbers' });
-  if (req.user.username === 'Sadness')
-    return res.status(403).json({ error: 'Owner username cannot be changed' });
   try {
     const { rows: existing } = await pool.query(
       'SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2',
@@ -140,9 +144,8 @@ router.patch('/me/status', auth, async (req, res) => {
 // Delete account
 router.delete('/me', auth, async (req, res) => {
   try {
-    // Prevent owner from deleting their account
-    if (req.user.username === 'Sadness')
-      return res.status(403).json({ error: 'Owner account cannot be deleted' });
+    if (await isAdmin(req.user.id))
+      return res.status(403).json({ error: 'Admin account cannot be deleted' });
     await pool.query('DELETE FROM users WHERE id = $1', [req.user.id]);
     res.json({ message: 'Account deleted' });
   } catch (err) {
@@ -153,7 +156,7 @@ router.delete('/me', auth, async (req, res) => {
 
 // Admin: delete user's profile picture
 router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
-  if (req.user.username !== 'Sadness') return res.status(403).json({ error: 'Forbidden' });
+  if (!await isAdmin(req.user.id)) return res.status(403).json({ error: 'Forbidden' });
   try {
     const { rows } = await pool.query('UPDATE users SET avatar_url = NULL WHERE username = $1 RETURNING id', [req.params.username]);
     if (rows.length) {
@@ -173,7 +176,7 @@ router.post('/feedback', auth, async (req, res) => {
   const { message } = req.body;
   if (!message?.trim()) return res.status(400).json({ error: 'Message required' });
   try {
-    const { rows } = await pool.query('SELECT id FROM users WHERE username = $1', ['Sadness']);
+    const { rows } = await pool.query('SELECT id FROM users WHERE is_admin = TRUE LIMIT 1');
     if (!rows.length) return res.status(404).json({ error: 'Owner not found' });
     const ownerId = rows[0].id;
     await pool.query(
@@ -207,7 +210,7 @@ router.post('/feedback', auth, async (req, res) => {
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned, status, custom_status FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned, status, custom_status, is_admin FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
@@ -217,4 +220,4 @@ router.get('/:username', auth, async (req, res) => {
   }
 });
 
-module.exports = router;  
+module.exports = router;

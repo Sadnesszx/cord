@@ -33,7 +33,7 @@ export default function ProfileModal({ username, onClose }) {
   const [friendStatus, setFriendStatus] = useState('none');
   const [friendMsg, setFriendMsg] = useState('');
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const isAdmin = user?.username === 'Sadness';
+  const isAdmin = user?.is_admin;
   const isOwnProfile = user?.username === username;
   const [showDMViewer, setShowDMViewer] = useState(false);
 
@@ -181,7 +181,7 @@ export default function ProfileModal({ username, onClose }) {
               )}
               <p className="profile-joined">Joined {joined}</p>
 
-              {isAdmin && username !== 'Sadness' && (
+              {isAdmin && !profile?.is_admin && (
                 <div className="profile-admin-section">
                   <p className="profile-bio-label">Admin Controls</p>
 
