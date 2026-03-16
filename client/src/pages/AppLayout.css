@@ -203,3 +203,8 @@
 }
 
 .top-bar-settings:hover { color: var(--white); background: var(--bg-hover); }
+
+.server-icon.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}

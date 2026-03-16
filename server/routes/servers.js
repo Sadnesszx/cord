@@ -4,6 +4,21 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Reorder servers
+router.patch('/reorder', auth, async (req, res) => {
+  const { order } = req.body;
+  if (!Array.isArray(order)) return res.status(400).json({ error: 'Invalid order' });
+  try {
+    for (const { id, position } of order) {
+      await pool.query('UPDATE servers SET position = $1 WHERE id = $2', [position, id]);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get all servers for current user
 router.get('/', auth, async (req, res) => {
   try {
@@ -11,7 +26,7 @@ router.get('/', auth, async (req, res) => {
       `SELECT s.* FROM servers s
        JOIN server_members sm ON s.id = sm.server_id
        WHERE sm.user_id = $1
-       ORDER BY s.created_at ASC`,
+       ORDER BY s.position ASC, s.created_at ASC`,
       [req.user.id]
     );
     res.json(rows);
