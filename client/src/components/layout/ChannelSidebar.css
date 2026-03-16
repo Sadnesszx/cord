@@ -6,13 +6,16 @@
 }
 
 .channel-header {
-  padding: 16px 14px 12px;
+  padding: 14px 12px 10px;
   border-bottom: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .channel-server-name {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--white);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -47,14 +50,20 @@
 .channel-add-btn {
   background: none;
   color: var(--gray-2);
-  font-size: 16px;
+  font-size: 18px;
   padding: 0 4px;
   border-radius: var(--radius-sm);
   transition: color 0.15s;
   line-height: 1;
 }
-
 .channel-add-btn:hover { color: var(--gray-5); }
+
+.channel-item-wrapper {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+}
+.channel-item-wrapper .channel-item { flex: 1; }
 
 .channel-item {
   display: flex;
@@ -70,21 +79,31 @@
   transition: all 0.1s;
   text-align: left;
 }
-
 .channel-item:hover { background: var(--bg-hover); color: var(--gray-5); }
-.channel-item.active { background: var(--bg-active); color: var(--white); }
+.channel-item.active { background: var(--bg-active); color: var(--white); font-weight: 500; }
 
 .channel-hash {
-  font-size: 16px;
+  font-size: 17px;
   color: var(--gray-2);
   line-height: 1;
+  flex-shrink: 0;
 }
-
 .channel-item.active .channel-hash { color: var(--gray-4); }
 .channel-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.channel-create-form { padding: 8px 6px; }
+.channel-delete-btn {
+  background: none;
+  color: transparent;
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.channel-item-wrapper:hover .channel-delete-btn { color: var(--gray-2); }
+.channel-delete-btn:hover { color: var(--danger) !important; }
 
+.channel-create-form { padding: 8px 6px; }
 .channel-create-form input {
   width: 100%;
   background: var(--bg-float);
@@ -95,7 +114,6 @@
   color: var(--white);
   margin-bottom: 6px;
 }
-
 .channel-create-form input:focus { border-color: var(--accent); }
 .channel-create-form input::placeholder { color: var(--gray-2); }
 
@@ -103,6 +121,92 @@
   display: flex;
   gap: 6px;
   justify-content: flex-end;
+}
+
+/* Header action buttons */
+.channel-invite-btn {
+  display: flex;
+  align-items: center;
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-md);
+  color: var(--gray-3);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  margin-top: 2px;
+}
+.channel-invite-btn:hover { color: var(--white); background: var(--bg-hover); border-color: var(--gray-1); }
+
+.channel-rename-server {
+  display: flex;
+  align-items: center;
+  background: rgba(88,101,242,0.08);
+  border: 1px solid rgba(88,101,242,0.18);
+  border-radius: var(--radius-md);
+  color: #7289da;
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.channel-rename-server:hover { background: rgba(88,101,242,0.18); }
+
+.channel-delete-server {
+  display: flex;
+  align-items: center;
+  background: var(--danger-dim);
+  border: 1px solid rgba(237,66,69,0.2);
+  border-radius: var(--radius-md);
+  color: var(--danger);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.channel-delete-server:hover { background: rgba(237,66,69,0.2); }
+
+.channel-leave-server {
+  display: flex;
+  align-items: center;
+  background: rgba(240,177,50,0.08);
+  border: 1px solid rgba(240,177,50,0.18);
+  border-radius: var(--radius-md);
+  color: var(--warning);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.channel-leave-server:hover { background: rgba(240,177,50,0.2); }
+
+.channel-rename-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.channel-rename-form input {
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--white);
+}
+.channel-rename-form input:focus { border-color: var(--accent); }
+
+.invite-box {
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  margin-top: 8px;
 }
 
 .user-panel { display: none; }
@@ -121,110 +225,4 @@
   width: 100%;
   text-align: center;
 }
-
 .channel-copy-id:hover { background: var(--bg-active); color: var(--white); }
-
-.channel-delete-server {
-  background: var(--danger-dim);
-  border: 1px solid rgba(237,66,69,0.2);
-  border-radius: var(--radius-md);
-  color: var(--danger);
-  font-size: 12px;
-  padding: 5px 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 4px;
-  width: 100%;
-}
-
-.channel-delete-server:hover { background: rgba(237,66,69,0.2); }
-
-.channel-item-wrapper {
-  display: flex;
-  align-items: center;
-  border-radius: var(--radius-md);
-}
-
-.channel-item-wrapper .channel-item { flex: 1; }
-
-.channel-delete-btn {
-  background: none;
-  color: transparent;
-  font-size: 11px;
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.channel-item-wrapper:hover .channel-delete-btn { color: var(--gray-2); }
-.channel-delete-btn:hover { color: var(--danger) !important; }
-
-.channel-rename-server {
-  background: rgba(88,101,242,0.1);
-  border: 1px solid rgba(88,101,242,0.2);
-  border-radius: var(--radius-md);
-  color: var(--accent);
-  font-size: 12px;
-  padding: 5px 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 4px;
-  width: 100%;
-}
-
-.channel-rename-server:hover { background: rgba(88,101,242,0.2); }
-
-.channel-leave-server {
-  background: rgba(240,177,50,0.1);
-  border: 1px solid rgba(240,177,50,0.2);
-  border-radius: var(--radius-md);
-  color: var(--warning);
-  font-size: 12px;
-  padding: 5px 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 4px;
-  width: 100%;
-}
-
-.channel-leave-server:hover { background: rgba(240,177,50,0.2); }
-
-.channel-rename-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.channel-rename-form input {
-  background: var(--bg-float);
-  border: var(--border-bright);
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-  font-size: 13px;
-  color: var(--white);
-}
-
-.channel-rename-form input:focus { border-color: var(--accent); }
-
-.channel-invite-btn {
-  background: none;
-  border: none;
-  color: var(--gray-3);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  transition: all 0.15s;
-}
-
-.channel-invite-btn:hover { color: var(--white); background: var(--bg-hover); }
-
-.invite-box {
-  background: var(--bg-float);
-  border: var(--border-bright);
-  border-radius: var(--radius-lg);
-  padding: 10px;
-  margin-top: 8px;
-}

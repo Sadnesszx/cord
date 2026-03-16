@@ -189,7 +189,7 @@ export default function SettingsModal({ onClose }) {
           <p className="settings-label">Profile Picture</p>
           <div className="settings-photo-row">
             <label className="btn-primary settings-upload-btn">
-              {uploadingPhoto ? 'Uploading...' : '📷 Upload Photo'}
+              {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProfilePicture} disabled={uploadingPhoto} />
             </label>
             {user?.avatar_url && (
@@ -302,7 +302,7 @@ export default function SettingsModal({ onClose }) {
                 color: '#f23f43', fontSize: 13,
               }}
             >
-              🗑️ Delete Account
+              Delete Account
             </button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

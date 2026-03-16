@@ -96,21 +96,25 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
         <div className="channel-header">
           <span className="channel-server-name">{server.name}</span>
           <button className="channel-invite-btn" onClick={generateInvite} title="Invite people">
-            🔗 Invite
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:4}}><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            Invite
           </button>
           {isOwner && (
             <>
               <button className="channel-rename-server" onClick={() => setShowRename(!showRename)}>
-                ✏️ Rename
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:4}}><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                Rename
               </button>
               <button className="channel-delete-server" onClick={deleteServer}>
-                🗑 Delete Server
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:4}}><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                Delete Server
               </button>
             </>
           )}
           {!isOwner && (
             <button className="channel-leave-server" onClick={leaveServer}>
-              🚪 Leave Server
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:4}}><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Leave Server
             </button>
           )}
           {showRename && (

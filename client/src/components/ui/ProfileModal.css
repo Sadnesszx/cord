@@ -6,25 +6,25 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
 }
 
 .profile-modal {
-  background: #141414;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  background: var(--bg-raised);
+  border: var(--border-bright);
+  border-radius: var(--radius-xl);
   width: 320px;
   min-height: 200px;
-  box-shadow: 0 8px 48px rgba(0,0,0,0.8);
+  box-shadow: var(--shadow-lg);
   animation: fadeIn 0.15s ease;
   position: relative;
+  overflow: hidden;
 }
 
 .profile-banner {
   height: 80px;
   width: 100%;
-  border-radius: 12px 12px 0 0;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .profile-avatar {
@@ -34,13 +34,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  color: white;
-  border: 4px solid #141414;
+  color: var(--white);
+  border: 4px solid var(--bg-raised);
   position: absolute;
   top: 44px;
   left: 20px;
+  overflow: hidden;
 }
 
 .profile-body {
@@ -51,16 +52,15 @@
 }
 
 .profile-username {
-  font-family: 'Space Mono', monospace;
   font-size: 18px;
   font-weight: 700;
-  color: #e8e8e8;
+  color: var(--white);
 }
 
 .profile-bio-section {
-  background: #1a1a1a;
-  border: 1px solid #1e1e1e;
-  border-radius: 8px;
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-lg);
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
@@ -68,38 +68,35 @@
 }
 
 .profile-bio-label {
-  font-family: 'Space Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #666;
+  color: var(--gray-2);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .profile-bio {
   font-size: 13px;
-  color: #aaa;
+  color: var(--gray-4);
   line-height: 1.5;
 }
 
 .profile-no-bio {
   font-size: 12px;
-  color: #666;
+  color: var(--gray-2);
   font-style: italic;
 }
 
 .profile-joined {
   font-size: 11px;
-  color: #666;
-  font-family: 'Space Mono', monospace;
+  color: var(--gray-2);
 }
 
 .profile-loading {
   padding: 40px;
   text-align: center;
-  color: #666;
+  color: var(--gray-2);
   font-size: 12px;
-  font-family: 'Space Mono', monospace;
 }
 
 .profile-close {
@@ -107,10 +104,10 @@
   top: 10px;
   right: 10px;
   background: rgba(0,0,0,0.5);
-  color: white;
+  color: var(--white);
   width: 26px;
   height: 26px;
-  border-radius: 9999px;
+  border-radius: 50%;
   font-size: 11px;
   display: flex;
   align-items: center;
@@ -120,13 +117,12 @@
   border: none;
   cursor: pointer;
 }
-
 .profile-close:hover { background: rgba(0,0,0,0.8); }
 
 .profile-admin-section {
-  background: rgba(192, 57, 43, 0.08);
-  border: 1px solid rgba(192, 57, 43, 0.2);
-  border-radius: 8px;
+  background: rgba(192,57,43,0.06);
+  border: 1px solid rgba(192,57,43,0.15);
+  border-radius: var(--radius-lg);
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
@@ -134,20 +130,22 @@
 }
 
 .profile-admin-section input {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-md);
   padding: 8px 10px;
   font-size: 13px;
-  color: #e8e8e8;
+  color: var(--white);
   width: 100%;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
+  transition: border-color 0.2s;
 }
+.profile-admin-section input:focus { border-color: var(--accent); }
+.profile-admin-section input::placeholder { color: var(--gray-2); }
 
 .profile-reset-msg {
   font-size: 11px;
-  color: #27ae60;
-  font-family: 'Space Mono', monospace;
+  color: var(--success);
   text-align: center;
 }
 
@@ -159,79 +157,66 @@
 }
 
 .add-friend-btn {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
-  color: #ccc;
+  background: var(--bg-float);
+  border: var(--border-bright);
+  border-radius: var(--radius-md);
+  color: var(--gray-4);
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
   white-space: nowrap;
 }
-
 .add-friend-btn:hover:not(.disabled) {
-  background: #272727;
-  border-color: #444;
-  color: #e8e8e8;
+  background: var(--bg-hover);
+  border-color: var(--gray-1);
+  color: var(--white);
 }
-
-.add-friend-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.add-friend-btn.disabled { opacity: 0.5; cursor: not-allowed; }
 
 .profile-friend-msg {
   font-size: 11px;
-  color: #27ae60;
-  font-family: 'Space Mono', monospace;
+  color: var(--success);
 }
 
 .admin-warn-btn {
-  background: rgba(230, 126, 34, 0.1);
-  border: 1px solid rgba(230, 126, 34, 0.3);
-  border-radius: 6px;
-  color: #e67e22;
+  background: rgba(230,126,34,0.08);
+  border: 1px solid rgba(230,126,34,0.2);
+  border-radius: var(--radius-md);
+  color: var(--warning);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
   width: 100%;
 }
-
-.admin-warn-btn:hover { background: #e67e22; color: white; }
+.admin-warn-btn:hover { background: var(--warning); color: #000; }
 
 .admin-ban-btn {
-  background: rgba(192, 57, 43, 0.1);
-  border: 1px solid rgba(192, 57, 43, 0.3);
-  border-radius: 6px;
-  color: #e74c3c;
+  background: var(--danger-dim);
+  border: 1px solid rgba(237,66,69,0.2);
+  border-radius: var(--radius-md);
+  color: var(--danger);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
   width: 100%;
 }
-
-.admin-ban-btn:hover { background: #c0392b; color: white; }
+.admin-ban-btn:hover { background: var(--danger); color: #fff; }
 
 .admin-unban-btn {
-  background: rgba(39, 174, 96, 0.1);
-  border: 1px solid rgba(39, 174, 96, 0.3);
-  border-radius: 6px;
-  color: #27ae60;
+  background: rgba(35,165,90,0.08);
+  border: 1px solid rgba(35,165,90,0.2);
+  border-radius: var(--radius-md);
+  color: var(--success);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
 }
-
-.admin-unban-btn:hover { background: #27ae60; color: white; }
+.admin-unban-btn:hover { background: var(--success); color: #fff; }

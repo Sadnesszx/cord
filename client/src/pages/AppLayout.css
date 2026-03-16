@@ -109,12 +109,12 @@
 
 .server-icon.server-danger { 
   color: var(--gray-3);
-  background: transparent;
+  background: var(--bg-raised);
 }
 .server-icon.server-danger:hover { 
-  background: var(--danger-dim); 
-  color: var(--danger); 
-  border-color: transparent; 
+  background: var(--danger);
+  color: var(--white);
+  border-radius: 30%;
 }
 
 /* Modal */

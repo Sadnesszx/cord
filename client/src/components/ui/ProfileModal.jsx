@@ -126,7 +126,7 @@ export default function ProfileModal({ username, onClose }) {
             <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : (profile.banner_color || profile.avatar_color) }} />
             <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0 }}>
               {profile.banned ? (
-                <span style={{ fontSize: 28 }}>🚫</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#666"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"/></svg>
               ) : profile.avatar_url ? (
                 <img src={profile.avatar_url} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
@@ -207,7 +207,7 @@ export default function ProfileModal({ username, onClose }) {
                     onClick={() => setShowDMViewer(true)}
                     style={{ width: '100%', marginTop: 8 }}
                   >
-                    🔍 View User DMs
+                    View User DMs
                </button>
 
                   <form onSubmit={async (e) => {
@@ -221,7 +221,7 @@ export default function ProfileModal({ username, onClose }) {
                   }}>
                     <input name="reason" type="text" placeholder="Reason for removing pfp" />
                     <button type="submit" className="admin-ban-btn" style={{ width: '100%', marginTop: 8 }}>
-                      🗑️ Remove Profile Picture
+                      Remove Profile Picture
                     </button>
                   </form>
 
