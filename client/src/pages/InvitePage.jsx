@@ -22,7 +22,7 @@ export default function InvitePage() {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexDirection: 'column', gap: 16, color: '#e8e8e8', fontFamily: 'monospace'
     }}>
-      <img src="/favicon.png" alt="SadnessChat" style={{ width: 64, height: 64, borderRadius: 16 }} />
+      <img src="/favicon.png" alt="NihilisticChat" style={{ width: 64, height: 64, borderRadius: 16 }} />
       {status === 'joining' && <p>Joining server...</p>}
       {status === 'success' && <p style={{ color: '#23a55a' }}>✓ Joined! Redirecting...</p>}
       {status === 'error' && <p style={{ color: '#f23f43' }}>✕ Invalid or expired invite.</p>}

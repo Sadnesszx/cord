@@ -53,10 +53,10 @@ export default function AppLayout() {
 useEffect(() => {
   const socket = getSocket();
   socket.on('avatar_cleared', ({ reason }) => {
-    const token = localStorage.getItem('sadnesschat_token');
-    const currentUser = JSON.parse(localStorage.getItem('sadnesschat_user'));
+    const token = localStorage.getItem('nihilisticchat_token');
+    const currentUser = JSON.parse(localStorage.getItem('nihilisticchat_user'));
     const updatedUser = { ...currentUser, avatar_url: null };
-    localStorage.setItem('sadnesschat_user', JSON.stringify(updatedUser));
+    localStorage.setItem('nihilisticchat_user', JSON.stringify(updatedUser));
     login(token, updatedUser);
     setAvatarClearedMessage(`Your profile picture has been removed by an admin.\nReason: ${reason}`);
   });
@@ -80,10 +80,10 @@ useEffect(() => {
   const socket = getSocket();
   socket.on('user_avatar_updated', ({ userId, avatar_url }) => {
     if (String(userId) === String(user?.id)) {
-      const token = localStorage.getItem('sadnesschat_token');
-      const currentUser = JSON.parse(localStorage.getItem('sadnesschat_user'));
+      const token = localStorage.getItem('nihilisticchat_token');
+      const currentUser = JSON.parse(localStorage.getItem('nihilisticchat_user'));
       const updatedUser = { ...currentUser, avatar_url };
-      localStorage.setItem('sadnesschat_user', JSON.stringify(updatedUser));
+      localStorage.setItem('nihilisticchat_user', JSON.stringify(updatedUser));
       login(token, updatedUser);
     }
   });

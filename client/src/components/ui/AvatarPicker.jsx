@@ -28,7 +28,7 @@ export default function AvatarPicker({ onClose }) {
     try {
       await api.patch('/api/users/me/avatar', { avatar_color: selected });
       const updatedUser = { ...user, avatar_color: selected };
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, updatedUser);
     } catch (err) {
       console.error(err);
@@ -53,7 +53,7 @@ export default function AvatarPicker({ onClose }) {
       await api.patch('/api/users/me/avatar', { avatar_color: selected });
       if (bio.trim()) await api.patch('/api/users/me/bio', { bio });
       const updatedUser = { ...user, avatar_color: selected };
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, updatedUser);
       onClose();
     } catch (err) {

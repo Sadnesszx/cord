@@ -76,12 +76,12 @@ export default function AuthPage() {
 
       <div className="auth-card fade-in">
         <div className="auth-logo">
-          <img src="/favicon.png" alt="SadnessChat" className="auth-logo-icon" />
-          <span>SadnessChat</span>
+          <img src="/favicon.png" alt="NihilisticChat" className="auth-logo-icon" />
+          <span>NihilisticChat</span>
         </div>
 
         <h1 className="auth-title">
-          {mode === 'login' ? 'Welcome back' : 'Join SadnessChat'}
+          {mode === 'login' ? 'Welcome back' : 'Join NihilisticChat'}
         </h1>
         <p className="auth-subtitle">
           {mode === 'login' ? 'Good to see you again.' : 'Pick your username and start chatting.'}

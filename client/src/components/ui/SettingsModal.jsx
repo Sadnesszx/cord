@@ -62,7 +62,7 @@ export default function SettingsModal({ onClose }) {
   const saveAvatar = async () => {
     try {
       await api.patch('/api/users/me/avatar', { avatar_color: selectedColor });
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, avatar_color: selectedColor });
       showMsg('Avatar updated!');
     } catch (err) {
@@ -73,7 +73,7 @@ export default function SettingsModal({ onClose }) {
   const saveBanner = async () => {
     try {
       await api.patch('/api/users/me/banner', { banner_color: selectedBanner });
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, banner_color: selectedBanner });
       showMsg('Banner updated!');
     } catch (err) {
@@ -84,7 +84,7 @@ export default function SettingsModal({ onClose }) {
   const saveStatus = async () => {
     try {
       await api.patch('/api/users/me/status', { status: selectedStatus, custom_status: customStatus });
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, status: selectedStatus, custom_status: customStatus });
       showMsg('Status updated!');
     } catch (err) {
@@ -107,7 +107,7 @@ export default function SettingsModal({ onClose }) {
       const data = await res.json();
       const url = data.data.url;
       await api.patch('/api/users/avatar-image', { avatar_url: url });
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, avatar_url: url });
       showMsg('Profile picture updated!');
     } catch (err) {
@@ -120,7 +120,7 @@ export default function SettingsModal({ onClose }) {
   const removeProfilePicture = async () => {
     try {
       await api.patch('/api/users/avatar-image', { avatar_url: null });
-      const token = localStorage.getItem('sadnesschat_token');
+      const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, avatar_url: null });
       showMsg('Profile picture removed!');
     } catch (err) {

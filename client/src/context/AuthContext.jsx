@@ -5,19 +5,19 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('sadnesschat_user');
+    const saved = localStorage.getItem('nihilisticchat_user');
     return saved ? JSON.parse(saved) : null;
   });
 
   const login = (token, userData) => {
-    localStorage.setItem('sadnesschat_token', token);
-    localStorage.setItem('sadnesschat_user', JSON.stringify(userData));
+    localStorage.setItem('nihilisticchat_token', token);
+    localStorage.setItem('nihilisticchat_user', JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('sadnesschat_token');
-    localStorage.removeItem('sadnesschat_user');
+    localStorage.removeItem('nihilisticchat_token');
+    localStorage.removeItem('nihilisticchat_user');
     disconnectSocket();
     setUser(null);
   };
