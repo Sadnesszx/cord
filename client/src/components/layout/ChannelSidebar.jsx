@@ -15,6 +15,7 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
   const [newName, setNewName] = useState('');
   const [inviteCode, setInviteCode] = useState(null);
   const [showInvite, setShowInvite] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
 
   useEffect(() => {
     if (!server) { setChannels([]); return; }
@@ -88,13 +89,61 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
     }
   };
 
+  const uploadServerIcon = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return alert('Image must be under 5MB');
+    setUploadingIcon(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
+        method: 'POST',
+        body: formData,
+      });
+      const imgData = await res.json();
+      const url = imgData.data.url;
+      await api.patch(`/api/servers/${server.id}/icon`, { icon_url: url });
+      onServerRenamed({ ...server, icon_url: url });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload icon');
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
+
   const inviteUrl = `${window.location.origin}/invite/${inviteCode}`;
 
   return (
     <div className="channel-sidebar">
       {server && (
         <div className="channel-header">
-          <span className="channel-server-name">{server.name}</span>
+          <div className="channel-server-top">
+            {isOwner ? (
+              <label className="server-icon-upload" title="Change server icon">
+                {server.icon_url ? (
+                  <img src={server.icon_url} alt={server.name} className="server-icon-img" />
+                ) : (
+                  <div className="server-icon-placeholder">
+                    {server.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="server-icon-overlay">{uploadingIcon ? '...' : '📷'}</div>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadServerIcon} disabled={uploadingIcon} />
+              </label>
+            ) : (
+              server.icon_url ? (
+                <img src={server.icon_url} alt={server.name} className="server-icon-img" />
+              ) : (
+                <div className="server-icon-placeholder">
+                  {server.name.slice(0, 2).toUpperCase()}
+                </div>
+              )
+            )}
+            <span className="channel-server-name">{server.name}</span>
+          </div>
+
           <button className="channel-invite-btn" onClick={generateInvite} title="Invite people">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:4}}><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
             Invite

@@ -218,6 +218,20 @@ router.patch('/:id/rename', auth, async (req, res) => {
   }
 });
 
+router.patch('/:id/icon', auth, async (req, res) => {
+  const { icon_url } = req.body;
+  try {
+    const { rows } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Server not found' });
+    if (rows[0].owner_id !== req.user.id) return res.status(403).json({ error: 'Not the owner' });
+    const { rows: updated } = await pool.query('UPDATE servers SET icon_url = $1 WHERE id = $2 RETURNING *', [icon_url, req.params.id]);
+    res.json(updated[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/:channelId', auth, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM channels WHERE id = $1', [req.params.channelId]);

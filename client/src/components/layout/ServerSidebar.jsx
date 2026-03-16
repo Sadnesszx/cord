@@ -40,8 +40,6 @@ export default function ServerSidebar({ activeServer, onSelectServer }) {
     }
   };
 
-  const getInitials = (name) => name.slice(0, 2).toUpperCase();
-
   return (
     <div className="server-rail">
       {/* Home */}
@@ -63,8 +61,13 @@ export default function ServerSidebar({ activeServer, onSelectServer }) {
           className={`server-icon ${activeServer?.id === server.id ? 'active' : ''}`}
           onClick={() => onSelectServer(server)}
           title={server.name}
+          style={{ padding: 0, overflow: 'hidden' }}
         >
-          {getInitials(server.name)}
+          {server.icon_url ? (
+            <img src={server.icon_url} alt={server.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+          ) : (
+            server.name.slice(0, 2).toUpperCase()
+          )}
         </button>
       ))}
 
