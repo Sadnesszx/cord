@@ -393,7 +393,7 @@ export default function ChatArea({ channel }) {
             );
           }
           return (
-            <div key={`group-${i}`} className="msg-group fade-in">
+            <div key={`group-${i}`} className="msg-group fade-in" onMouseLeave={() => setActiveReactionPicker(null)}>
               <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} onClick={() => setViewProfile(group.username)} />
               <div className="msg-content">
                 <div className="msg-meta">
