@@ -34,25 +34,6 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Get leaderboard for a game
-router.get('/:game', auth, async (req, res) => {
-  try {
-    const { rows } = await pool.query(
-      `SELECT ms.username, u.avatar_color, u.avatar_url, ms.score, ms.meta, ms.created_at
-       FROM minigame_scores ms
-       JOIN users u ON ms.user_id = u.id
-       WHERE ms.game = $1
-       ORDER BY ms.score DESC
-       LIMIT 10`,
-      [req.params.game]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Get badges for a username
 router.get('/badges/:username', auth, async (req, res) => {
   try {
@@ -76,6 +57,25 @@ router.get('/badges/:username', auth, async (req, res) => {
     }
 
     res.json(badges);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get leaderboard for a game
+router.get('/:game', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT ms.username, u.avatar_color, u.avatar_url, ms.score, ms.meta, ms.created_at
+       FROM minigame_scores ms
+       JOIN users u ON ms.user_id = u.id
+       WHERE ms.game = $1
+       ORDER BY ms.score DESC
+       LIMIT 10`,
+      [req.params.game]
+    );
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
