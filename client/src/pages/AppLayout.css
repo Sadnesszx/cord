@@ -109,7 +109,7 @@
 
 .server-icon.server-danger { 
   color: var(--gray-3);
-  background: var(--bg-raised);
+  background: #2b2d31;
 }
 .server-icon.server-danger:hover { 
   background: var(--danger);
