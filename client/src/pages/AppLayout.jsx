@@ -236,17 +236,21 @@ return (
         <div className="server-divider" />
         {/* Servers */}
         {servers.map(s => (
-          <button
-            key={s.id}
-            className={`server-icon ${activeServer?.id === s.id ? 'active' : ''}`}
-            onClick={() => handleSelectServer(s)}
-            title={s.name}
-            style={{ position: 'relative' }}
-          >
-            {s.name.slice(0, 2).toUpperCase()}
-            {unreadServers[s.id] && <span className="server-unread-dot" />}
-          </button>
-        ))}
+  <button
+    key={s.id}
+    className={`server-icon ${activeServer?.id === s.id ? 'active' : ''}`}
+    onClick={() => handleSelectServer(s)}
+    title={s.name}
+    style={{ position: 'relative', padding: 0, overflow: 'hidden' }}
+  >
+    {s.icon_url ? (
+      <img src={s.icon_url} alt={s.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+    ) : (
+      s.name.slice(0, 2).toUpperCase()
+    )}
+    {unreadServers[s.id] && <span className="server-unread-dot" />}
+  </button>
+))}
         <div className="server-divider" />
         {/* Add server */}
         <button className="server-icon server-add" onClick={() => setShowCreate(true)} title="Create server">
