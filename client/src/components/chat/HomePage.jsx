@@ -5,6 +5,8 @@ import './HomePage.css';
 import TOSPage from './TOSPage';
 import PrivacyPolicy from './PrivacyPolicy';
 import AimTrainer from './AimTrainer';
+import TypeRacer from './TypeRacer';
+import ReactionTest from './ReactionTest';
 
 export default function HomePage({ onSelectFriend }) {
   const { user } = useAuth();
@@ -16,6 +18,8 @@ export default function HomePage({ onSelectFriend }) {
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAimTrainer, setShowAimTrainer] = useState(false);
+  const [showTypeRacer, setShowTypeRacer] = useState(false);
+  const [showReactionTest, setShowReactionTest] = useState(false);
 
   useEffect(() => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
@@ -85,6 +89,12 @@ export default function HomePage({ onSelectFriend }) {
         <button className="home-contact-btn" onClick={() => setShowAimTrainer(true)}>
           🎯 Aim Trainer
         </button>
+        <button className="home-contact-btn" onClick={() => setShowTypeRacer(true)} style={{ marginTop: 8 }}>
+          ⌨️ Type Racer
+        </button>
+        <button className="home-contact-btn" onClick={() => setShowReactionTest(true)} style={{ marginTop: 8 }}>
+          ⚡ Reaction Test
+        </button>
       </div>
 
       <div className="home-section">
@@ -148,6 +158,8 @@ export default function HomePage({ onSelectFriend }) {
       {showTOS && <TOSPage onClose={() => setShowTOS(false)} onAccept={() => setShowTOS(false)} />}
       {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
       {showAimTrainer && <AimTrainer onClose={() => setShowAimTrainer(false)} />}
+      {showTypeRacer && <TypeRacer onClose={() => setShowTypeRacer(false)} />}
+      {showReactionTest && <ReactionTest onClose={() => setShowReactionTest(false)} />}
     </div>
   );
 }
