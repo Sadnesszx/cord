@@ -5,8 +5,31 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Update avatar color
-router.patch('/me/avatar', auth, async (req, res) => {
+// Change username
+router.patch('/me/username', auth, async (req, res) => {
+  const { username } = req.body;
+  if (!username || username.length < 3 || username.length > 32)
+    return res.status(400).json({ error: 'Username must be 3–32 characters' });
+  if (!/^[a-zA-Z0-9]+$/.test(username))
+    return res.status(400).json({ error: 'Username can only contain letters and numbers' });
+  if (req.user.username === 'Sadness')
+    return res.status(403).json({ error: 'Owner username cannot be changed' });
+  try {
+    const { rows: existing } = await pool.query(
+      'SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2',
+      [username, req.user.id]
+    );
+    if (existing.length) return res.status(409).json({ error: 'Username already taken' });
+    const { rows } = await pool.query(
+      'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username',
+      [username, req.user.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
   const { avatar_color } = req.body;
   const validColors = ['#555', '#7a3030', '#2d5a3d', '#2d3d5a', '#5a2d5a', '#5a4a2d', '#2d5a5a', '#3d3d3d', '#6b2737', '#2d4a2d'];
   if (!validColors.includes(avatar_color))

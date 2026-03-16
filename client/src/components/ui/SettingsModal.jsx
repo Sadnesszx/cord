@@ -41,6 +41,7 @@ export default function SettingsModal({ onClose }) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [bio, setBio] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [selectedColor, setSelectedColor] = useState(user?.avatar_color || '#555');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -57,6 +58,20 @@ export default function SettingsModal({ onClose }) {
     if (isError) setError(m);
     else setMsg(m);
     setTimeout(() => { setMsg(''); setError(''); }, 3000);
+  };
+
+  const saveUsername = async (e) => {
+    e.preventDefault();
+    if (!newUsername.trim()) return;
+    try {
+      await api.patch('/api/users/me/username', { username: newUsername.trim() });
+      const token = localStorage.getItem('nihilisticchat_token');
+      login(token, { ...user, username: newUsername.trim() });
+      showMsg('Username updated!');
+      setNewUsername('');
+    } catch (err) {
+      showMsg(err.response?.data?.error || 'Error updating username', true);
+    }
   };
 
   const saveAvatar = async () => {
@@ -183,6 +198,21 @@ export default function SettingsModal({ onClose }) {
             </div>
           )}
           <span className="settings-username">{user?.username}</span>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Change Username</p>
+          <form onSubmit={saveUsername}>
+            <input
+              value={newUsername}
+              onChange={e => setNewUsername(e.target.value)}
+              placeholder={`Current: ${user?.username}`}
+              maxLength={32}
+            />
+            <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: 4 }}>
+              Update Username
+            </button>
+          </form>
         </div>
 
         <div className="settings-section">
