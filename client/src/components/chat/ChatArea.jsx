@@ -137,6 +137,7 @@ export default function ChatArea({ channel }) {
   const typingTimeout = useRef(null);
   const socket = getSocket();
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [hoveredGroup, setHoveredGroup] = useState(null);
 
   useEffect(() => {
   const handler = () => setActiveReactionPicker(null);
@@ -382,7 +383,7 @@ export default function ChatArea({ channel }) {
             );
           }
           return (
-            <div key={`group-${i}`} className="msg-group fade-in">
+            <div key={`group-${i}`} className="msg-group fade-in" onMouseEnter={() => setHoveredGroup(i)} onMouseLeave={() => { if (activeReactionPicker === null) setHoveredGroup(null); }}>
               <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} onClick={() => setViewProfile(group.username)} />
               <div className="msg-content">
                 <div className="msg-meta">
@@ -390,7 +391,7 @@ export default function ChatArea({ channel }) {
                   <span className="msg-time">{formatTime(group.messages[0].created_at)}</span>
                 </div>
                 {group.messages.map((msg) => (
-                  <div key={msg.id} className={`msg-text-wrapper ${activeReactionPicker === msg.id ? 'picker-open' : ''}`}>
+                  <div key={msg.id} className={`msg-text-wrapper ${activeReactionPicker === msg.id || hoveredGroup === i ? 'picker-open' : ''}`}>
                     {editingId === msg.id ? (
                       <div className="msg-edit-wrapper">
                         <textarea

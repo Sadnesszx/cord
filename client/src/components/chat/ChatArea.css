@@ -390,7 +390,6 @@
   top: 0;
 }
 
-.msg-group:hover .msg-actions { display: flex; }
 .msg-text-wrapper.picker-open .msg-actions { display: flex; }
 
 .msg-react-btn, .msg-edit-btn, .msg-reply-btn, .msg-delete-btn {
