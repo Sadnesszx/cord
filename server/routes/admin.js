@@ -4,11 +4,11 @@ const { pool } = require('../db');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
-const ADMIN_USERNAME = 'Sadness';
+
 
 const isAdmin = async (userId) => {
-  const { rows } = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
-  return rows.length && rows[0].username === ADMIN_USERNAME;
+  const { rows } = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userId]);
+  return rows[0]?.is_admin === true;
 };
 
 // Reset password
