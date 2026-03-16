@@ -105,12 +105,16 @@ function EmojiPicker({ onPick }) {
   );
 }
 
-function ReactionPicker({ onPick }) {
+function ReactionPicker({ onPick, position }) {
   const emojis = ['👍','👎','❤️','😂','😮','😢','🔥','💯','🎉','👏'];
   return (
-    <div className="reaction-picker">
+    <div
+      className="reaction-picker"
+      style={{ position: 'fixed', top: position.top, left: position.left, zIndex: 9999 }}
+      onMouseDown={e => e.stopPropagation()}
+    >
       {emojis.map((emoji, i) => (
-        <button key={i} className="reaction-picker-btn" onMouseDown={e => { e.preventDefault(); onPick(emoji); }}>
+        <button key={i} className="reaction-picker-btn" onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onPick(emoji); }}>
           {emoji}
         </button>
       ))}
@@ -130,6 +134,7 @@ export default function ChatArea({ channel }) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [reactions, setReactions] = useState({});
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
+  const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 });
   const [viewProfile, setViewProfile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
@@ -137,13 +142,17 @@ export default function ChatArea({ channel }) {
   const typingTimeout = useRef(null);
   const socket = getSocket();
   const [lightboxUrl, setLightboxUrl] = useState(null);
-  const [hoveredGroup, setHoveredGroup] = useState(null);
 
+  // Close reaction picker when clicking outside
   useEffect(() => {
-  const handler = () => setActiveReactionPicker(null);
-  if (activeReactionPicker) document.addEventListener('mousedown', handler);
-  return () => document.removeEventListener('mousedown', handler);
-}, [activeReactionPicker]);
+    const handler = (e) => {
+      if (!e.target.closest('.reaction-picker') && !e.target.closest('.msg-react-btn')) {
+        setActiveReactionPicker(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const deleteMessage = async (messageId) => {
     try {
@@ -287,28 +296,28 @@ export default function ChatArea({ channel }) {
   }, [channel?.id]);
 
   useEffect(() => {
-  const handlePaste = async (e) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (!file) return;
-        if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
-        try {
-          const url = await uploadImage(file);
-          socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]` });
-        } catch (err) {
-          console.error(err);
+    const handlePaste = async (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (!file) return;
+          if (file.size > 10 * 1024 * 1024) return alert('Image must be under 10MB');
+          try {
+            const url = await uploadImage(file);
+            socket.emit('send_message', { channelId: channel.id, content: `[img]${url}[/img]` });
+          } catch (err) {
+            console.error(err);
+          }
+          break;
         }
-        break;
       }
-    }
-  };
-  window.addEventListener('paste', handlePaste);
-  return () => window.removeEventListener('paste', handlePaste);
-}, [channel?.id]);
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [channel?.id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -383,7 +392,7 @@ export default function ChatArea({ channel }) {
             );
           }
           return (
-            <div key={`group-${i}`} className="msg-group fade-in" onMouseEnter={() => setHoveredGroup(i)} onMouseLeave={() => { if (activeReactionPicker === null) setHoveredGroup(null); }}>
+            <div key={`group-${i}`} className="msg-group fade-in">
               <Avatar username={group.username} color={group.avatar_color} avatarUrl={group.avatar_url} onClick={() => setViewProfile(group.username)} />
               <div className="msg-content">
                 <div className="msg-meta">
@@ -391,7 +400,7 @@ export default function ChatArea({ channel }) {
                   <span className="msg-time">{formatTime(group.messages[0].created_at)}</span>
                 </div>
                 {group.messages.map((msg) => (
-                  <div key={msg.id} className={`msg-text-wrapper ${activeReactionPicker === msg.id || hoveredGroup === i ? 'picker-open' : ''}`}>
+                  <div key={msg.id} className={`msg-text-wrapper ${activeReactionPicker === msg.id ? 'picker-open' : ''}`}>
                     {editingId === msg.id ? (
                       <div className="msg-edit-wrapper">
                         <textarea
@@ -416,11 +425,23 @@ export default function ChatArea({ channel }) {
                           {msg.edited && <span className="msg-edited">(edited)</span>}
                         </p>
                         <div className="msg-actions">
-                          <div style={{ position: 'relative' }}>
-                            <button className="msg-react-btn" onMouseDown={e => { e.preventDefault(); setActiveReactionPicker(activeReactionPicker === msg.id ? null : msg.id); }} title="Add reaction">
-                              😑
-                            </button>
-                          </div>
+                          <button
+                            className="msg-react-btn"
+                            onMouseDown={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (activeReactionPicker === msg.id) {
+                                setActiveReactionPicker(null);
+                              } else {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setPickerPosition({ top: rect.bottom + 4, left: rect.left });
+                                setActiveReactionPicker(msg.id);
+                              }
+                            }}
+                            title="Add reaction"
+                          >
+                            😑
+                          </button>
                           {msg.user_id === user?.id && (
                             <>
                               <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
@@ -428,9 +449,6 @@ export default function ChatArea({ channel }) {
                             </>
                           )}
                         </div>
-                        {activeReactionPicker === msg.id && (
-                          <ReactionPicker onPick={(emoji) => toggleReaction(msg.id, emoji)} />
-                        )}
                       </>
                     )}
                     {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
@@ -467,6 +485,14 @@ export default function ChatArea({ channel }) {
 
         <div ref={bottomRef} />
       </div>
+
+      {/* Reaction picker rendered at fixed position outside message flow */}
+      {activeReactionPicker && (
+        <ReactionPicker
+          onPick={(emoji) => toggleReaction(activeReactionPicker, emoji)}
+          position={pickerPosition}
+        />
+      )}
 
       {showMentions && (
         <div className="mention-picker">
