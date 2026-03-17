@@ -15,7 +15,7 @@ const getStatusColor = (isOnline, status) => {
   }
 };
 
-export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs = {}, activeRoom, onSelectRoom }) {
+export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs = {}, activeRoom, onSelectRoom, forceTab, onTabSet }) {
   const { user } = useAuth();
   const isAdmin = user?.is_admin;
   const [friends, setFriends] = useState([]);
@@ -44,6 +44,10 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (forceTab) { setTab(forceTab); onTabSet?.(); }
+  }, [forceTab]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -147,11 +151,6 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
         <button className={tab === 'rooms' ? 'active' : ''} onClick={() => setTab('rooms')}>
           Rooms {rooms.length > 0 && <span className="badge">{rooms.length}</span>}
         </button>
-        {isAdmin && (
-          <button className={tab === 'inbox' ? 'active' : ''} onClick={() => setTab('inbox')}>
-            Inbox {inbox.length > 0 && <span className="badge">{inbox.length}</span>}
-          </button>
-        )}
       </div>
 
       <div className="friends-list">

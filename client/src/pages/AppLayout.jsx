@@ -44,6 +44,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const [avatarClearedMessage, setAvatarClearedMessage] = useState('');
   const [draggedId, setDraggedId] = useState(null);
+  const [forceTab, setForceTab] = useState(null);
 
   useEffect(() => {
     const socket = getSocket();
@@ -271,6 +272,11 @@ export default function AppLayout() {
               <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
             </svg>
           </button>
+          {user?.is_admin && (
+            <button className="server-icon server-add" onClick={() => { handleDMs(); setForceTab('inbox'); }} title="Inbox">
+              📥
+            </button>
+          )}
         </div>
         <div className="rail-bottom">
           <button className="server-icon" onClick={() => setShowSettings(true)} title="Settings">
@@ -288,7 +294,7 @@ export default function AppLayout() {
 
       <div className="left-panel">
         {view === 'dms' ? (
-          <FriendsSidebar activeFriend={activeFriend} onSelectFriend={handleSelectFriend} unreadDMs={unreadDMs} activeRoom={activeRoom} onSelectRoom={handleSelectRoom} />
+          <FriendsSidebar activeFriend={activeFriend} onSelectFriend={handleSelectFriend} unreadDMs={unreadDMs} activeRoom={activeRoom} onSelectRoom={handleSelectRoom} forceTab={forceTab} onTabSet={() => setForceTab(null)} />
         ) : (
           <ChannelSidebar
             server={activeServer}
