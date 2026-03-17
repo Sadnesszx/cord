@@ -325,4 +325,90 @@ router.patch('/dm/message/:messageId', auth, async (req, res) => {
   }
 });
 
+// Block a user
+router.post('/block/:userId', auth, async (req, res) => {
+  try {
+    await pool.query(
+      'INSERT INTO blocked_users (blocker_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [req.user.id, req.params.userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Unblock a user
+router.delete('/block/:userId', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM blocked_users WHERE blocker_id = $1 AND blocked_id = $2', [req.user.id, req.params.userId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Check if user is blocked
+router.get('/block/:userId', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT 1 FROM blocked_users WHERE blocker_id = $1 AND blocked_id = $2',
+      [req.user.id, req.params.userId]
+    );
+    res.json({ blocked: rows.length > 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Check if can DM (friends or share a server)
+router.get('/can-dm/:userId', auth, async (req, res) => {
+  try {
+    // Check if blocked
+    const { rows: blocked } = await pool.query(
+      'SELECT 1 FROM blocked_users WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)',
+      [req.user.id, req.params.userId]
+    );
+    if (blocked.length) return res.json({ allowed: false, reason: 'blocked' });
+
+    // Check if friends
+    const { rows: friends } = await pool.query(
+      `SELECT 1 FROM friend_requests WHERE ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)) AND status = 'accepted'`,
+      [req.user.id, req.params.userId]
+    );
+    if (friends.length) return res.json({ allowed: true });
+
+    // Check if share a server
+    const { rows: sharedServer } = await pool.query(
+      `SELECT 1 FROM server_members sm1
+       JOIN server_members sm2 ON sm1.server_id = sm2.server_id
+       WHERE sm1.user_id = $1 AND sm2.user_id = $2 LIMIT 1`,
+      [req.user.id, req.params.userId]
+    );
+    if (sharedServer.length) return res.json({ allowed: true });
+
+    res.json({ allowed: false, reason: 'not_connected' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Report a message or user
+router.post('/report', auth, async (req, res) => {
+  const { reportedUserId, messageId, messageContent, reason } = req.body;
+  if (!reportedUserId) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    await pool.query(
+      'INSERT INTO reports (reporter_id, reported_user_id, message_id, message_content, reason) VALUES ($1, $2, $3, $4, $5)',
+      [req.user.id, reportedUserId, messageId || null, messageContent || null, reason || 'No reason provided']
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

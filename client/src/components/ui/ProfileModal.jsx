@@ -4,6 +4,7 @@ import api from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import './ProfileModal.css';
 import AdminDMViewer from './AdminDMViewer';
+import ReportModal from './ReportModal';
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -37,7 +38,8 @@ export default function ProfileModal({ username, onClose }) {
   const isAdmin = user?.is_admin;
   const isOwnProfile = user?.username === username;
   const [showDMViewer, setShowDMViewer] = useState(false);
-
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [warningText, setWarningText] = useState('');
   const [banReason, setBanReason] = useState('');
 
@@ -73,15 +75,16 @@ export default function ProfileModal({ username, onClose }) {
     api.get(`/api/users/${username}`).then(({ data }) => {
       setProfile(data);
       setLoading(false);
+      if (!isOwnProfile && data?.id) {
+        api.get(`/api/friends/block/${data.id}`).then(({ data: blockData }) => setIsBlocked(blockData.blocked)).catch(() => {});
+      }
     }).catch(() => setLoading(false));
 
     api.get(`/api/scores/badges/${username}`).then(({ data }) => setBadges(data)).catch(() => {});
 
     if (!isOwnProfile) {
       api.get('/api/friends').then(({ data }) => {
-        if (data.find(f => f.username === username)) {
-          setFriendStatus('friend');
-        }
+        if (data.find(f => f.username === username)) setFriendStatus('friend');
       });
     }
 
@@ -117,6 +120,19 @@ export default function ProfileModal({ username, onClose }) {
     }
   };
 
+  const toggleBlock = async () => {
+    if (!profile) return;
+    try {
+      if (isBlocked) {
+        await api.delete(`/api/friends/block/${profile.id}`);
+        setIsBlocked(false);
+      } else {
+        await api.post(`/api/friends/block/${profile.id}`);
+        setIsBlocked(true);
+      }
+    } catch (err) { console.error(err); }
+  };
+
   const isOnline = profile ? onlineUsers.map(id => String(id)).includes(String(profile.id)) : false;
 
   return (
@@ -135,43 +151,39 @@ export default function ProfileModal({ username, onClose }) {
               ) : (
                 profile.username[0].toUpperCase()
               )}
-              
             </div>
             <div className="profile-body">
               <div className="profile-top-row">
                 <div>
                   <h2 className="profile-username">{profile.banned ? 'Account Banned' : profile.username}</h2>
                   {!profile.banned && (
-                    <p style={{ 
-                       fontSize: 12, 
-                       color: getStatusColor(isOnline ? profile.status : 'offline'), 
-                       margin: '4px 0 0 0',
-                       display: 'flex',
-                       alignItems: 'center',
-                       gap: 5
-                      }}>
-                        <span style={{
-                        width: 10, height: 10, borderRadius: '50%',
-                        background: getStatusColor(isOnline ? profile.status : 'offline'),
-                        display: 'inline-block', flexShrink: 0
-                       }} />
+                    <p style={{ fontSize: 12, color: getStatusColor(isOnline ? profile.status : 'offline'), margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: getStatusColor(isOnline ? profile.status : 'offline'), display: 'inline-block', flexShrink: 0 }} />
                       <span style={{ color: '#a0a0b0' }}>
-                       {isOnline ? getStatusLabel(profile.status) : 'Offline'}
-                       {isOnline && profile.custom_status && ` — ${profile.custom_status}`}
+                        {isOnline ? getStatusLabel(profile.status) : 'Offline'}
+                        {isOnline && profile.custom_status && ` — ${profile.custom_status}`}
                       </span>
                     </p>
                   )}
                 </div>
                 {!isOwnProfile && (
-                  <button
-                    className={`add-friend-btn ${friendStatus !== 'none' ? 'disabled' : ''}`}
-                    onClick={addFriend}
-                    disabled={friendStatus !== 'none'}
-                  >
+                  <button className={`add-friend-btn ${friendStatus !== 'none' ? 'disabled' : ''}`} onClick={addFriend} disabled={friendStatus !== 'none'}>
                     {friendStatus === 'friend' ? '✓ Friends' : friendStatus === 'pending' ? 'Pending...' : '+ Add Friend'}
                   </button>
                 )}
               </div>
+
+              {!isOwnProfile && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                  <button onClick={toggleBlock} style={{ background: isBlocked ? 'var(--danger-dim)' : 'var(--bg-float)', border: isBlocked ? '1px solid rgba(237,66,69,0.3)' : 'var(--border-bright)', color: isBlocked ? 'var(--danger)' : 'var(--gray-3)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer' }}>
+                    {isBlocked ? '🚫 Unblock' : '🚫 Block'}
+                  </button>
+                  <button onClick={() => setShowReport(true)} style={{ background: 'var(--bg-float)', border: 'var(--border-bright)', color: 'var(--gray-3)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer' }}>
+                    ⚠️ Report
+                  </button>
+                </div>
+              )}
+
               {friendMsg && <p className="profile-friend-msg">{friendMsg}</p>}
 
               {profile.bio ? (
@@ -189,12 +201,7 @@ export default function ProfileModal({ username, onClose }) {
                   <p className="profile-bio-label">Badges</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
                     {badges.map(badge => (
-                      <div key={badge.id} title={badge.desc} style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        background: 'var(--bg-raised)', border: 'var(--border-bright)',
-                        borderRadius: 20, padding: '4px 10px', fontSize: 12,
-                        color: 'var(--gray-4)', fontWeight: 500,
-                      }}>
+                      <div key={badge.id} title={badge.desc} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-raised)', border: 'var(--border-bright)', borderRadius: 20, padding: '4px 10px', fontSize: 12, color: 'var(--gray-4)', fontWeight: 500 }}>
                         <span style={{ fontSize: 14 }}>{badge.emoji}</span>
                         {badge.label}
                       </div>
@@ -206,32 +213,20 @@ export default function ProfileModal({ username, onClose }) {
               {isAdmin && username !== 'Sadness' && (
                 <div className="profile-admin-section">
                   <p className="profile-bio-label">Admin Controls</p>
-
                   <form onSubmit={resetPassword}>
                     <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password for user" />
                     <button type="submit" className="btn-primary" style={{ marginTop: 8, width: '100%' }}>Reset Password</button>
                   </form>
-
                   <form onSubmit={warnUser}>
                     <input type="text" value={warningText} onChange={e => setWarningText(e.target.value)} placeholder="Warning message (leave empty to clear)" />
                     <button type="submit" className="admin-warn-btn" style={{ marginTop: 8, width: '100%' }}>Send Warning</button>
                   </form>
-
                   <form onSubmit={banUser}>
                     <input type="text" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason" />
                     <button type="submit" className="admin-ban-btn" style={{ marginTop: 8, width: '100%' }}>Ban User</button>
                   </form>
-
                   <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
-
-                  <button
-                    className="admin-warn-btn"
-                    onClick={() => setShowDMViewer(true)}
-                    style={{ width: '100%', marginTop: 8 }}
-                  >
-                    View User DMs
-               </button>
-
+                  <button className="admin-warn-btn" onClick={() => setShowDMViewer(true)} style={{ width: '100%', marginTop: 8 }}>View User DMs</button>
                   <form onSubmit={async (e) => {
                     e.preventDefault();
                     const reason = e.target.reason.value || 'No reason provided';
@@ -242,16 +237,14 @@ export default function ProfileModal({ username, onClose }) {
                     } catch (err) { setResetMsg('Error'); }
                   }}>
                     <input name="reason" type="text" placeholder="Reason for removing pfp" />
-                    <button type="submit" className="admin-ban-btn" style={{ width: '100%', marginTop: 8 }}>
-                      Remove Profile Picture
-                    </button>
+                    <button type="submit" className="admin-ban-btn" style={{ width: '100%', marginTop: 8 }}>Remove Profile Picture</button>
                   </form>
-
                   {resetMsg && <p className="profile-reset-msg">{resetMsg}</p>}
                 </div>
               )}
             </div>
             {showDMViewer && <AdminDMViewer onClose={() => setShowDMViewer(false)} />}
+            {showReport && <ReportModal reportedUser={profile} onClose={() => setShowReport(false)} />}
           </>
         )}
       </div>

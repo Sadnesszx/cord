@@ -99,6 +99,23 @@ const setupSocket = (io) => {
     socket.on('send_dm', async ({ receiverId, content }) => {
       if (!content?.trim() || !receiverId) return;
       try {
+        // Check if blocked
+        const { rows: blocked } = await pool.query(
+          'SELECT 1 FROM blocked_users WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)',
+          [socket.user.id, receiverId]
+        );
+        if (blocked.length) return socket.emit('dm_error', { error: 'Cannot send message' });
+
+        // Check if can DM (friends or shared server)
+        const { rows: friends } = await pool.query(
+          `SELECT 1 FROM friend_requests WHERE ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)) AND status = 'accepted'`,
+          [socket.user.id, receiverId]
+        );
+        const { rows: sharedServer } = await pool.query(
+          `SELECT 1 FROM server_members sm1 JOIN server_members sm2 ON sm1.server_id = sm2.server_id WHERE sm1.user_id = $1 AND sm2.user_id = $2 LIMIT 1`,
+          [socket.user.id, receiverId]
+        );
+        if (!friends.length && !sharedServer.length) return socket.emit('dm_error', { error: 'You can only DM friends or people you share a server with' });
         const { rows } = await pool.query(
           `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
           [socket.user.id, receiverId, content.trim()]

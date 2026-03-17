@@ -114,13 +114,32 @@ router.get('/dms/:user1/:user2', auth, async (req, res) => {
   }
 });
 
-router.get('/owner', auth, async (req, res) => {
+// Get all reports
+router.get('/reports', auth, async (req, res) => {
+  if (!await isAdmin(req.user.id)) return res.status(403).json({ error: 'Not authorized' });
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url FROM users WHERE is_admin = TRUE LIMIT 1'
+      `SELECT r.*, 
+        reporter.username as reporter_username,
+        reported.username as reported_username
+       FROM reports r
+       JOIN users reporter ON r.reporter_id = reporter.id
+       LEFT JOIN users reported ON r.reported_user_id = reported.id
+       WHERE r.resolved = FALSE
+       ORDER BY r.created_at DESC`
     );
-    if (!rows.length) return res.status(404).json({ error: 'Owner not found' });
-    res.json(rows[0]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Resolve a report
+router.patch('/reports/:id/resolve', auth, async (req, res) => {
+  if (!await isAdmin(req.user.id)) return res.status(403).json({ error: 'Not authorized' });
+  try {
+    await pool.query('UPDATE reports SET resolved = TRUE WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
