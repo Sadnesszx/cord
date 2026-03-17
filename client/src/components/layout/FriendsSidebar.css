@@ -82,7 +82,7 @@
 .friends-tabs::-webkit-scrollbar { display: none; }
 
 .friends-tabs button {
-  flex: 1;
+  flex: 0 0 auto;
   background: none;
   color: var(--gray-3);
   font-size: 12px;
