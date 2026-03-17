@@ -109,9 +109,9 @@ export default function HomePage({ onSelectFriend }) {
       </div>
 
       <div className="home-section">
-        <div className="home-section-label">Feedback</div>
+        <div className="home-section-label">Feedback & Support</div>
         <p style={{ fontSize: 13, color: '#888', marginBottom: 10 }}>
-          Got a suggestion or found a bug? Let us know!
+          Got a suggestion, found a bug, or need help? Send a message — it goes directly to the owner!
         </p>
         <form onSubmit={sendFeedback} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <textarea
@@ -144,25 +144,6 @@ export default function HomePage({ onSelectFriend }) {
           </div>
           {feedbackMsg && <p style={{ fontSize: 13, color: feedbackMsg.startsWith('✅') ? '#23a55a' : '#f23f43' }}>{feedbackMsg}</p>}
         </form>
-      </div>
-
-      <div className="home-section">
-        <div className="home-section-label">Support</div>
-        <button
-          className="home-contact-btn"
-          onClick={() => {
-            if (ownerUser) {
-              onSelectFriend(ownerUser);
-            } else {
-              api.get('/api/admin/owner').then(({ data }) => {
-                setOwnerUser(data);
-                onSelectFriend(data);
-              }).catch(() => alert('Could not find owner'));
-            }
-          }}
-        >
-          💬 Contact Owner
-        </button>
       </div>
 
       <div className="home-section">
