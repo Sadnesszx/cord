@@ -150,7 +150,16 @@ export default function HomePage({ onSelectFriend }) {
         <div className="home-section-label">Support</div>
         <button
           className="home-contact-btn"
-          onClick={() => ownerUser && onSelectFriend(ownerUser)}
+          onClick={() => {
+            if (ownerUser) {
+              onSelectFriend(ownerUser);
+            } else {
+              api.get('/api/admin/owner').then(({ data }) => {
+                setOwnerUser(data);
+                onSelectFriend(data);
+              }).catch(() => alert('Could not find owner'));
+            }
+          }}
         >
           💬 Contact Owner
         </button>
