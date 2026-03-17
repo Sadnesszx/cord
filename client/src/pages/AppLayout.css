@@ -224,3 +224,16 @@
 .right-panel {
   background: rgba(13,13,15,0.85) !important;
 }
+
+/* Background image support */
+body {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+.server-rail-panel { background: rgba(6,6,7,0.92) !important; }
+.left-panel { background: rgba(13,13,15,0.92) !important; }
+.right-panel { background: rgba(13,13,15,0.92) !important; }
+.main-panel { background: transparent !important; }
