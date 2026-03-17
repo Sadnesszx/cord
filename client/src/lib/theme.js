@@ -102,24 +102,17 @@ export function applyTheme(themeId, customBg = null) {
   const root = document.documentElement;
   Object.entries(theme.vars).forEach(([key, val]) => root.style.setProperty(key, val));
 
-  const applyBg = () => {
-    const mainPanel = document.querySelector('.main-panel');
-    if (mainPanel) {
-      if (customBg) {
-        mainPanel.style.backgroundImage = `url(${customBg})`;
-        mainPanel.style.backgroundSize = 'cover';
-        mainPanel.style.backgroundPosition = 'center';
-        mainPanel.style.backgroundRepeat = 'no-repeat';
-      } else {
-        mainPanel.style.backgroundImage = '';
-        mainPanel.style.backgroundSize = '';
-        mainPanel.style.backgroundPosition = '';
-        mainPanel.style.backgroundRepeat = '';
-      }
-    }
-  };
-  applyBg();
-  setTimeout(applyBg, 500);
+  let styleTag = document.getElementById('nihilistic-bg-style');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'nihilistic-bg-style';
+    document.head.appendChild(styleTag);
+  }
+  if (customBg) {
+    styleTag.textContent = `.main-panel { background-image: url(${customBg}) !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }`;
+  } else {
+    styleTag.textContent = '';
+  }
 }
 
 export function loadSavedTheme() {
