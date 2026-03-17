@@ -107,11 +107,15 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 3000, backdropFilter: 'blur(8px)',
-    }}>
+    <div
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 3000, backdropFilter: 'blur(8px)',
+      }}
+      onMouseDown={e => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
+    >
       <div style={{
         background: 'var(--bg-raised)', border: 'var(--border-bright)',
         borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column',
