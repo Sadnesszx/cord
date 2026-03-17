@@ -137,6 +137,27 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// Search DM messages
+router.get('/dm/:friendId/search', auth, async (req, res) => {
+  const { q } = req.query;
+  if (!q?.trim()) return res.json([]);
+  try {
+    const { rows } = await pool.query(
+      `SELECT dm.*, u.username, u.avatar_color, u.avatar_url
+       FROM dm_messages dm
+       JOIN users u ON dm.sender_id = u.id
+       WHERE ((dm.sender_id = $1 AND dm.receiver_id = $2) OR (dm.sender_id = $2 AND dm.receiver_id = $1))
+       AND dm.content ILIKE $3
+       ORDER BY dm.created_at DESC LIMIT 25`,
+      [req.user.id, req.params.friendId, `%${q.trim()}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get DM messages with a friend
 router.get('/dm/:friendId', auth, async (req, res) => {
   try {

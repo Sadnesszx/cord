@@ -4,7 +4,7 @@
   flex-direction: column;
   min-width: 0;
   background: var(--bg-base);
-  overflow: visible;
+  overflow: hidden;
   height: 100%;
   position: relative;
 }
@@ -319,18 +319,15 @@
 .emoji-btn {
   background: none;
   color: var(--gray-3);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
+  font-size: 18px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.emoji-btn:hover { color: var(--white); background: var(--bg-hover); }
+.emoji-btn:hover { color: var(--white); }
 
 .emoji-grid {
   display: grid;
@@ -366,18 +363,15 @@
 .image-upload-btn {
   background: none;
   color: var(--gray-3);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
+  font-size: 18px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.image-upload-btn:hover { color: var(--white); background: var(--bg-hover); }
+.image-upload-btn:hover { color: var(--white); }
 
 .msg-link {
   color: var(--accent);
@@ -396,9 +390,7 @@
   top: 0;
 }
 
-.msg-group:hover .msg-actions { display: flex; }
-.msg-text-wrapper.picker-open .msg-actions { display: flex; }
-.msg-group:has(.picker-open) .msg-actions { display: flex; }
+.msg-text-wrapper:hover .msg-actions { display: flex; }
 
 .msg-react-btn, .msg-edit-btn, .msg-reply-btn, .msg-delete-btn {
   background: var(--bg-raised);
@@ -422,7 +414,10 @@
   border-radius: var(--radius-lg);
   flex-wrap: wrap;
   max-width: 220px;
-  z-index: 9999;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
   box-shadow: var(--shadow-md);
 }
 
@@ -542,3 +537,8 @@
 }
 
 .reply-bar button:hover { color: var(--white); background: var(--bg-hover); }
+.msg-highlighted {
+  background: rgba(88,101,242,0.15) !important;
+  border-radius: var(--radius-md);
+  transition: background 1s ease;
+}

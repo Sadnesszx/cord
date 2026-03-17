@@ -120,4 +120,24 @@ router.patch('/messages/:messageId', auth, async (req, res) => {
   }
 });
 
+// Search messages in a channel
+router.get('/channels/:channelId/search', auth, async (req, res) => {
+  const { q } = req.query;
+  if (!q?.trim()) return res.json([]);
+  try {
+    const { rows } = await pool.query(
+      `SELECT m.*, u.username, u.avatar_color, u.avatar_url
+       FROM messages m
+       JOIN users u ON m.user_id = u.id
+       WHERE m.channel_id = $1 AND m.content ILIKE $2
+       ORDER BY m.created_at DESC LIMIT 25`,
+      [req.params.channelId, `%${q.trim()}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
