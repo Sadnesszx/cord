@@ -114,4 +114,16 @@ router.get('/dms/:user1/:user2', auth, async (req, res) => {
   }
 });
 
+router.get('/owner', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, username, avatar_color, avatar_url FROM users WHERE is_admin = TRUE LIMIT 1'
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Owner not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
