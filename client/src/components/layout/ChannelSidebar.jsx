@@ -188,7 +188,18 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
                 <button
                   className="btn-primary"
                   style={{ fontSize: 12, padding: '6px 10px' }}
-                  onClick={() => { navigator.clipboard.writeText(inviteUrl); }}
+                  onClick={(e) => {
+                    navigator.clipboard.writeText(inviteUrl).catch(() => {
+                      const el = document.createElement('textarea');
+                      el.value = inviteUrl;
+                      document.body.appendChild(el);
+                      el.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(el);
+                    });
+                    e.target.textContent = 'Copied!';
+                    setTimeout(() => e.target.textContent = 'Copy', 2000);
+                  }}
                 >
                   Copy
                 </button>
