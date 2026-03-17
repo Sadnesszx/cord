@@ -6,7 +6,7 @@ const { pool } = require('../db');
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
-  const { username, password, birthday } = req.body;
+  const { username, password, birthday, captchaToken } = req.body;
   if (!username || !password)
     return res.status(400).json({ error: 'Username and password required' });
 
@@ -18,6 +18,23 @@ router.post('/register', async (req, res) => {
 
   if (!birthday)
     return res.status(400).json({ error: 'Birthday is required' });
+
+  // Verify hCaptcha
+  if (!captchaToken)
+    return res.status(400).json({ error: 'Please complete the CAPTCHA' });
+
+  try {
+    const captchaRes = await fetch('https://api.hcaptcha.com/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${process.env.HCAPTCHA_SECRET}&response=${captchaToken}`,
+    });
+    const captchaData = await captchaRes.json();
+    if (!captchaData.success)
+      return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'CAPTCHA verification error' });
+  }
 
   // Age check - must be at least 13
   const today = new Date();
