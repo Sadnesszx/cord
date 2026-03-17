@@ -91,7 +91,7 @@ export default function ProfileModal({ username, onClose }) {
     return () => socket.off('online_users');
   }, [username]);
 
-  const joined = profile ? new Date(profile.created_at).toLocaleDateString([], { month: 'long', year: 'numeric' }) : '';
+  const joined = profile ? new Date(profile.created_at).toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
   const addFriend = async () => {
     try {
