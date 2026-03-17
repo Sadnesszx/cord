@@ -110,6 +110,7 @@ export function applyTheme(themeId, customBg = null) {
   }
   if (customBg) {
     styleTag.textContent = `body { background-image: url(${customBg}) !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; background-attachment: fixed !important; }`;
+  } else {
     styleTag.textContent = '';
   }
 }
