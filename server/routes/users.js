@@ -5,7 +5,6 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Helper to check if user is admin
 const isAdmin = async (userId) => {
   const { rows } = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userId]);
   return rows[0]?.is_admin === true;
@@ -29,9 +28,7 @@ router.patch('/me/username', auth, async (req, res) => {
       [username, req.user.id]
     );
     const io = global.getIO?.();
-    if (io) {
-      io.emit('user_username_updated', { userId: req.user.id, username });
-    }
+    if (io) io.emit('user_username_updated', { userId: req.user.id, username });
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -46,10 +43,7 @@ router.patch('/me/avatar', auth, async (req, res) => {
   if (!validColors.includes(avatar_color))
     return res.status(400).json({ error: 'Invalid color' });
   try {
-    const { rows } = await pool.query(
-      'UPDATE users SET avatar_color = $1 WHERE id = $2 RETURNING avatar_color',
-      [avatar_color, req.user.id]
-    );
+    const { rows } = await pool.query('UPDATE users SET avatar_color = $1 WHERE id = $2 RETURNING avatar_color', [avatar_color, req.user.id]);
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -63,9 +57,7 @@ router.patch('/avatar-image', auth, async (req, res) => {
   try {
     await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.user.id]);
     const io = global.getIO?.();
-    if (io) {
-      io.emit('user_avatar_updated', { userId: req.user.id, avatar_url });
-    }
+    if (io) io.emit('user_avatar_updated', { userId: req.user.id, avatar_url });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -94,10 +86,7 @@ router.patch('/me/bio', auth, async (req, res) => {
   if (bio && bio.length > 200)
     return res.status(400).json({ error: 'Bio must be under 200 characters' });
   try {
-    const { rows } = await pool.query(
-      'UPDATE users SET bio = $1 WHERE id = $2 RETURNING bio',
-      [bio || '', req.user.id]
-    );
+    const { rows } = await pool.query('UPDATE users SET bio = $1 WHERE id = $2 RETURNING bio', [bio || '', req.user.id]);
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -123,18 +112,9 @@ router.patch('/me/status', auth, async (req, res) => {
   if (status && !validStatuses.includes(status))
     return res.status(400).json({ error: 'Invalid status' });
   try {
-    await pool.query(
-      'UPDATE users SET status = $1, custom_status = $2 WHERE id = $3',
-      [status || 'online', custom_status || null, req.user.id]
-    );
+    await pool.query('UPDATE users SET status = $1, custom_status = $2 WHERE id = $3', [status || 'online', custom_status || null, req.user.id]);
     const io = global.getIO?.();
-    if (io) {
-      io.emit('user_status_updated', {
-        userId: req.user.id,
-        status: status || 'online',
-        custom_status: custom_status || null,
-      });
-    }
+    if (io) io.emit('user_status_updated', { userId: req.user.id, status: status || 'online', custom_status: custom_status || null });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -161,9 +141,7 @@ router.patch('/admin/clear-avatar/:username', auth, async (req, res) => {
     const { rows } = await pool.query('UPDATE users SET avatar_url = NULL WHERE username = $1 RETURNING id', [req.params.username]);
     if (rows.length) {
       const io = global.getIO?.();
-      if (io) {
-        io.to(`user_${rows[0].id}`).emit('avatar_cleared', { reason: req.body.reason || 'No reason provided' });
-      }
+      if (io) io.to(`user_${rows[0].id}`).emit('avatar_cleared', { reason: req.body.reason || 'No reason provided' });
     }
     res.json({ success: true });
   } catch (err) {
@@ -179,27 +157,89 @@ router.post('/feedback', auth, async (req, res) => {
     const { rows } = await pool.query('SELECT id FROM users WHERE is_admin = TRUE LIMIT 1');
     if (!rows.length) return res.status(404).json({ error: 'Owner not found' });
     const ownerId = rows[0].id;
-    await pool.query(
-      'INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)',
-      [req.user.id, ownerId, `📝 Feedback: ${message.trim()}`]
-    );
+    await pool.query('INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)', [req.user.id, ownerId, `📝 Feedback: ${message.trim()}`]);
     const io = global.getIO?.();
     if (io) {
-      const { rows: senderInfo } = await pool.query(
-        'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
-        [req.user.id]
-      );
-      io.to(`user_${ownerId}`).emit('new_dm', {
-        sender_id: req.user.id,
-        receiver_id: ownerId,
-        content: `📝 Feedback: ${message.trim()}`,
-        username: senderInfo[0].username,
-        avatar_color: senderInfo[0].avatar_color,
-        avatar_url: senderInfo[0].avatar_url,
-        created_at: new Date().toISOString(),
-      });
+      const { rows: senderInfo } = await pool.query('SELECT username, avatar_color, avatar_url FROM users WHERE id = $1', [req.user.id]);
+      io.to(`user_${ownerId}`).emit('new_dm', { sender_id: req.user.id, receiver_id: ownerId, content: `📝 Feedback: ${message.trim()}`, username: senderInfo[0].username, avatar_color: senderInfo[0].avatar_color, avatar_url: senderInfo[0].avatar_url, created_at: new Date().toISOString() });
     }
     res.json({ message: 'Feedback sent!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get active sessions
+router.get('/me/sessions', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, created_at, last_seen, ip_address, user_agent FROM user_sessions WHERE user_id = $1 ORDER BY last_seen DESC',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Revoke a session
+router.delete('/me/sessions/:sessionId', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM user_sessions WHERE id = $1 AND user_id = $2', [req.params.sessionId, req.user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Revoke all other sessions
+router.delete('/me/sessions', auth, async (req, res) => {
+  const currentToken = req.headers.authorization?.split(' ')[1];
+  const crypto = require('crypto');
+  const currentHash = crypto.createHash('sha256').update(currentToken).digest('hex');
+  try {
+    await pool.query('DELETE FROM user_sessions WHERE user_id = $1 AND token_hash != $2', [req.user.id, currentHash]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Export account data
+router.get('/me/export', auth, async (req, res) => {
+  try {
+    const { rows: profile } = await pool.query(
+      'SELECT id, username, bio, avatar_color, banner_color, status, custom_status, created_at FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    const { rows: messages } = await pool.query(
+      `SELECT m.content, m.created_at, c.name as channel, s.name as server
+       FROM messages m JOIN channels c ON m.channel_id = c.id JOIN servers s ON c.server_id = s.id
+       WHERE m.user_id = $1 ORDER BY m.created_at DESC`,
+      [req.user.id]
+    );
+    const { rows: dms } = await pool.query(
+      `SELECT dm.content, dm.created_at, u.username as with_user
+       FROM dm_messages dm JOIN users u ON (CASE WHEN dm.sender_id = $1 THEN dm.receiver_id = u.id ELSE dm.sender_id = u.id END)
+       WHERE dm.sender_id = $1 OR dm.receiver_id = $1
+       ORDER BY dm.created_at DESC LIMIT 1000`,
+      [req.user.id]
+    );
+    const { rows: servers } = await pool.query(
+      `SELECT s.name, s.created_at, sm.joined_at FROM servers s JOIN server_members sm ON s.id = sm.server_id WHERE sm.user_id = $1`,
+      [req.user.id]
+    );
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      profile: profile[0],
+      servers,
+      messages: { count: messages.length, data: messages },
+      direct_messages: { count: dms.length, data: dms },
+    };
+    res.setHeader('Content-Disposition', `attachment; filename="nihilisticchat-export-${profile[0].username}.json"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.json(exportData);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

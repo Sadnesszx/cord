@@ -1,9 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './SettingsModal.css';
 import ImageCropper from './ImageCropper';
 import { THEMES, saveTheme, loadSavedTheme } from '../../lib/theme';
+
+function SessionManager() {
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/api/users/me/sessions').then(({ data }) => { setSessions(data); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+
+  const revoke = async (id) => {
+    await api.delete(`/api/users/me/sessions/${id}`);
+    setSessions(prev => prev.filter(s => s.id !== id));
+  };
+
+  const revokeAll = async () => {
+    await api.delete('/api/users/me/sessions');
+    setSessions(prev => prev.slice(0, 1));
+  };
+
+  const formatUA = (ua) => {
+    if (!ua) return 'Unknown device';
+    if (ua.includes('Chrome')) return '🌐 Chrome';
+    if (ua.includes('Firefox')) return '🦊 Firefox';
+    if (ua.includes('Safari')) return '🧭 Safari';
+    if (ua.includes('Edge')) return '🌀 Edge';
+    return '🖥️ Browser';
+  };
+
+  const formatDate = (ts) => new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  if (loading) return <p style={{ fontSize: 12, color: '#888' }}>Loading...</p>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {sessions.length === 0 && <p style={{ fontSize: 12, color: '#888' }}>No active sessions found.</p>}
+      {sessions.map((s, i) => (
+        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-float)', border: 'var(--border-bright)', borderRadius: 8, padding: '8px 12px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, color: 'var(--white)', fontWeight: 500 }}>
+              {formatUA(s.user_agent)}
+              {i === 0 && <span style={{ fontSize: 10, background: 'var(--accent-dim)', color: 'var(--accent)', borderRadius: 4, padding: '1px 5px', marginLeft: 4 }}>current</span>}
+            </div>
+            <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>Last seen {formatDate(s.last_seen)} {s.ip_address ? `• ${s.ip_address}` : ''}</div>
+          </div>
+          {i !== 0 && (
+            <button onClick={() => revoke(s.id)} style={{ background: 'var(--danger-dim)', border: '1px solid rgba(237,66,69,0.2)', color: 'var(--danger)', borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer' }}>Revoke</button>
+          )}
+        </div>
+      ))}
+      {sessions.length > 1 && (
+        <button onClick={revokeAll} style={{ background: 'transparent', border: '1px solid rgba(237,66,69,0.3)', color: 'var(--danger)', borderRadius: 8, padding: '6px', fontSize: 12, cursor: 'pointer', marginTop: 4 }}>
+          Log out all other sessions
+        </button>
+      )}
+    </div>
+  );
+}
 
 const COLORS = [
   { color: '#555', label: 'Ash' },
@@ -56,7 +113,6 @@ export default function SettingsModal({ onClose }) {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  // Theme state
   const saved = loadSavedTheme();
   const [selectedTheme, setSelectedTheme] = useState(saved.themeId || 'dark');
   const [customBg, setCustomBg] = useState(saved.customBg || '');
@@ -256,22 +312,11 @@ export default function SettingsModal({ onClose }) {
           <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveAvatar}>Save Avatar Color</button>
         </div>
 
-        {/* Theme section */}
         <div className="settings-section">
           <p className="settings-label">Theme</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
             {THEMES.map(t => (
-              <button
-                key={t.id}
-                onClick={() => applyThemeChoice(t.id)}
-                style={{
-                  padding: '10px 8px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500,
-                  background: selectedTheme === t.id ? 'var(--accent-dim)' : '#1a1a1a',
-                  border: selectedTheme === t.id ? '1px solid var(--accent)' : '1px solid #2a2a2a',
-                  color: '#e8e8e8', transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
+              <button key={t.id} onClick={() => applyThemeChoice(t.id)} style={{ padding: '10px 8px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500, background: selectedTheme === t.id ? 'var(--accent-dim)' : '#1a1a1a', border: selectedTheme === t.id ? '1px solid var(--accent)' : '1px solid #2a2a2a', color: '#e8e8e8', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {t.name}
               </button>
             ))}
@@ -279,15 +324,8 @@ export default function SettingsModal({ onClose }) {
           <p className="settings-label" style={{ marginBottom: 6 }}>Custom Background</p>
           <p style={{ fontSize: 11, color: '#555', marginBottom: 8 }}>Upload an image or paste a URL — it appears as a wallpaper behind the chat.</p>
           <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-            <input
-              value={customBgInput}
-              onChange={e => setCustomBgInput(e.target.value)}
-              placeholder="Paste image URL..."
-              style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '7px 10px', color: '#e8e8e8', fontSize: 12 }}
-            />
-            <button className="btn-primary" style={{ fontSize: 12, padding: '7px 12px', whiteSpace: 'nowrap' }} onClick={applyCustomBg}>
-              Apply
-            </button>
+            <input value={customBgInput} onChange={e => setCustomBgInput(e.target.value)} placeholder="Paste image URL..." style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '7px 10px', color: '#e8e8e8', fontSize: 12 }} />
+            <button className="btn-primary" style={{ fontSize: 12, padding: '7px 12px', whiteSpace: 'nowrap' }} onClick={applyCustomBg}>Apply</button>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <label className="btn-ghost" style={{ fontSize: 12, padding: '7px 12px', cursor: 'pointer', border: '1px solid #2a2a2a', borderRadius: 8, flex: 1, textAlign: 'center' }}>
@@ -326,6 +364,21 @@ export default function SettingsModal({ onClose }) {
               {saving ? 'Saving...' : 'Update Password'}
             </button>
           </form>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Sessions</p>
+          <SessionManager />
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Export Data</p>
+          <p style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>Download all your messages and account data as a JSON file.</p>
+          <a href={`${import.meta.env.VITE_API_URL}/api/users/me/export`}
+            style={{ display: 'block', textAlign: 'center', background: 'var(--bg-float)', border: 'var(--border-bright)', borderRadius: 8, padding: '8px', color: 'var(--gray-4)', fontSize: 13, cursor: 'pointer', textDecoration: 'none' }}
+            target="_blank" rel="noreferrer">
+            📦 Download My Data
+          </a>
         </div>
 
         <div className="settings-section">

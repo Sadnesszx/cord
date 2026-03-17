@@ -3,6 +3,20 @@ const { pool } = require('../db');
 
 const setupSocket = (io) => {
   const onlineUsers = new Set();
+  // Rate limiting: map of userId -> { count, resetAt }
+  const messageRates = new Map();
+
+  const checkRateLimit = (userId) => {
+    const now = Date.now();
+    const rate = messageRates.get(userId);
+    if (!rate || now > rate.resetAt) {
+      messageRates.set(userId, { count: 1, resetAt: now + 5000 });
+      return true;
+    }
+    if (rate.count >= 5) return false;
+    rate.count++;
+    return true;
+  };
 
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
@@ -32,10 +46,12 @@ const setupSocket = (io) => {
 
     socket.on('send_message', async ({ channelId, content, replyToId }) => {
       if (!content?.trim() || !channelId) return;
+      if (!checkRateLimit(socket.user.id)) {
+        return socket.emit('rate_limited', { error: 'You are sending messages too fast!' });
+      }
       try {
         const { rows } = await pool.query(
-          `INSERT INTO messages (channel_id, user_id, content, reply_to_id)
-           VALUES ($1, $2, $3, $4) RETURNING *`,
+          `INSERT INTO messages (channel_id, user_id, content, reply_to_id) VALUES ($1, $2, $3, $4) RETURNING *`,
           [channelId, socket.user.id, content.trim(), replyToId || null]
         );
         const message = rows[0];
@@ -49,20 +65,9 @@ const setupSocket = (io) => {
             `SELECT m.content, u.username FROM messages m JOIN users u ON m.user_id = u.id WHERE m.id = $1`,
             [replyToId]
           );
-          if (replyRows.length) {
-            reply_content = replyRows[0].content;
-            reply_username = replyRows[0].username;
-          }
+          if (replyRows.length) { reply_content = replyRows[0].content; reply_username = replyRows[0].username; }
         }
-        const fullMessage = {
-          ...message,
-          username: users[0].username,
-          avatar_color: users[0].avatar_color,
-          avatar_url: users[0].avatar_url,
-          reply_content,
-          reply_username,
-        };
-        io.to(channelId).emit('new_message', fullMessage);
+        io.to(channelId).emit('new_message', { ...message, username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url, reply_content, reply_username });
       } catch (err) {
         console.error('Message error:', err);
         socket.emit('error', { message: 'Failed to send message' });
@@ -98,15 +103,15 @@ const setupSocket = (io) => {
 
     socket.on('send_dm', async ({ receiverId, content }) => {
       if (!content?.trim() || !receiverId) return;
+      if (!checkRateLimit(socket.user.id)) {
+        return socket.emit('rate_limited', { error: 'You are sending messages too fast!' });
+      }
       try {
-        // Check if blocked
         const { rows: blocked } = await pool.query(
           'SELECT 1 FROM blocked_users WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)',
           [socket.user.id, receiverId]
         );
         if (blocked.length) return socket.emit('dm_error', { error: 'Cannot send message' });
-
-        // Check if can DM (friends or shared server)
         const { rows: friends } = await pool.query(
           `SELECT 1 FROM friend_requests WHERE ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)) AND status = 'accepted'`,
           [socket.user.id, receiverId]
@@ -120,56 +125,32 @@ const setupSocket = (io) => {
           `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
           [socket.user.id, receiverId, content.trim()]
         );
-        const { rows: users } = await pool.query(
-          'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
-          [socket.user.id]
-        );
-        const fullMsg = {
-          ...rows[0],
-          username: users[0].username,
-          avatar_color: users[0].avatar_color,
-          avatar_url: users[0].avatar_url,
-        };
+        const { rows: users } = await pool.query('SELECT username, avatar_color, avatar_url FROM users WHERE id = $1', [socket.user.id]);
+        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url };
         socket.emit('new_dm', fullMsg);
         io.to(`user_${receiverId}`).emit('new_dm', fullMsg);
-      } catch (err) {
-        console.error('DM error:', err);
-      }
+      } catch (err) { console.error('DM error:', err); }
     });
 
     socket.on('get_online_users', () => {
       socket.emit('online_users', Array.from(onlineUsers));
     });
 
-    socket.on('join_server', (serverId) => {
-      socket.join(`server_${serverId}`);
-    });
-
-    socket.on('join_room', (roomId) => {
-      socket.join(`room_${roomId}`);
-    });
+    socket.on('join_server', (serverId) => { socket.join(`server_${serverId}`); });
+    socket.on('join_room', (roomId) => { socket.join(`room_${roomId}`); });
 
     socket.on('send_room_message', async ({ roomId, content }) => {
       if (!content?.trim() || !roomId) return;
-      try {
-        const { rows: member } = await pool.query(
-          'SELECT 1 FROM room_members WHERE room_id = $1 AND user_id = $2',
-          [roomId, socket.user.id]
-        );
-        if (!member.length) return;
-        const { rows } = await pool.query(
-          'INSERT INTO room_messages (room_id, user_id, content) VALUES ($1, $2, $3) RETURNING *',
-          [roomId, socket.user.id, content.trim()]
-        );
-        const { rows: users } = await pool.query(
-          'SELECT username, avatar_color, avatar_url FROM users WHERE id = $1',
-          [socket.user.id]
-        );
-        const fullMessage = { ...rows[0], ...users[0] };
-        io.to(`room_${roomId}`).emit('new_room_message', fullMessage);
-      } catch (err) {
-        console.error('Room message error:', err);
+      if (!checkRateLimit(socket.user.id)) {
+        return socket.emit('rate_limited', { error: 'You are sending messages too fast!' });
       }
+      try {
+        const { rows: member } = await pool.query('SELECT 1 FROM room_members WHERE room_id = $1 AND user_id = $2', [roomId, socket.user.id]);
+        if (!member.length) return;
+        const { rows } = await pool.query('INSERT INTO room_messages (room_id, user_id, content) VALUES ($1, $2, $3) RETURNING *', [roomId, socket.user.id, content.trim()]);
+        const { rows: users } = await pool.query('SELECT username, avatar_color, avatar_url FROM users WHERE id = $1', [socket.user.id]);
+        io.to(`room_${roomId}`).emit('new_room_message', { ...rows[0], ...users[0] });
+      } catch (err) { console.error('Room message error:', err); }
     });
 
     socket.on('delete_room_message', async ({ messageId, roomId }) => {
