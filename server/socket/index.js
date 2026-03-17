@@ -30,24 +30,37 @@ const setupSocket = (io) => {
       socket.join(channelId);
     });
 
-    socket.on('send_message', async ({ channelId, content }) => {
+    socket.on('send_message', async ({ channelId, content, replyToId }) => {
       if (!content?.trim() || !channelId) return;
       try {
         const { rows } = await pool.query(
-          `INSERT INTO messages (channel_id, user_id, content)
-           VALUES ($1, $2, $3) RETURNING *`,
-          [channelId, socket.user.id, content.trim()]
+          `INSERT INTO messages (channel_id, user_id, content, reply_to_id)
+           VALUES ($1, $2, $3, $4) RETURNING *`,
+          [channelId, socket.user.id, content.trim(), replyToId || null]
         );
         const message = rows[0];
         const { rows: users } = await pool.query(
           `SELECT username, avatar_color, avatar_url FROM users WHERE id = $1`,
           [socket.user.id]
         );
+        let reply_content = null, reply_username = null;
+        if (replyToId) {
+          const { rows: replyRows } = await pool.query(
+            `SELECT m.content, u.username FROM messages m JOIN users u ON m.user_id = u.id WHERE m.id = $1`,
+            [replyToId]
+          );
+          if (replyRows.length) {
+            reply_content = replyRows[0].content;
+            reply_username = replyRows[0].username;
+          }
+        }
         const fullMessage = {
           ...message,
           username: users[0].username,
           avatar_color: users[0].avatar_color,
           avatar_url: users[0].avatar_url,
+          reply_content,
+          reply_username,
         };
         io.to(channelId).emit('new_message', fullMessage);
       } catch (err) {
