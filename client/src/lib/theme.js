@@ -109,7 +109,7 @@ export function applyTheme(themeId, customBg = null) {
     document.head.appendChild(styleTag);
   }
   if (customBg) {
-    styleTag.textContent = `body { background-image: url(${customBg}) !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; background-attachment: fixed !important; }`;
+    sstyleTag.textContent = `body::before { content: ''; position: fixed; inset: 0; background-image: url(${customBg}); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; opacity: 0.15; z-index: -1; } body { background: var(--bg-void); }`;
   } else {
     styleTag.textContent = '';
   }
