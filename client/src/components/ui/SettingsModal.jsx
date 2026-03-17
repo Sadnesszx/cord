@@ -374,11 +374,24 @@ export default function SettingsModal({ onClose }) {
         <div className="settings-section">
           <p className="settings-label">Export Data</p>
           <p style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>Download all your messages and account data as a JSON file.</p>
-          <a href={`${import.meta.env.VITE_API_URL}/api/users/me/export`}
-            style={{ display: 'block', textAlign: 'center', background: 'var(--bg-float)', border: 'var(--border-bright)', borderRadius: 8, padding: '8px', color: 'var(--gray-4)', fontSize: 13, cursor: 'pointer', textDecoration: 'none' }}
-            target="_blank" rel="noreferrer">
+          <button
+            onClick={async () => {
+              const token = localStorage.getItem('nihilisticchat_token');
+              const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me/export`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `nihilisticchat-export.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'center', background: 'var(--bg-float)', border: 'var(--border-bright)', borderRadius: 8, padding: '8px', color: 'var(--gray-4)', fontSize: 13, cursor: 'pointer' }}
+          >
             📦 Download My Data
-          </a>
+          </button>
         </div>
 
         <div className="settings-section">
