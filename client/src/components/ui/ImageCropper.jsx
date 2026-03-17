@@ -59,18 +59,24 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel }) {
     if (imgRef.current) draw(imgRef.current, scale, offset);
   }, [scale, offset, draw]);
 
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging) return;
+      setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    };
+    const onUp = () => setDragging(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragging, dragStart]);
+
   const handleMouseDown = (e) => {
     setDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   };
-
-  const handleMouseMove = (e) => {
-    if (!dragging) return;
-    const newOffset = { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y };
-    setOffset(newOffset);
-  };
-
-  const handleMouseUp = () => setDragging(false);
 
   const handleWheel = (e) => {
     e.preventDefault();
@@ -120,9 +126,6 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel }) {
           height={SIZE}
           style={{ borderRadius: '50%', cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none' }}
           onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
         />
 
