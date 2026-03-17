@@ -9,6 +9,14 @@ router.post('/', auth, async (req, res) => {
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Name required' });
   try {
+    // Max 5 rooms per user
+    const { rows: existing } = await pool.query(
+      'SELECT COUNT(*) FROM rooms WHERE owner_id = $1',
+      [req.user.id]
+    );
+    if (parseInt(existing[0].count) >= 5) {
+      return res.status(429).json({ error: 'You can only create up to 5 rooms' });
+    }
     const code = Math.random().toString(36).substring(2, 8).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
     const { rows } = await pool.query(
       'INSERT INTO rooms (name, code, owner_id) VALUES ($1, $2, $3) RETURNING *',

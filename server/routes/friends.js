@@ -16,6 +16,15 @@ router.post('/request', auth, async (req, res) => {
     const receiverId = rows[0].id;
     if (receiverId === req.user.id) return res.status(400).json({ error: "You can't add yourself" });
 
+    // Check daily friend request limit (max 10 per day)
+    const { rows: todayRequests } = await pool.query(
+      `SELECT COUNT(*) FROM friend_requests WHERE sender_id = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
+      [req.user.id]
+    );
+    if (parseInt(todayRequests[0].count) >= 10) {
+      return res.status(429).json({ error: 'You can only send 10 friend requests per day' });
+    }
+
     const { rows: existing } = await pool.query(
       `SELECT * FROM friend_requests WHERE 
        (sender_id = $1 AND receiver_id = $2) OR 

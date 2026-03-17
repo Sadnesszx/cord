@@ -42,6 +42,12 @@ router.post('/', auth, async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Server name required' });
 
   try {
+    // Check account age — must be at least 24 hours old
+    const { rows: userRows } = await pool.query('SELECT created_at FROM users WHERE id = $1', [req.user.id]);
+    const accountAge = Date.now() - new Date(userRows[0].created_at).getTime();
+    if (accountAge < 24 * 60 * 60 * 1000) {
+      return res.status(403).json({ error: 'Your account must be at least 24 hours old to create a server' });
+    }
     const { rows } = await pool.query(
       `INSERT INTO servers (name, owner_id) VALUES ($1, $2) RETURNING *`,
       [name, req.user.id]
