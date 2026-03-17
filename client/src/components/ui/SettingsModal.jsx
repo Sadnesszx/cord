@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './SettingsModal.css';
+import ImageCropper from './ImageCropper';
 
 const COLORS = [
   { color: '#555', label: 'Ash' },
@@ -41,12 +42,12 @@ export default function SettingsModal({ onClose }) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [bio, setBio] = useState('');
-  const [newUsername, setNewUsername] = useState('');
   const [selectedColor, setSelectedColor] = useState(user?.avatar_color || '#555');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [cropSrc, setCropSrc] = useState(null);
   const [selectedBanner, setSelectedBanner] = useState(user?.banner_color || '#1a1a1a');
   const [selectedStatus, setSelectedStatus] = useState(user?.status || 'online');
   const [customStatus, setCustomStatus] = useState(user?.custom_status || '');
@@ -58,20 +59,6 @@ export default function SettingsModal({ onClose }) {
     if (isError) setError(m);
     else setMsg(m);
     setTimeout(() => { setMsg(''); setError(''); }, 3000);
-  };
-
-  const saveUsername = async (e) => {
-    e.preventDefault();
-    if (!newUsername.trim()) return;
-    try {
-      await api.patch('/api/users/me/username', { username: newUsername.trim() });
-      const token = localStorage.getItem('nihilisticchat_token');
-      login(token, { ...user, username: newUsername.trim() });
-      showMsg('Username updated!');
-      setNewUsername('');
-    } catch (err) {
-      showMsg(err.response?.data?.error || 'Error updating username', true);
-    }
   };
 
   const saveAvatar = async () => {
@@ -110,11 +97,19 @@ export default function SettingsModal({ onClose }) {
   const uploadProfilePicture = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return showMsg('Image must be under 5MB', true);
+    if (file.size > 10 * 1024 * 1024) return showMsg('Image must be under 10MB', true);
+    const reader = new FileReader();
+    reader.onload = (ev) => setCropSrc(ev.target.result);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleCropDone = async (blob) => {
+    setCropSrc(null);
     setUploadingPhoto(true);
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', blob, 'avatar.png');
       const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
         method: 'POST',
         body: formData,
@@ -198,21 +193,6 @@ export default function SettingsModal({ onClose }) {
             </div>
           )}
           <span className="settings-username">{user?.username}</span>
-        </div>
-
-        <div className="settings-section">
-          <p className="settings-label">Change Username</p>
-          <form onSubmit={saveUsername}>
-            <input
-              value={newUsername}
-              onChange={e => setNewUsername(e.target.value)}
-              placeholder={`Current: ${user?.username}`}
-              maxLength={32}
-            />
-            <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: 4 }}>
-              Update Username
-            </button>
-          </form>
         </div>
 
         <div className="settings-section">
@@ -374,6 +354,7 @@ export default function SettingsModal({ onClose }) {
 
         <button className="btn-ghost" style={{ width: '100%', marginTop: 8 }} onClick={onClose}>Close</button>
       </div>
+      {cropSrc && <ImageCropper imageSrc={cropSrc} onCrop={handleCropDone} onCancel={() => setCropSrc(null)} />}
     </div>
   );
 }
