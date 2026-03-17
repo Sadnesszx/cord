@@ -102,21 +102,24 @@ export function applyTheme(themeId, customBg = null) {
   const root = document.documentElement;
   Object.entries(theme.vars).forEach(([key, val]) => root.style.setProperty(key, val));
 
-  // Handle custom background
-  const mainPanel = document.querySelector('.main-panel');
-  if (mainPanel) {
-    if (customBg) {
-      mainPanel.style.backgroundImage = `url(${customBg})`;
-      mainPanel.style.backgroundSize = 'cover';
-      mainPanel.style.backgroundPosition = 'center';
-      mainPanel.style.backgroundRepeat = 'no-repeat';
-    } else {
-      mainPanel.style.backgroundImage = '';
-      mainPanel.style.backgroundSize = '';
-      mainPanel.style.backgroundPosition = '';
-      mainPanel.style.backgroundRepeat = '';
+  const applyBg = () => {
+    const mainPanel = document.querySelector('.main-panel');
+    if (mainPanel) {
+      if (customBg) {
+        mainPanel.style.backgroundImage = `url(${customBg})`;
+        mainPanel.style.backgroundSize = 'cover';
+        mainPanel.style.backgroundPosition = 'center';
+        mainPanel.style.backgroundRepeat = 'no-repeat';
+      } else {
+        mainPanel.style.backgroundImage = '';
+        mainPanel.style.backgroundSize = '';
+        mainPanel.style.backgroundPosition = '';
+        mainPanel.style.backgroundRepeat = '';
+      }
     }
-  }
+  };
+  applyBg();
+  setTimeout(applyBg, 500);
 }
 
 export function loadSavedTheme() {
