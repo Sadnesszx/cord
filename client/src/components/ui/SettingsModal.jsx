@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import './SettingsModal.css';
 import ImageCropper from './ImageCropper';
+import { THEMES, saveTheme, loadSavedTheme } from '../../lib/theme';
 
 const COLORS = [
   { color: '#555', label: 'Ash' },
@@ -55,6 +56,12 @@ export default function SettingsModal({ onClose }) {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
+  // Theme state
+  const saved = loadSavedTheme();
+  const [selectedTheme, setSelectedTheme] = useState(saved.themeId || 'dark');
+  const [customBg, setCustomBg] = useState(saved.customBg || '');
+  const [customBgInput, setCustomBgInput] = useState(saved.customBg || '');
+
   const showMsg = (m, isError = false) => {
     if (isError) setError(m);
     else setMsg(m);
@@ -67,9 +74,7 @@ export default function SettingsModal({ onClose }) {
       const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, avatar_color: selectedColor });
       showMsg('Avatar updated!');
-    } catch (err) {
-      showMsg('Error updating avatar', true);
-    }
+    } catch (err) { showMsg('Error updating avatar', true); }
   };
 
   const saveBanner = async () => {
@@ -78,9 +83,7 @@ export default function SettingsModal({ onClose }) {
       const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, banner_color: selectedBanner });
       showMsg('Banner updated!');
-    } catch (err) {
-      showMsg('Error updating banner', true);
-    }
+    } catch (err) { showMsg('Error updating banner', true); }
   };
 
   const saveStatus = async () => {
@@ -89,9 +92,7 @@ export default function SettingsModal({ onClose }) {
       const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, status: selectedStatus, custom_status: customStatus });
       showMsg('Status updated!');
-    } catch (err) {
-      showMsg('Error updating status', true);
-    }
+    } catch (err) { showMsg('Error updating status', true); }
   };
 
   const uploadProfilePicture = async (e) => {
@@ -110,21 +111,15 @@ export default function SettingsModal({ onClose }) {
     try {
       const formData = new FormData();
       formData.append('image', blob, 'avatar.png');
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
-        method: 'POST',
-        body: formData,
-      });
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, { method: 'POST', body: formData });
       const data = await res.json();
       const url = data.data.url;
       await api.patch('/api/users/avatar-image', { avatar_url: url });
       const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, avatar_url: url });
       showMsg('Profile picture updated!');
-    } catch (err) {
-      showMsg('Error uploading photo', true);
-    } finally {
-      setUploadingPhoto(false);
-    }
+    } catch (err) { showMsg('Error uploading photo', true); }
+    finally { setUploadingPhoto(false); }
   };
 
   const removeProfilePicture = async () => {
@@ -133,9 +128,7 @@ export default function SettingsModal({ onClose }) {
       const token = localStorage.getItem('nihilisticchat_token');
       login(token, { ...user, avatar_url: null });
       showMsg('Profile picture removed!');
-    } catch (err) {
-      showMsg('Error removing photo', true);
-    }
+    } catch (err) { showMsg('Error removing photo', true); }
   };
 
   const saveBio = async (e) => {
@@ -143,9 +136,7 @@ export default function SettingsModal({ onClose }) {
     try {
       await api.patch('/api/users/me/bio', { bio });
       showMsg('Bio updated!');
-    } catch (err) {
-      showMsg(err.response?.data?.error || 'Error', true);
-    }
+    } catch (err) { showMsg(err.response?.data?.error || 'Error', true); }
   };
 
   const savePassword = async (e) => {
@@ -158,9 +149,8 @@ export default function SettingsModal({ onClose }) {
       await api.patch('/api/users/me/password', { password });
       showMsg('Password updated!');
       setPassword(''); setConfirm('');
-    } catch (err) {
-      showMsg(err.response?.data?.error || 'Error', true);
-    } finally { setSaving(false); }
+    } catch (err) { showMsg(err.response?.data?.error || 'Error', true); }
+    finally { setSaving(false); }
   };
 
   const deleteAccount = async () => {
@@ -169,11 +159,39 @@ export default function SettingsModal({ onClose }) {
     try {
       await api.delete('/api/users/me');
       logout();
-    } catch (err) {
-      showMsg(err.response?.data?.error || 'Error deleting account', true);
-    } finally {
-      setDeleting(false);
-    }
+    } catch (err) { showMsg(err.response?.data?.error || 'Error deleting account', true); }
+    finally { setDeleting(false); }
+  };
+
+  const applyThemeChoice = (themeId) => {
+    setSelectedTheme(themeId);
+    saveTheme(themeId, customBg || null);
+    showMsg('Theme applied!');
+  };
+
+  const applyCustomBg = () => {
+    const url = customBgInput.trim();
+    setCustomBg(url);
+    saveTheme(selectedTheme, url || null);
+    showMsg(url ? 'Background applied!' : 'Background removed!');
+  };
+
+  const uploadBgImage = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) return showMsg('Image must be under 10MB', true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, { method: 'POST', body: formData });
+      const data = await res.json();
+      const url = data.data.url;
+      setCustomBgInput(url);
+      setCustomBg(url);
+      saveTheme(selectedTheme, url);
+      showMsg('Background applied!');
+    } catch (err) { showMsg('Error uploading image', true); }
+    e.target.value = '';
   };
 
   return (
@@ -202,9 +220,7 @@ export default function SettingsModal({ onClose }) {
               {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProfilePicture} disabled={uploadingPhoto} />
             </label>
-            {user?.avatar_url && (
-              <button className="btn-ghost" onClick={removeProfilePicture}>Remove</button>
-            )}
+            {user?.avatar_url && <button className="btn-ghost" onClick={removeProfilePicture}>Remove</button>}
           </div>
         </div>
 
@@ -212,79 +228,90 @@ export default function SettingsModal({ onClose }) {
           <p className="settings-label">Avatar Color</p>
           <div className="settings-colors">
             {COLORS.map(({ color, label }) => (
-              <button
-                key={color}
-                className={`settings-color-swatch ${selectedColor === color ? 'active' : ''}`}
-                style={{ background: color }}
-                onClick={() => setSelectedColor(color)}
-                title={label}
-              />
+              <button key={color} className={`settings-color-swatch ${selectedColor === color ? 'active' : ''}`} style={{ background: color }} onClick={() => setSelectedColor(color)} title={label} />
             ))}
           </div>
-
           <div className="settings-section">
             <p className="settings-label">Banner Color</p>
             <div className="settings-colors">
               {BANNER_COLORS.map(({ color, label }) => (
-                <button
-                  key={color}
-                  className={`settings-color-swatch ${selectedBanner === color ? 'active' : ''}`}
-                  style={{ background: color, border: '1px solid #333' }}
-                  onClick={() => setSelectedBanner(color)}
-                  title={label}
-                />
+                <button key={color} className={`settings-color-swatch ${selectedBanner === color ? 'active' : ''}`} style={{ background: color, border: '1px solid #333' }} onClick={() => setSelectedBanner(color)} title={label} />
               ))}
             </div>
-
             <div className="settings-section">
               <p className="settings-label">Status</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {STATUSES.map(s => (
-                  <button
-                    key={s.value}
-                    onClick={() => setSelectedStatus(s.value)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      background: selectedStatus === s.value ? '#2a2a2a' : '#1a1a1a',
-                      border: selectedStatus === s.value ? '1px solid #5865f2' : '1px solid #2a2a2a',
-                      borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#e8e8e8',
-                    }}
-                  >
+                  <button key={s.value} onClick={() => setSelectedStatus(s.value)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: selectedStatus === s.value ? '#2a2a2a' : '#1a1a1a', border: selectedStatus === s.value ? '1px solid #5865f2' : '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#e8e8e8' }}>
                     <span style={{ width: 12, height: 12, borderRadius: '50%', background: s.color, display: 'inline-block', flexShrink: 0 }} />
                     {s.label}
                   </button>
                 ))}
               </div>
-              <input
-                style={{ marginTop: 10, width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }}
-                value={customStatus}
-                onChange={e => setCustomStatus(e.target.value)}
-                placeholder="Custom status (optional)"
-                maxLength={60}
-              />
-              <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveStatus}>
-                Save Status
-              </button>
+              <input style={{ marginTop: 10, width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }} value={customStatus} onChange={e => setCustomStatus(e.target.value)} placeholder="Custom status (optional)" maxLength={60} />
+              <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveStatus}>Save Status</button>
             </div>
-            <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveBanner}>
-              Save Banner
+            <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveBanner}>Save Banner</button>
+          </div>
+          <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveAvatar}>Save Avatar Color</button>
+        </div>
+
+        {/* Theme section */}
+        <div className="settings-section">
+          <p className="settings-label">Theme</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+            {THEMES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => applyThemeChoice(t.id)}
+                style={{
+                  padding: '10px 8px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 500,
+                  background: selectedTheme === t.id ? 'var(--accent-dim)' : '#1a1a1a',
+                  border: selectedTheme === t.id ? '1px solid var(--accent)' : '1px solid #2a2a2a',
+                  color: '#e8e8e8', transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          <p className="settings-label" style={{ marginBottom: 6 }}>Custom Background</p>
+          <p style={{ fontSize: 11, color: '#555', marginBottom: 8 }}>Upload an image or paste a URL — it appears as a wallpaper behind the chat.</p>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <input
+              value={customBgInput}
+              onChange={e => setCustomBgInput(e.target.value)}
+              placeholder="Paste image URL..."
+              style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '7px 10px', color: '#e8e8e8', fontSize: 12 }}
+            />
+            <button className="btn-primary" style={{ fontSize: 12, padding: '7px 12px', whiteSpace: 'nowrap' }} onClick={applyCustomBg}>
+              Apply
             </button>
           </div>
-          <button className="btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={saveAvatar}>
-            Save Avatar Color
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <label className="btn-ghost" style={{ fontSize: 12, padding: '7px 12px', cursor: 'pointer', border: '1px solid #2a2a2a', borderRadius: 8, flex: 1, textAlign: 'center' }}>
+              📁 Upload Image
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadBgImage} />
+            </label>
+            {customBg && (
+              <button className="btn-ghost" style={{ fontSize: 12, padding: '7px 12px', border: '1px solid #f23f43', color: '#f23f43', borderRadius: 8 }} onClick={() => { setCustomBg(''); setCustomBgInput(''); saveTheme(selectedTheme, null); showMsg('Background removed!'); }}>
+                Remove
+              </button>
+            )}
+          </div>
+          {customBg && (
+            <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', height: 60, position: 'relative' }}>
+              <img src={customBg} alt="bg preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff' }}>Preview</div>
+            </div>
+          )}
         </div>
 
         <div className="settings-section">
           <p className="settings-label">Bio</p>
           <form onSubmit={saveBio}>
-            <textarea
-              value={bio}
-              onChange={e => setBio(e.target.value)}
-              placeholder="Tell people about yourself..."
-              maxLength={200}
-              rows={3}
-            />
+            <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell people about yourself..." maxLength={200} rows={3} />
             <p className="settings-char-count">{bio.length}/200</p>
             <button type="submit" className="btn-primary" style={{ width: '100%' }}>Save Bio</button>
           </form>
@@ -304,14 +331,7 @@ export default function SettingsModal({ onClose }) {
         <div className="settings-section">
           <p className="settings-label" style={{ color: '#f23f43' }}>Danger Zone</p>
           {!showDeleteConfirm ? (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              style={{
-                width: '100%', padding: '8px', borderRadius: 8, cursor: 'pointer',
-                background: 'transparent', border: '1px solid #f23f43',
-                color: '#f23f43', fontSize: 13,
-              }}
-            >
+            <button onClick={() => setShowDeleteConfirm(true)} style={{ width: '100%', padding: '8px', borderRadius: 8, cursor: 'pointer', background: 'transparent', border: '1px solid #f23f43', color: '#f23f43', fontSize: 13 }}>
               Delete Account
             </button>
           ) : (
@@ -319,29 +339,10 @@ export default function SettingsModal({ onClose }) {
               <p style={{ fontSize: 13, color: '#aaa', margin: 0 }}>
                 This is permanent and cannot be undone. Type your username <strong style={{ color: '#e8e8e8' }}>{user?.username}</strong> to confirm.
               </p>
-              <input
-                value={deleteConfirmText}
-                onChange={e => setDeleteConfirmText(e.target.value)}
-                placeholder={`Type "${user?.username}" to confirm`}
-                style={{ background: '#1a1a1a', border: '1px solid #f23f43', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }}
-              />
+              <input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} placeholder={`Type "${user?.username}" to confirm`} style={{ background: '#1a1a1a', border: '1px solid #f23f43', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }} />
               <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
-                  className="btn-ghost"
-                  style={{ flex: 1 }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={deleteAccount}
-                  disabled={deleteConfirmText !== user?.username || deleting}
-                  style={{
-                    flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer',
-                    background: deleteConfirmText === user?.username ? '#f23f43' : '#3a1a1a',
-                    border: 'none', color: '#fff', fontSize: 13,
-                  }}
-                >
+                <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
+                <button onClick={deleteAccount} disabled={deleteConfirmText !== user?.username || deleting} style={{ flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer', background: deleteConfirmText === user?.username ? '#f23f43' : '#3a1a1a', border: 'none', color: '#fff', fontSize: 13 }}>
                   {deleting ? 'Deleting...' : 'Delete Forever'}
                 </button>
               </div>
