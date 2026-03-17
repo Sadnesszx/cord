@@ -7,8 +7,13 @@ import ConfirmModal from '../ui/ConfirmModal';
 export default function ChannelSidebar({ server, activeChannel, onSelectChannel, onServerDeleted, onServerRenamed }) {
   const { user } = useAuth();
   const [channels, setChannels] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [collapsed, setCollapsed] = useState({});
   const [showCreate, setShowCreate] = useState(false);
   const [newChannel, setNewChannel] = useState('');
+  const [newChannelCategory, setNewChannelCategory] = useState('');
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
   const isOwner = server?.owner_id === user?.id;
   const [confirm, setConfirm] = useState(null);
   const [showRename, setShowRename] = useState(false);
@@ -18,21 +23,38 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
   const [uploadingIcon, setUploadingIcon] = useState(false);
 
   useEffect(() => {
-    if (!server) { setChannels([]); return; }
+    if (!server) { setChannels([]); setCategories([]); return; }
     api.get(`/api/servers/${server.id}/channels`).then(({ data }) => {
-      setChannels(data);
-      if (data.length > 0) onSelectChannel(data[0]);
+      const cats = data.categories || [];
+      const chans = data.channels || data;
+      setCategories(cats);
+      setChannels(Array.isArray(data) ? data : chans);
+      const allChans = Array.isArray(data) ? data : chans;
+      if (allChans.length > 0) onSelectChannel(allChans[0]);
     });
   }, [server?.id]);
 
   const createChannel = async (e) => {
     e.preventDefault();
     if (!newChannel.trim()) return;
-    const { data } = await api.post(`/api/servers/${server.id}/channels`, { name: newChannel.trim() });
+    const { data } = await api.post(`/api/servers/${server.id}/channels`, {
+      name: newChannel.trim(),
+      categoryId: newChannelCategory || null,
+    });
     setChannels([...channels, data]);
     onSelectChannel(data);
     setNewChannel('');
+    setNewChannelCategory('');
     setShowCreate(false);
+  };
+
+  const createCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.trim()) return;
+    const { data } = await api.post(`/api/servers/${server.id}/categories`, { name: newCategory.trim() });
+    setCategories([...categories, data]);
+    setNewCategory('');
+    setShowCreateCategory(false);
   };
 
   const deleteChannel = (channelId) => {
@@ -43,6 +65,18 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
         const updated = channels.filter(c => c.id !== channelId);
         setChannels(updated);
         if (activeChannel?.id === channelId) onSelectChannel(updated[0] || null);
+        setConfirm(null);
+      }
+    });
+  };
+
+  const deleteCategory = (categoryId) => {
+    setConfirm({
+      message: 'Delete this category? Channels inside will become uncategorized.',
+      action: async () => {
+        await api.delete(`/api/servers/${server.id}/categories/${categoryId}`);
+        setCategories(prev => prev.filter(c => c.id !== categoryId));
+        setChannels(prev => prev.map(ch => ch.category_id === categoryId ? { ...ch, category_id: null } : ch));
         setConfirm(null);
       }
     });
@@ -84,9 +118,7 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
       const { data } = await api.post(`/api/servers/${server.id}/invite`);
       setInviteCode(data.code);
       setShowInvite(true);
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const uploadServerIcon = async (e) => {
@@ -97,23 +129,34 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, {
-        method: 'POST',
-        body: formData,
-      });
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=4e1a8e9f7f45de208e0ef1b1d36b91a5`, { method: 'POST', body: formData });
       const imgData = await res.json();
       const url = imgData.data.url;
       await api.patch(`/api/servers/${server.id}/icon`, { icon_url: url });
       onServerRenamed({ ...server, icon_url: url });
-    } catch (err) {
-      console.error(err);
-      alert('Failed to upload icon');
-    } finally {
-      setUploadingIcon(false);
-    }
+    } catch (err) { console.error(err); alert('Failed to upload icon'); }
+    finally { setUploadingIcon(false); }
   };
 
+  const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
+
   const inviteUrl = `${window.location.origin}/invite/${inviteCode}`;
+
+  // Group channels by category
+  const uncategorized = channels.filter(ch => !ch.category_id);
+  const getChannelsForCategory = (catId) => channels.filter(ch => ch.category_id === catId);
+
+  const renderChannel = (ch) => (
+    <div key={ch.id} className={`channel-item-wrapper ${activeChannel?.id === ch.id ? 'active' : ''}`}>
+      <button className={`channel-item ${activeChannel?.id === ch.id ? 'active' : ''}`} onClick={() => onSelectChannel(ch)}>
+        <span className="channel-hash">#</span>
+        <span className="channel-name">{ch.name}</span>
+      </button>
+      {isOwner && (
+        <button className="channel-delete-btn" onClick={() => deleteChannel(ch.id)} title="Delete channel">✕</button>
+      )}
+    </div>
+  );
 
   return (
     <div className="channel-sidebar">
@@ -122,24 +165,12 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
           <div className="channel-server-top">
             {isOwner ? (
               <label className="server-icon-upload" title="Change server icon">
-                {server.icon_url ? (
-                  <img src={server.icon_url} alt={server.name} className="server-icon-img" />
-                ) : (
-                  <div className="server-icon-placeholder">
-                    {server.name.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
+                {server.icon_url ? <img src={server.icon_url} alt={server.name} className="server-icon-img" /> : <div className="server-icon-placeholder">{server.name.slice(0, 2).toUpperCase()}</div>}
                 <div className="server-icon-overlay">{uploadingIcon ? '...' : '📷'}</div>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadServerIcon} disabled={uploadingIcon} />
               </label>
             ) : (
-              server.icon_url ? (
-                <img src={server.icon_url} alt={server.name} className="server-icon-img" />
-              ) : (
-                <div className="server-icon-placeholder">
-                  {server.name.slice(0, 2).toUpperCase()}
-                </div>
-              )
+              server.icon_url ? <img src={server.icon_url} alt={server.name} className="server-icon-img" /> : <div className="server-icon-placeholder">{server.name.slice(0, 2).toUpperCase()}</div>
             )}
             <span className="channel-server-name">{server.name}</span>
           </div>
@@ -179,80 +210,78 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
             <div className="invite-box">
               <p style={{ fontSize: 12, color: '#aaa', marginBottom: 6 }}>Share this link — expires in 7 days:</p>
               <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  readOnly
-                  value={inviteUrl}
-                  style={{ flex: 1, background: '#111', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#e8e8e8', fontSize: 12 }}
-                  onClick={e => e.target.select()}
-                />
-                <button
-                  className="btn-primary"
-                  style={{ fontSize: 12, padding: '6px 10px' }}
+                <input readOnly value={inviteUrl} style={{ flex: 1, background: '#111', border: '1px solid #333', borderRadius: 6, padding: '6px 8px', color: '#e8e8e8', fontSize: 12 }} onClick={e => e.target.select()} />
+                <button className="btn-primary" style={{ fontSize: 12, padding: '6px 10px' }}
                   onClick={(e) => {
-                    navigator.clipboard.writeText(inviteUrl).catch(() => {
-                      const el = document.createElement('textarea');
-                      el.value = inviteUrl;
-                      document.body.appendChild(el);
-                      el.select();
-                      document.execCommand('copy');
-                      document.body.removeChild(el);
-                    });
+                    navigator.clipboard.writeText(inviteUrl).catch(() => { const el = document.createElement('textarea'); el.value = inviteUrl; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); });
                     e.target.textContent = 'Copied!';
                     setTimeout(() => e.target.textContent = 'Copy', 2000);
-                  }}
-                >
-                  Copy
-                </button>
+                  }}>Copy</button>
               </div>
-              <button className="btn-ghost" style={{ marginTop: 6, width: '100%', fontSize: 12 }} onClick={() => setShowInvite(false)}>
-                Close
-              </button>
+              <button className="btn-ghost" style={{ marginTop: 6, width: '100%', fontSize: 12 }} onClick={() => setShowInvite(false)}>Close</button>
             </div>
           )}
         </div>
       )}
 
       <div className="channel-list">
-        {!server && (
-          <div className="channel-empty-state">
-            <p>Select a server from the top bar</p>
-          </div>
-        )}
+        {!server && <div className="channel-empty-state"><p>Select a server from the top bar</p></div>}
 
         {server && (
           <>
-            <div className="channel-section-label">
-              <span>Channels</span>
-              {isOwner && (
-                <button className="channel-add-btn" onClick={() => setShowCreate(!showCreate)}>+</button>
-              )}
-            </div>
-
-            {channels.map((ch) => (
-              <div key={ch.id} className={`channel-item-wrapper ${activeChannel?.id === ch.id ? 'active' : ''}`}>
-                <button
-                  className={`channel-item ${activeChannel?.id === ch.id ? 'active' : ''}`}
-                  onClick={() => onSelectChannel(ch)}
-                >
-                  <span className="channel-hash">#</span>
-                  <span className="channel-name">{ch.name}</span>
-                </button>
-                {isOwner && (
-                  <button className="channel-delete-btn" onClick={() => deleteChannel(ch.id)} title="Delete channel">✕</button>
-                )}
+            {/* Categories */}
+            {categories.map(cat => (
+              <div key={cat.id}>
+                <div className="channel-section-label" style={{ cursor: 'pointer' }} onClick={() => toggleCollapse(cat.id)}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 9, color: 'var(--gray-2)', transition: 'transform 0.15s', display: 'inline-block', transform: collapsed[cat.id] ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
+                    {cat.name}
+                  </span>
+                  {isOwner && (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button className="channel-add-btn" onClick={e => { e.stopPropagation(); setNewChannelCategory(cat.id); setShowCreate(true); }} title="Add channel to category">+</button>
+                      <button className="channel-add-btn" onClick={e => { e.stopPropagation(); deleteCategory(cat.id); }} title="Delete category" style={{ color: 'var(--danger)', opacity: 0.6 }}>✕</button>
+                    </div>
+                  )}
+                </div>
+                {!collapsed[cat.id] && getChannelsForCategory(cat.id).map(renderChannel)}
               </div>
             ))}
 
+            {/* Uncategorized channels */}
+            <div className="channel-section-label">
+              <span>Channels</span>
+              {isOwner && (
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button className="channel-add-btn" onClick={() => { setNewChannelCategory(''); setShowCreate(!showCreate); }} title="Add channel">+</button>
+                  <button className="channel-add-btn" onClick={() => setShowCreateCategory(!showCreateCategory)} title="Add category" style={{ fontSize: 10 }}>📁</button>
+                </div>
+              )}
+            </div>
+
+            {uncategorized.map(renderChannel)}
+
             {showCreate && (
               <form className="channel-create-form" onSubmit={createChannel}>
-                <input
-                  value={newChannel}
-                  onChange={e => setNewChannel(e.target.value)}
-                  placeholder="new-channel"
-                  autoFocus
-                />
+                <input value={newChannel} onChange={e => setNewChannel(e.target.value)} placeholder="new-channel" autoFocus />
+                {categories.length > 0 && (
+                  <select value={newChannelCategory} onChange={e => setNewChannelCategory(e.target.value)} style={{ background: 'var(--bg-float)', border: 'var(--border-bright)', borderRadius: 6, padding: '6px 8px', color: 'var(--white)', fontSize: 12, marginTop: 4 }}>
+                    <option value="">No category</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                )}
                 <div className="channel-create-actions">
                   <button type="button" className="btn-ghost" onClick={() => setShowCreate(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">Create</button>
+                </div>
+              </form>
+            )}
+
+            {showCreateCategory && (
+              <form className="channel-create-form" onSubmit={createCategory}>
+                <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Category name" autoFocus />
+                <div className="channel-create-actions">
+                  <button type="button" className="btn-ghost" onClick={() => setShowCreateCategory(false)}>Cancel</button>
                   <button type="submit" className="btn-primary">Create</button>
                 </div>
               </form>
@@ -260,13 +289,7 @@ export default function ChannelSidebar({ server, activeChannel, onSelectChannel,
           </>
         )}
       </div>
-      {confirm && (
-        <ConfirmModal
-          message={confirm.message}
-          onConfirm={confirm.action}
-          onCancel={() => setConfirm(null)}
-        />
-      )}
+      {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.action} onCancel={() => setConfirm(null)} />}
     </div>
   );
 }

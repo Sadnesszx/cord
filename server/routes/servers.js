@@ -76,31 +76,80 @@ router.post('/', auth, async (req, res) => {
 // Get channels for a server
 router.get('/:serverId/channels', auth, async (req, res) => {
   try {
-    // Verify membership
     const { rows: members } = await pool.query(
       `SELECT 1 FROM server_members WHERE server_id = $1 AND user_id = $2`,
       [req.params.serverId, req.user.id]
     );
     if (!members.length) return res.status(403).json({ error: 'Not a member' });
-
-    const { rows } = await pool.query(
-      `SELECT * FROM channels WHERE server_id = $1 ORDER BY created_at ASC`,
+    const { rows: categories } = await pool.query(
+      `SELECT * FROM channel_categories WHERE server_id = $1 ORDER BY position ASC, created_at ASC`,
       [req.params.serverId]
     );
-    res.json(rows);
+    const { rows: channels } = await pool.query(
+      `SELECT * FROM channels WHERE server_id = $1 ORDER BY position ASC, created_at ASC`,
+      [req.params.serverId]
+    );
+    res.json({ categories, channels });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Create a category
+router.post('/:serverId/categories', auth, async (req, res) => {
+  const { name } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Category name required' });
+  try {
+    const { rows: owner } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.serverId]);
+    if (!owner.length || String(owner[0].owner_id) !== String(req.user.id))
+      return res.status(403).json({ error: 'Only server owner can create categories' });
+    const { rows } = await pool.query(
+      'INSERT INTO channel_categories (server_id, name) VALUES ($1, $2) RETURNING *',
+      [req.params.serverId, name.trim()]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+// Delete a category
+router.delete('/:serverId/categories/:categoryId', auth, async (req, res) => {
+  try {
+    const { rows: owner } = await pool.query('SELECT owner_id FROM servers WHERE id = $1', [req.params.serverId]);
+    if (!owner.length || String(owner[0].owner_id) !== String(req.user.id))
+      return res.status(403).json({ error: 'Only server owner can delete categories' });
+    await pool.query('UPDATE channels SET category_id = NULL WHERE category_id = $1', [req.params.categoryId]);
+    await pool.query('DELETE FROM channel_categories WHERE id = $1', [req.params.categoryId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
 // Create a channel
 router.post('/:serverId/channels', auth, async (req, res) => {
-  const { name } = req.body;
+  const { name, categoryId } = req.body;
   if (!name) return res.status(400).json({ error: 'Channel name required' });
 
   try {
-    // Verify ownership
     const { rows } = await pool.query(
       `SELECT owner_id FROM servers WHERE id = $1`, [req.params.serverId]
     );
@@ -108,8 +157,8 @@ router.post('/:serverId/channels', auth, async (req, res) => {
       return res.status(403).json({ error: 'Only server owner can create channels' });
 
     const { rows: channels } = await pool.query(
-      `INSERT INTO channels (server_id, name) VALUES ($1, $2) RETURNING *`,
-      [req.params.serverId, name.toLowerCase().replace(/\s+/g, '-')]
+      `INSERT INTO channels (server_id, name, category_id) VALUES ($1, $2, $3) RETURNING *`,
+      [req.params.serverId, name.toLowerCase().replace(/\s+/g, '-'), categoryId || null]
     );
     res.status(201).json(channels[0]);
   } catch (err) {
