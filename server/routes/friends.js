@@ -16,13 +16,6 @@ router.post('/request', auth, async (req, res) => {
     const receiverId = rows[0].id;
     if (receiverId === req.user.id) return res.status(400).json({ error: "You can't add yourself" });
 
-    // Check if either user has blocked the other
-    const { rows: blocked } = await pool.query(
-      'SELECT 1 FROM blocked_users WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)',
-      [req.user.id, receiverId]
-    );
-    if (blocked.length) return res.status(403).json({ error: 'You cannot send a friend request to this user' });
-
     // Check daily friend request limit (max 10 per day)
     const { rows: todayRequests } = await pool.query(
       `SELECT COUNT(*) FROM friend_requests WHERE sender_id = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
@@ -336,6 +329,21 @@ router.patch('/dm/message/:messageId', auth, async (req, res) => {
       io.to(`user_${rows[0].receiver_id}`).emit('dm_edited', { messageId: req.params.messageId, content: content.trim() });
     }
     res.json(updated[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get list of blocked users
+router.get('/blocked', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.username, u.avatar_color, u.avatar_url
+       FROM blocked_users bu JOIN users u ON bu.blocked_id = u.id
+       WHERE bu.blocker_id = $1`,
+      [req.user.id]
+    );
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

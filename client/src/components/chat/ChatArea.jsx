@@ -7,6 +7,7 @@ import './ChatArea.css';
 import ImageLightbox from '../ui/ImageLightbox';
 import { createPortal } from 'react-dom';
 import SearchBar from '../ui/SearchBar';
+import { useBlockedUsers } from '../../lib/useBlockedUsers';
 
 const renderContent = (content, onMentionClick, onImageClick) => {
   if (content.startsWith('[img]') && content.endsWith('[/img]')) {
@@ -54,7 +55,6 @@ const groupMessages = (messages) => {
     const date = new Date(msg.created_at).toDateString();
     if (date !== lastDate) { groups.push({ type: 'divider', date: msg.created_at }); lastDate = date; }
     const last = groups[groups.length - 1];
-    // Don't group messages that are replies
     if (last?.type === 'group' && last.user_id === msg.user_id && !msg.reply_to_id) {
       last.messages.push(msg);
     } else {
@@ -102,8 +102,9 @@ export default function ChatArea({ channel }) {
   const [viewProfile, setViewProfile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
-  const [replyTo, setReplyTo] = useState(null); // { id, username, content }
+  const [replyTo, setReplyTo] = useState(null);
   const [highlightedId, setHighlightedId] = useState(null);
+  const blockedIds = useBlockedUsers();
   const bottomRef = useRef(null);
   const typingTimeout = useRef(null);
   const inputRef = useRef(null);
@@ -269,14 +270,12 @@ export default function ChatArea({ channel }) {
   };
 
   const jumpToMessage = (msg) => {
-    // If message is already loaded, scroll to it
     const el = document.getElementById(`msg-${msg.id}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setHighlightedId(msg.id);
       setTimeout(() => setHighlightedId(null), 2000);
     } else {
-      // Load messages around that time and scroll
       api.get(`/api/channels/${channel.id}/messages?before=${new Date(new Date(msg.created_at).getTime() + 1000).toISOString()}&limit=50`).then(({ data }) => {
         setMessages(data);
         setTimeout(() => {
@@ -336,63 +335,72 @@ export default function ChatArea({ channel }) {
                   <span className="msg-author">{group.username}</span>
                   <span className="msg-time">{formatTime(group.messages[0].created_at)}</span>
                 </div>
-                {group.messages.map((msg) => (
-                  <div key={msg.id} id={`msg-${msg.id}`} className={`msg-text-wrapper ${activeReactionPicker === msg.id ? 'picker-open' : ''} ${highlightedId === msg.id ? 'msg-highlighted' : ''}`}>
-                    {/* Reply preview */}
-                    {msg.reply_to_id && msg.reply_username && (
-                      <div className="msg-reply-preview">
-                        <span className="msg-reply-author">↩ {msg.reply_username}</span>
-                        <span className="msg-reply-content">
-                          {msg.reply_content?.startsWith('[img]') ? '🖼️ Image' : msg.reply_content?.slice(0, 80)}
-                        </span>
-                      </div>
-                    )}
-                    {editingId === msg.id ? (
-                      <div className="msg-edit-wrapper">
-                        <textarea className="msg-edit-input" value={editContent} onChange={e => setEditContent(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msg.id); } if (e.key === 'Escape') cancelEdit(); }}
-                          autoFocus />
-                        <div className="msg-edit-actions">
-                          <button className="btn-ghost" onClick={cancelEdit}>Cancel</button>
-                          <button className="btn-primary" onClick={() => saveEdit(msg.id)}>Save</button>
+                {blockedIds.includes(String(group.user_id)) ? (
+                  <p style={{ fontSize: 12, color: 'var(--gray-1)', fontStyle: 'italic' }}>Message hidden — user is blocked.</p>
+                ) : (
+                  group.messages.map((msg) => (
+                    <div key={msg.id} id={`msg-${msg.id}`} className={`msg-text-wrapper ${activeReactionPicker === msg.id ? 'picker-open' : ''} ${highlightedId === msg.id ? 'msg-highlighted' : ''}`}>
+                      {msg.reply_to_id && msg.reply_username && (
+                        <div className="msg-reply-preview">
+                          <span className="msg-reply-author">↩ {msg.reply_username}</span>
+                          <span className="msg-reply-content">
+                            {msg.reply_content?.startsWith('[img]') ? '🖼️ Image' : msg.reply_content?.slice(0, 80)}
+                          </span>
                         </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="msg-text">
-                          {renderContent(msg.content, (username) => setViewProfile(username), (url) => setLightboxUrl(url))}
-                          {msg.edited && <span className="msg-edited">(edited)</span>}
-                        </p>
-                        <div className="msg-actions">
-                          <button className="msg-reply-btn" onClick={() => startReply(msg)} title="Reply">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
-                          </button>
-                          <button className="msg-react-btn"
-                            onMouseDown={e => {
-                              e.preventDefault(); e.stopPropagation();
-                              if (activeReactionPicker === msg.id) { setActiveReactionPicker(null); }
-                              else { const rect = e.currentTarget.getBoundingClientRect(); setPickerPosition({ top: rect.bottom + 4, left: rect.left }); setActiveReactionPicker(msg.id); }
-                            }} title="Add reaction">😑</button>
-                          {msg.user_id === user?.id && (
-                            <>
-                              <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">✏️</button>
-                              <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">🗑️</button>
-                            </>
-                          )}
+                      )}
+                      {editingId === msg.id ? (
+                        <div className="msg-edit-wrapper">
+                          <textarea className="msg-edit-input" value={editContent} onChange={e => setEditContent(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(msg.id); } if (e.key === 'Escape') cancelEdit(); }}
+                            autoFocus />
+                          <div className="msg-edit-actions">
+                            <button className="btn-ghost" onClick={cancelEdit}>Cancel</button>
+                            <button className="btn-primary" onClick={() => saveEdit(msg.id)}>Save</button>
+                          </div>
                         </div>
-                      </>
-                    )}
-                    {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
-                      <div className="msg-reactions">
-                        {Object.entries(reactions[msg.id]).map(([emoji, users]) => (
-                          <button key={emoji} className={`reaction-btn ${users.includes(user.username) ? 'reacted' : ''}`} onClick={() => toggleReaction(msg.id, emoji)} title={users.join(', ')}>
-                            {emoji} {users.length}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      ) : (
+                        <>
+                          <p className="msg-text">
+                            {renderContent(msg.content, (username) => setViewProfile(username), (url) => setLightboxUrl(url))}
+                            {msg.edited && <span className="msg-edited">(edited)</span>}
+                          </p>
+                          <div className="msg-actions">
+                            <button className="msg-reply-btn" onClick={() => startReply(msg)} title="Reply">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
+                            </button>
+                            <button className="msg-react-btn"
+                              onMouseDown={e => {
+                                e.preventDefault(); e.stopPropagation();
+                                if (activeReactionPicker === msg.id) { setActiveReactionPicker(null); }
+                                else { const rect = e.currentTarget.getBoundingClientRect(); setPickerPosition({ top: rect.bottom + 4, left: rect.left }); setActiveReactionPicker(msg.id); }
+                              }} title="Add reaction">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                            </button>
+                            {msg.user_id === user?.id && (
+                              <>
+                                <button className="msg-edit-btn" onClick={() => startEdit(msg)} title="Edit message">
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                </button>
+                                <button className="msg-delete-btn" onClick={() => deleteMessage(msg.id)} title="Delete message">
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
+                      {reactions[msg.id] && Object.keys(reactions[msg.id]).length > 0 && (
+                        <div className="msg-reactions">
+                          {Object.entries(reactions[msg.id]).map(([emoji, users]) => (
+                            <button key={emoji} className={`reaction-btn ${users.includes(user.username) ? 'reacted' : ''}`} onClick={() => toggleReaction(msg.id, emoji)} title={users.join(', ')}>
+                              {emoji} {users.length}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           );
