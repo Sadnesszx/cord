@@ -95,6 +95,28 @@ const STATUSES = [
   { value: 'invisible', label: 'Invisible', color: '#80848e' },
 ];
 
+function PronounsField() {
+  const { user, login } = useAuth();
+  const [pronouns, setPronouns] = useState(user?.pronouns || '');
+  const [saved, setSaved] = useState(false);
+  const save = async () => {
+    await api.patch('/api/users/me/pronouns', { pronouns });
+    const token = localStorage.getItem('nihilisticchat_token');
+    login(token, { ...user, pronouns });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <input value={pronouns} onChange={e => setPronouns(e.target.value)} placeholder="e.g. he/him, she/her, they/them" maxLength={30}
+        style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '8px 12px', color: '#e8e8e8', fontSize: 13 }} />
+      <button onClick={save} className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }}>
+        {saved ? '✓' : 'Save'}
+      </button>
+    </div>
+  );
+}
+
 export default function SettingsModal({ onClose }) {
   const { user, login, logout } = useAuth();
   const [password, setPassword] = useState('');
@@ -392,6 +414,11 @@ export default function SettingsModal({ onClose }) {
           >
             📦 Download My Data
           </button>
+        </div>
+
+        <div className="settings-section">
+          <p className="settings-label">Pronouns</p>
+          <PronounsField />
         </div>
 
         <div className="settings-section">

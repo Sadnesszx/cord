@@ -196,6 +196,12 @@ export default function ProfileModal({ username, onClose }) {
               )}
               <p className="profile-joined">Joined {joined}</p>
 
+              {profile.pronouns && (
+                <p style={{ fontSize: 12, color: 'var(--gray-3)', marginTop: 4 }}>
+                  {profile.pronouns}
+                </p>
+              )}
+
               {badges.length > 0 && (
                 <div className="profile-bio-section">
                   <p className="profile-bio-label">Badges</p>

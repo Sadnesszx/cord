@@ -246,11 +246,24 @@ router.get('/me/export', auth, async (req, res) => {
   }
 });
 
+// Update pronouns
+router.patch('/me/pronouns', auth, async (req, res) => {
+  const { pronouns } = req.body;
+  if (pronouns && pronouns.length > 30)
+    return res.status(400).json({ error: 'Pronouns must be under 30 characters' });
+  try {
+    await pool.query('UPDATE users SET pronouns = $1 WHERE id = $2', [pronouns || null, req.user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Get user profile (keep this LAST since it's a wildcard route)
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, created_at, banned, status, custom_status, is_admin FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, pronouns, created_at, banned, status, custom_status, is_admin FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
