@@ -16,6 +16,13 @@ router.post('/request', auth, async (req, res) => {
     const receiverId = rows[0].id;
     if (receiverId === req.user.id) return res.status(400).json({ error: "You can't add yourself" });
 
+    // Check if either user has blocked the other
+    const { rows: blocked } = await pool.query(
+      'SELECT 1 FROM blocked_users WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)',
+      [req.user.id, receiverId]
+    );
+    if (blocked.length) return res.status(403).json({ error: 'You cannot send a friend request to this user' });
+
     // Check daily friend request limit (max 10 per day)
     const { rows: todayRequests } = await pool.query(
       `SELECT COUNT(*) FROM friend_requests WHERE sender_id = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
