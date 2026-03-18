@@ -23,6 +23,11 @@ export default function MembersSidebar({ server }) {
   const { user } = useAuth();
   const isOwner = server?.owner_id === user?.id;
   const blockedIds = useBlockedUsers();
+  const [blockedByIds, setBlockedByIds] = useState([]);
+
+  useEffect(() => {
+    api.get('/api/friends/blocked-by').then(({ data }) => setBlockedByIds(data.map(u => String(u.id)))).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!server) return;
@@ -58,11 +63,13 @@ export default function MembersSidebar({ server }) {
   if (!server) return null;
 
   const isBlocked = (memberId) => blockedIds.includes(String(memberId));
+  const blockedByMe = (memberId) => blockedIds.includes(String(memberId));
+  const hasBlockedMe = (memberId) => blockedByIds.includes(String(memberId));
 
-  // Blocked members always appear offline
+  // Blocked members always appear offline, and users who blocked you appear offline to you
   const onlineIds = onlineUsers.map(id => String(id));
-  const online = members.filter(m => onlineIds.includes(String(m.id)) && !isBlocked(m.id));
-  const offline = members.filter(m => !onlineIds.includes(String(m.id)) || isBlocked(m.id));
+  const online = members.filter(m => onlineIds.includes(String(m.id)) && !blockedByMe(m.id) && !hasBlockedMe(m.id));
+  const offline = members.filter(m => !onlineIds.includes(String(m.id)) || blockedByMe(m.id) || hasBlockedMe(m.id));
 
   const renderMember = (m, isOnline) => (
     <button key={m.id} className={`member-item ${!isOnline ? 'offline' : ''}`} onClick={() => setViewProfile(m.username)}>
