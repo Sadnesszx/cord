@@ -46,6 +46,14 @@ export default function AppLayout() {
   const [draggedId, setDraggedId] = useState(null);
   const [forceTab, setForceTab] = useState(null);
 
+  // Update browser tab title with unread count
+  useEffect(() => {
+    const unreadDMCount = Object.values(unreadDMs).filter(Boolean).length;
+    const unreadServerCount = Object.values(unreadServers).filter(Boolean).length;
+    const total = unreadDMCount + unreadServerCount;
+    document.title = total > 0 ? `(${total}) NihilisticChat` : 'NihilisticChat';
+  }, [unreadDMs, unreadServers]);
+
   useEffect(() => {
     const socket = getSocket();
     socket.on('force_logout', ({ reason }) => { logout(); setBanMessage(reason); });
