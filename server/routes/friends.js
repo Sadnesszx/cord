@@ -349,6 +349,19 @@ router.get('/blocked', auth, async (req, res) => {
   }
 });
 
+// Get users who have blocked me
+router.get('/blocked-by', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT blocker_id as id FROM blocked_users WHERE blocked_id = $1',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Block a user
 router.post('/block/:userId', auth, async (req, res) => {
   try {

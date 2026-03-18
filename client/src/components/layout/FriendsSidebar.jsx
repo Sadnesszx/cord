@@ -33,11 +33,13 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
   const [roomName, setRoomName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [roomMsg, setRoomMsg] = useState('');
+  const [blockedByIds, setBlockedByIds] = useState([]);
 
   const load = () => {
     api.get('/api/friends').then(({ data }) => setFriends(data));
     api.get('/api/friends/requests').then(({ data }) => setRequests(data));
     api.get('/api/rooms').then(({ data }) => setRooms(data)).catch(() => {});
+    api.get('/api/friends/blocked-by').then(({ data }) => setBlockedByIds(data.map(u => String(u.id)))).catch(() => {});
     if (isAdmin) {
       api.get('/api/friends/inbox/all').then(({ data }) => setInbox(data)).catch(() => {});
     }
@@ -166,8 +168,8 @@ export default function FriendsSidebar({ activeFriend, onSelectFriend, unreadDMs
                     ) : (
                       <div className="friend-avatar" style={{ background: f.avatar_color }}>{f.username[0].toUpperCase()}</div>
                     )}
-                    <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) ? 'online' : 'offline'}`}
-                      style={{ background: getStatusColor(onlineUsers.map(id => String(id)).includes(String(f.id)), f.status) }} />
+                    <span className={`status-dot ${onlineUsers.map(id => String(id)).includes(String(f.id)) && !blockedByIds.includes(String(f.id)) ? 'online' : 'offline'}`}
+                      style={{ background: getStatusColor(onlineUsers.map(id => String(id)).includes(String(f.id)) && !blockedByIds.includes(String(f.id)), f.status) }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <span>{f.username}</span>
