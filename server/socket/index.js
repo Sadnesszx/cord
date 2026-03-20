@@ -3,7 +3,6 @@ const { pool } = require('../db');
 
 const setupSocket = (io) => {
   const onlineUsers = new Set();
-  // Rate limiting: map of userId -> { count, resetAt }
   const messageRates = new Map();
 
   const checkRateLimit = (userId) => {
@@ -56,7 +55,7 @@ const setupSocket = (io) => {
         );
         const message = rows[0];
         const { rows: users } = await pool.query(
-          `SELECT username, avatar_color, avatar_url FROM users WHERE id = $1`,
+          `SELECT username, avatar_color, avatar_url, username_color, profile_border FROM users WHERE id = $1`,
           [socket.user.id]
         );
         let reply_content = null, reply_username = null;
@@ -67,7 +66,16 @@ const setupSocket = (io) => {
           );
           if (replyRows.length) { reply_content = replyRows[0].content; reply_username = replyRows[0].username; }
         }
-        io.to(channelId).emit('new_message', { ...message, username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url, reply_content, reply_username });
+        io.to(channelId).emit('new_message', {
+          ...message,
+          username: users[0].username,
+          avatar_color: users[0].avatar_color,
+          avatar_url: users[0].avatar_url,
+          username_color: users[0].username_color,
+          profile_border: users[0].profile_border,
+          reply_content,
+          reply_username,
+        });
       } catch (err) {
         console.error('Message error:', err);
         socket.emit('error', { message: 'Failed to send message' });
@@ -125,8 +133,18 @@ const setupSocket = (io) => {
           `INSERT INTO dm_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3) RETURNING *`,
           [socket.user.id, receiverId, content.trim()]
         );
-        const { rows: users } = await pool.query('SELECT username, avatar_color, avatar_url FROM users WHERE id = $1', [socket.user.id]);
-        const fullMsg = { ...rows[0], username: users[0].username, avatar_color: users[0].avatar_color, avatar_url: users[0].avatar_url };
+        const { rows: users } = await pool.query(
+          'SELECT username, avatar_color, avatar_url, username_color, profile_border FROM users WHERE id = $1',
+          [socket.user.id]
+        );
+        const fullMsg = {
+          ...rows[0],
+          username: users[0].username,
+          avatar_color: users[0].avatar_color,
+          avatar_url: users[0].avatar_url,
+          username_color: users[0].username_color,
+          profile_border: users[0].profile_border,
+        };
         socket.emit('new_dm', fullMsg);
         io.to(`user_${receiverId}`).emit('new_dm', fullMsg);
       } catch (err) { console.error('DM error:', err); }
@@ -148,8 +166,18 @@ const setupSocket = (io) => {
         const { rows: member } = await pool.query('SELECT 1 FROM room_members WHERE room_id = $1 AND user_id = $2', [roomId, socket.user.id]);
         if (!member.length) return;
         const { rows } = await pool.query('INSERT INTO room_messages (room_id, user_id, content) VALUES ($1, $2, $3) RETURNING *', [roomId, socket.user.id, content.trim()]);
-        const { rows: users } = await pool.query('SELECT username, avatar_color, avatar_url FROM users WHERE id = $1', [socket.user.id]);
-        io.to(`room_${roomId}`).emit('new_room_message', { ...rows[0], ...users[0] });
+        const { rows: users } = await pool.query(
+          'SELECT username, avatar_color, avatar_url, username_color, profile_border FROM users WHERE id = $1',
+          [socket.user.id]
+        );
+        io.to(`room_${roomId}`).emit('new_room_message', {
+          ...rows[0],
+          username: users[0].username,
+          avatar_color: users[0].avatar_color,
+          avatar_url: users[0].avatar_url,
+          username_color: users[0].username_color,
+          profile_border: users[0].profile_border,
+        });
       } catch (err) { console.error('Room message error:', err); }
     });
 

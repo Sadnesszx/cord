@@ -47,7 +47,6 @@ export default function AimTrainer({ onClose }) {
   const [lastTargetTime, setLastTargetTime] = useState(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
-  const [ticketsEarned, setTicketsEarned] = useState(0);
   const areaRef = useRef(null);
   const timerRef = useRef(null);
   const targetTimerRef = useRef(null);
@@ -70,7 +69,7 @@ export default function AimTrainer({ onClose }) {
 
   const startGame = () => {
     scoreRef.current = 0;
-    setScore(0); setHits(0); setMisses(0); setReactionTimes([]); setTimeLeft(GAME_DURATION); setTargets([]); setTicketsEarned(0);
+    setScore(0); setHits(0); setMisses(0); setReactionTimes([]); setTimeLeft(GAME_DURATION); setTargets([]);
     setGameState('playing');
   };
 
@@ -85,9 +84,7 @@ export default function AimTrainer({ onClose }) {
           setTargets([]);
           setFinalScore(scoreRef.current);
           setGameState('done');
-          api.post('/api/scores', { game: 'aim', score: scoreRef.current })
-            .then(({ data }) => { if (data.ticketsEarned > 0) setTicketsEarned(data.ticketsEarned); })
-            .catch(() => {});
+          api.post('/api/scores', { game: 'aim', score: scoreRef.current }).then(({ data }) => { if (data.ticketsEarned > 0) setTicketsEarned(data.ticketsEarned); }).catch(() => {});
           return 0;
         }
         return prev - 1;
@@ -159,11 +156,7 @@ export default function AimTrainer({ onClose }) {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
             <div style={{ fontSize: 48 }}>🏆</div>
             <h2 style={{ color: 'var(--white)', fontSize: 22, fontWeight: 700 }}>Game Over!</h2>
-            {ticketsEarned > 0 && (
-              <div style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, padding: '6px 16px', fontSize: 14, color: '#ffd700', fontWeight: 600 }}>
-                🎟️ +{ticketsEarned} tickets earned!
-              </div>
-            )}
+            {ticketsEarned > 0 && <div style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, padding: '6px 16px', fontSize: 14, color: '#ffd700', fontWeight: 600 }}>🎟️ +{ticketsEarned} tickets earned!</div>}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, width: 320, marginTop: 8 }}>
               {[
                 { label: 'Score', value: finalScore.toLocaleString(), color: '#5865f2' },
