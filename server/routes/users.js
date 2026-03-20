@@ -263,7 +263,7 @@ router.patch('/me/pronouns', auth, async (req, res) => {
 router.get('/:username', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, pronouns, created_at, banned, status, custom_status, is_admin FROM users WHERE username = $1',
+      'SELECT id, username, avatar_color, avatar_url, banner_color, bio, pronouns, created_at, banned, status, custom_status, is_admin, username_color, profile_border FROM users WHERE username = $1',
       [req.params.username]
     );
     if (!rows.length) return res.status(404).json({ error: 'User not found' });

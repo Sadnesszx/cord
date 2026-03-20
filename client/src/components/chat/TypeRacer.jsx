@@ -63,11 +63,12 @@ export default function TypeRacer({ onClose }) {
   const [accuracy, setAccuracy] = useState(100);
   const [errors, setErrors] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [ticketsEarned, setTicketsEarned] = useState(0);
   const inputRef = useRef(null);
 
   const startGame = () => {
     const s = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
-    setSentence(s); setInput(''); setErrors(0); setWpm(0); setAccuracy(100); setStartTime(null);
+    setSentence(s); setInput(''); setErrors(0); setWpm(0); setAccuracy(100); setStartTime(null); setTicketsEarned(0);
     setGameState('playing');
     setTimeout(() => inputRef.current?.focus(), 50);
   };
@@ -87,7 +88,9 @@ export default function TypeRacer({ onClose }) {
       const finalWpm = Math.round(words / elapsed);
       setWpm(finalWpm);
       setGameState('done');
-      api.post('/api/scores', { game: 'type', score: finalWpm, meta: { accuracy: acc, errors: errs } }).catch(() => {});
+      api.post('/api/scores', { game: 'type', score: finalWpm, meta: { accuracy: acc, errors: errs } })
+        .then(({ data }) => { if (data.ticketsEarned > 0) setTicketsEarned(data.ticketsEarned); })
+        .catch(() => {});
     }
   };
 
@@ -141,6 +144,11 @@ export default function TypeRacer({ onClose }) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
               <div style={{ fontSize: 48 }}>🏆</div>
               <h2 style={{ color: 'var(--white)', fontSize: 22, fontWeight: 700 }}>Nice work!</h2>
+              {ticketsEarned > 0 && (
+                <div style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, padding: '6px 16px', fontSize: 14, color: '#ffd700', fontWeight: 600 }}>
+                  🎟️ +{ticketsEarned} tickets earned!
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, width: '100%', marginTop: 8 }}>
                 {[
                   { label: 'WPM', value: wpm, color: wpm >= 80 ? '#23a55a' : wpm >= 50 ? '#f0b132' : '#f23f43' },

@@ -8,6 +8,7 @@ import AimTrainer from './AimTrainer';
 import TypeRacer from './TypeRacer';
 import ReactionTest from './ReactionTest';
 import ForumPage from './ForumPage';
+import ShopPage from './ShopPage';
 
 export default function HomePage({ onSelectFriend }) {
   const { user } = useAuth();
@@ -18,16 +19,15 @@ export default function HomePage({ onSelectFriend }) {
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [ownerUser, setOwnerUser] = useState(null);
   const [showAimTrainer, setShowAimTrainer] = useState(false);
   const [showTypeRacer, setShowTypeRacer] = useState(false);
   const [showReactionTest, setShowReactionTest] = useState(false);
   const [showForum, setShowForum] = useState(false);
+  const [showShop, setShowShop] = useState(false);
 
   useEffect(() => {
-  api.get('/api/friends').then(({ data }) => setFriends(data));
-  api.get('/api/admin/owner').then(({ data }) => setOwnerUser(data)).catch(() => {});
-}, []);
+    api.get('/api/friends').then(({ data }) => setFriends(data));
+  }, []);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -93,6 +93,9 @@ export default function HomePage({ onSelectFriend }) {
         <button className="home-contact-btn" onClick={() => setShowForum(true)}>
           💬 Forums
         </button>
+        <button className="home-contact-btn" onClick={() => setShowShop(true)} style={{ marginTop: 8 }}>
+          🎟️ Ticket Shop
+        </button>
       </div>
 
       <div className="home-section">
@@ -109,9 +112,9 @@ export default function HomePage({ onSelectFriend }) {
       </div>
 
       <div className="home-section">
-        <div className="home-section-label">Feedback & Support</div>
+        <div className="home-section-label">Feedback</div>
         <p style={{ fontSize: 13, color: '#888', marginBottom: 10 }}>
-          Got a suggestion, found a bug, or need help? Send a message — it goes directly to the owner!
+          Got a suggestion or found a bug? Let us know!
         </p>
         <form onSubmit={sendFeedback} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <textarea
@@ -147,6 +150,16 @@ export default function HomePage({ onSelectFriend }) {
       </div>
 
       <div className="home-section">
+        <div className="home-section-label">Support</div>
+        <button
+          className="home-contact-btn"
+          onClick={() => onSelectFriend({ id: '4b0b34aa-2f1e-4033-9e80-97accbb7edd3', username: 'Sadness' })}
+        >
+          💬 Contact Owner
+        </button>
+      </div>
+
+      <div className="home-section">
          <div className="home-section-label">Legal</div>
          <button className="home-contact-btn" onClick={() => setShowTOS(true)}>
            📋 Terms of Service
@@ -162,6 +175,7 @@ export default function HomePage({ onSelectFriend }) {
       {showTypeRacer && <TypeRacer onClose={() => setShowTypeRacer(false)} />}
       {showReactionTest && <ReactionTest onClose={() => setShowReactionTest(false)} />}
       {showForum && <ForumPage onClose={() => setShowForum(false)} />}
+      {showShop && <ShopPage onClose={() => setShowShop(false)} />}
     </div>
   );
 }
