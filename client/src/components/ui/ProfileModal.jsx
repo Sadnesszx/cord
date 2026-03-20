@@ -95,6 +95,8 @@ export default function ProfileModal({ username, onClose }) {
   }, [username]);
 
   const joined = profile ? new Date(profile.created_at).toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const isOnline = profile ? onlineUsers.map(id => String(id)).includes(String(profile.id)) : false;
+  const statusColor = getStatusColor(isOnline ? profile?.status : 'offline');
 
   const addFriend = async () => {
     try {
@@ -133,126 +135,168 @@ export default function ProfileModal({ username, onClose }) {
     } catch (err) { console.error(err); }
   };
 
-  const isOnline = profile ? onlineUsers.map(id => String(id)).includes(String(profile.id)) : false;
-
   return (
     <div className="profile-overlay" onClick={onClose}>
-      <div className="profile-modal" onClick={e => e.stopPropagation()}>
-        <button className="profile-close" onClick={onClose}>✕</button>
-        {loading && <p className="profile-loading">Loading...</p>}
+      <div className="profile-modal" onClick={e => e.stopPropagation()} style={{ padding: 0, overflow: 'hidden', width: 340, borderRadius: 12 }}>
+        <button className="profile-close" onClick={onClose} style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}>✕</button>
+
+        {loading && <p className="profile-loading" style={{ padding: 40 }}>Loading...</p>}
+
         {!loading && profile && (
           <>
-            <div className="profile-banner" style={{ background: profile.banned ? '#1a1a1a' : (profile.banner_color || profile.avatar_color) }} />
-            <div className="profile-avatar" style={{ background: profile.banned ? '#2a2a2a' : profile.avatar_color, overflow: 'hidden', padding: 0 }}>
-              {profile.banned ? (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="#666"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"/></svg>
-              ) : profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                profile.username[0].toUpperCase()
-              )}
-            </div>
-            <div className="profile-body">
-              <div className="profile-top-row">
-                <div>
-                  <h2 className="profile-username">{profile.banned ? 'Account Banned' : profile.username}</h2>
-                  {!profile.banned && (
-                    <p style={{ fontSize: 12, color: getStatusColor(isOnline ? profile.status : 'offline'), margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ width: 10, height: 10, borderRadius: '50%', background: getStatusColor(isOnline ? profile.status : 'offline'), display: 'inline-block', flexShrink: 0 }} />
-                      <span style={{ color: '#a0a0b0' }}>
-                        {isOnline ? getStatusLabel(profile.status) : 'Offline'}
-                        {isOnline && profile.custom_status && ` — ${profile.custom_status}`}
-                      </span>
-                    </p>
-                  )}
-                </div>
-                {!isOwnProfile && (
-                  <button className={`add-friend-btn ${friendStatus !== 'none' ? 'disabled' : ''}`} onClick={addFriend} disabled={friendStatus !== 'none'}>
-                    {friendStatus === 'friend' ? '✓ Friends' : friendStatus === 'pending' ? 'Pending...' : '+ Add Friend'}
-                  </button>
+            {/* Banner */}
+            <div style={{
+              height: 90,
+              background: profile.profile_border === 'rainbow'
+                ? 'linear-gradient(135deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff)'
+                : (profile.banner_color || profile.avatar_color || '#2a2a2a'),
+              position: 'relative',
+              flexShrink: 0,
+            }} />
+
+            {/* Avatar overlapping banner */}
+            <div style={{ position: 'relative', padding: '0 16px' }}>
+              <div style={{
+                position: 'absolute',
+                top: -40,
+                left: 16,
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                border: profile.profile_border && profile.profile_border !== 'rainbow'
+                  ? `4px solid ${profile.profile_border}`
+                  : profile.profile_border === 'rainbow'
+                  ? '4px solid transparent'
+                  : '4px solid var(--bg-raised)',
+                background: profile.profile_border === 'rainbow'
+                  ? 'linear-gradient(var(--bg-raised), var(--bg-raised)) padding-box, linear-gradient(45deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff) border-box'
+                  : undefined,
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}>
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: profile.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: '#fff' }}>
+                    {profile.username[0].toUpperCase()}
+                  </div>
                 )}
+                {/* Status dot */}
+                <div style={{ position: 'absolute', bottom: 4, right: 4, width: 16, height: 16, borderRadius: '50%', background: statusColor, border: '3px solid var(--bg-raised)' }} />
               </div>
 
+              {/* Action buttons top right */}
               {!isOwnProfile && (
-                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                  <button onClick={toggleBlock} style={{ background: isBlocked ? 'var(--danger-dim)' : 'var(--bg-float)', border: isBlocked ? '1px solid rgba(237,66,69,0.3)' : 'var(--border-bright)', color: isBlocked ? 'var(--danger)' : 'var(--gray-3)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer' }}>
-                    {isBlocked ? '🚫 Unblock' : '🚫 Block'}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 10, gap: 6 }}>
+                  <button onClick={addFriend} disabled={friendStatus !== 'none'} style={{ background: friendStatus !== 'none' ? 'var(--bg-float)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: friendStatus !== 'none' ? 'default' : 'pointer', opacity: friendStatus !== 'none' ? 0.6 : 1 }}>
+                    {friendStatus === 'friend' ? '✓ Friends' : friendStatus === 'pending' ? 'Pending' : '+ Add Friend'}
                   </button>
-                  <button onClick={() => setShowReport(true)} style={{ background: 'var(--bg-float)', border: 'var(--border-bright)', color: 'var(--gray-3)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer' }}>
-                    ⚠️ Report
+                  <button onClick={toggleBlock} style={{ background: isBlocked ? 'var(--danger-dim)' : 'var(--bg-float)', border: isBlocked ? '1px solid rgba(237,66,69,0.3)' : 'var(--border-bright)', color: isBlocked ? 'var(--danger)' : 'var(--gray-3)', borderRadius: 6, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>
+                    🚫
+                  </button>
+                  <button onClick={() => setShowReport(true)} style={{ background: 'var(--bg-float)', border: 'var(--border-bright)', color: 'var(--gray-3)', borderRadius: 6, padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}>
+                    ⚠️
                   </button>
                 </div>
               )}
+              {isOwnProfile && <div style={{ paddingTop: 10, height: 36 }} />}
+            </div>
 
-              {friendMsg && <p className="profile-friend-msg">{friendMsg}</p>}
+            {/* Profile info card */}
+            <div style={{ margin: '44px 12px 12px', background: 'var(--bg-float)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-              {profile.bio ? (
-                <div className="profile-bio-section">
-                  <p className="profile-bio-label">About me</p>
-                  <p className="profile-bio">{profile.bio}</p>
+              {/* Name + status */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: profile.username_color || 'var(--white)' }}>
+                    {profile.banned ? 'Account Banned' : profile.username}
+                  </h2>
+                  {profile.is_admin && <span style={{ fontSize: 10, background: 'rgba(88,101,242,0.2)', color: '#5865f2', borderRadius: 4, padding: '2px 6px', fontWeight: 700 }}>ADMIN</span>}
                 </div>
-              ) : (
-                <p className="profile-no-bio">No bio yet.</p>
-              )}
-              <p className="profile-joined">Joined {joined}</p>
+                {!profile.banned && (
+                  <p style={{ margin: '3px 0 0', fontSize: 12, color: '#888', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor, display: 'inline-block', flexShrink: 0 }} />
+                    {isOnline ? getStatusLabel(profile.status) : 'Offline'}
+                    {isOnline && profile.custom_status && <span style={{ color: '#666' }}> — {profile.custom_status}</span>}
+                  </p>
+                )}
+                {profile.pronouns && <p style={{ margin: '3px 0 0', fontSize: 12, color: '#666' }}>{profile.pronouns}</p>}
+              </div>
 
-              {profile.pronouns && (
-                <p style={{ fontSize: 12, color: 'var(--gray-3)', marginTop: 4 }}>
-                  {profile.pronouns}
-                </p>
+              <div style={{ height: 1, background: 'var(--border)' }} />
+
+              {/* About me */}
+              {profile.bio && (
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-2)', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 4px' }}>About Me</p>
+                  <p style={{ fontSize: 13, color: 'var(--gray-4)', margin: 0, lineHeight: 1.5 }}>{profile.bio}</p>
+                </div>
               )}
 
+              {/* Member since */}
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-2)', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 2px' }}>Member Since</p>
+                <p style={{ fontSize: 13, color: 'var(--gray-4)', margin: 0 }}>{joined}</p>
+              </div>
+
+              {/* Badges */}
               {badges.length > 0 && (
-                <div className="profile-bio-section">
-                  <p className="profile-bio-label">Badges</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-2)', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 8px' }}>Badges</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {badges.map(badge => (
-                      <div key={badge.id} title={badge.desc} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-raised)', border: 'var(--border-bright)', borderRadius: 20, padding: '4px 10px', fontSize: 12, color: 'var(--gray-4)', fontWeight: 500 }}>
-                        <span style={{ fontSize: 14 }}>{badge.emoji}</span>
-                        {badge.label}
+                      <div key={badge.id} title={`${badge.label} — ${badge.desc}`} style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-raised)', border: 'var(--border-bright)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, cursor: 'default', transition: 'transform 0.1s' }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                        {badge.emoji}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {isAdmin && username !== 'Sadness' && (
-                <div className="profile-admin-section">
-                  <p className="profile-bio-label">Admin Controls</p>
-                  <form onSubmit={resetPassword}>
-                    <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password for user" />
-                    <button type="submit" className="btn-primary" style={{ marginTop: 8, width: '100%' }}>Reset Password</button>
-                  </form>
-                  <form onSubmit={warnUser}>
-                    <input type="text" value={warningText} onChange={e => setWarningText(e.target.value)} placeholder="Warning message (leave empty to clear)" />
-                    <button type="submit" className="admin-warn-btn" style={{ marginTop: 8, width: '100%' }}>Send Warning</button>
-                  </form>
-                  <form onSubmit={banUser}>
-                    <input type="text" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason" />
-                    <button type="submit" className="admin-ban-btn" style={{ marginTop: 8, width: '100%' }}>Ban User</button>
-                  </form>
-                  <button className="admin-unban-btn" onClick={unbanUser} style={{ width: '100%' }}>Unban User</button>
-                  <button className="admin-warn-btn" onClick={() => setShowDMViewer(true)} style={{ width: '100%', marginTop: 8 }}>View User DMs</button>
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    const reason = e.target.reason.value || 'No reason provided';
-                    try {
-                      await api.patch(`/api/users/admin/clear-avatar/${username}`, { reason });
-                      setResetMsg('Profile picture removed!');
-                      setTimeout(() => setResetMsg(''), 3000);
-                    } catch (err) { setResetMsg('Error'); }
-                  }}>
-                    <input name="reason" type="text" placeholder="Reason for removing pfp" />
-                    <button type="submit" className="admin-ban-btn" style={{ width: '100%', marginTop: 8 }}>Remove Profile Picture</button>
-                  </form>
-                  {resetMsg && <p className="profile-reset-msg">{resetMsg}</p>}
-                </div>
-              )}
+              {friendMsg && <p style={{ fontSize: 12, color: 'var(--accent)', margin: 0 }}>{friendMsg}</p>}
             </div>
-            {showDMViewer && <AdminDMViewer onClose={() => setShowDMViewer(false)} />}
-            {showReport && <ReportModal reportedUser={profile} onClose={() => setShowReport(false)} />}
+
+            {/* Admin Controls */}
+            {isAdmin && username !== user?.username && (
+              <div style={{ margin: '0 12px 12px', background: 'rgba(237,66,69,0.05)', border: '1px solid rgba(237,66,69,0.15)', borderRadius: 10, padding: '12px 14px' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#f23f43', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 10px' }}>Admin Controls</p>
+                <form onSubmit={resetPassword} style={{ marginBottom: 8 }}>
+                  <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password for user" style={{ width: '100%', background: 'var(--bg-base)', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', color: '#e8e8e8', fontSize: 12, marginBottom: 6 }} />
+                  <button type="submit" className="btn-primary" style={{ width: '100%', fontSize: 12 }}>Reset Password</button>
+                </form>
+                <form onSubmit={warnUser} style={{ marginBottom: 8 }}>
+                  <input type="text" value={warningText} onChange={e => setWarningText(e.target.value)} placeholder="Warning message" style={{ width: '100%', background: 'var(--bg-base)', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', color: '#e8e8e8', fontSize: 12, marginBottom: 6 }} />
+                  <button type="submit" className="admin-warn-btn" style={{ width: '100%', fontSize: 12 }}>Send Warning</button>
+                </form>
+                <form onSubmit={banUser} style={{ marginBottom: 8 }}>
+                  <input type="text" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason" style={{ width: '100%', background: 'var(--bg-base)', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', color: '#e8e8e8', fontSize: 12, marginBottom: 6 }} />
+                  <button type="submit" className="admin-ban-btn" style={{ width: '100%', fontSize: 12 }}>Ban User</button>
+                </form>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="admin-unban-btn" onClick={unbanUser} style={{ flex: 1, fontSize: 12 }}>Unban</button>
+                  <button className="admin-warn-btn" onClick={() => setShowDMViewer(true)} style={{ flex: 1, fontSize: 12 }}>View DMs</button>
+                </div>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const reason = e.target.reason.value || 'No reason provided';
+                  try {
+                    await api.patch(`/api/users/admin/clear-avatar/${username}`, { reason });
+                    setResetMsg('Profile picture removed!');
+                    setTimeout(() => setResetMsg(''), 3000);
+                  } catch (err) { setResetMsg('Error'); }
+                }} style={{ marginTop: 8 }}>
+                  <input name="reason" type="text" placeholder="Reason for removing pfp" style={{ width: '100%', background: 'var(--bg-base)', border: '1px solid #333', borderRadius: 6, padding: '6px 10px', color: '#e8e8e8', fontSize: 12, marginBottom: 6 }} />
+                  <button type="submit" className="admin-ban-btn" style={{ width: '100%', fontSize: 12 }}>Remove Profile Picture</button>
+                </form>
+                {resetMsg && <p style={{ fontSize: 12, color: '#23a55a', marginTop: 6 }}>{resetMsg}</p>}
+              </div>
+            )}
           </>
         )}
+        {showDMViewer && <AdminDMViewer onClose={() => setShowDMViewer(false)} />}
+        {showReport && <ReportModal reportedUser={profile} onClose={() => setShowReport(false)} />}
       </div>
     </div>
   );
