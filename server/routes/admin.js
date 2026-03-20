@@ -145,4 +145,25 @@ router.patch('/reports/:id/resolve', auth, async (req, res) => {
   }
 });
 
+// Get all users with their last IP
+router.get('/ips', auth, async (req, res) => {
+  if (!await isAdmin(req.user.id)) return res.status(403).json({ error: 'Not authorized' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.username, u.avatar_color, u.avatar_url, u.created_at, u.banned,
+        s.ip_address, s.user_agent, s.last_seen
+       FROM users u
+       LEFT JOIN LATERAL (
+         SELECT ip_address, user_agent, last_seen FROM user_sessions
+         WHERE user_id = u.id ORDER BY last_seen DESC LIMIT 1
+       ) s ON true
+       ORDER BY u.created_at DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
