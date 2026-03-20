@@ -4,12 +4,28 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+const awardTickets = async (userId, amount) => {
+  await pool.query('UPDATE users SET tickets = COALESCE(tickets, 0) + $1 WHERE id = $2', [amount, userId]);
+};
+
+const calcTickets = (game, score) => {
+  if (game === 'aim') return Math.max(1, Math.floor(score / 50));
+  if (game === 'type') return Math.max(1, Math.floor(score * 2));
+  if (game === 'reaction') {
+    const ms = 10000 - score;
+    if (ms < 200) return 50;
+    if (ms < 300) return 30;
+    if (ms < 400) return 15;
+    return 5;
+  }
+  return 1;
+};
+
 // Submit a score
 router.post('/', auth, async (req, res) => {
   const { game, score, meta } = req.body;
   if (!game || score === undefined) return res.status(400).json({ error: 'Missing fields' });
   try {
-    // Only keep the best score per user per game
     const { rows: existing } = await pool.query(
       'SELECT id, score FROM minigame_scores WHERE user_id = $1 AND game = $2',
       [req.user.id, game]
@@ -27,7 +43,13 @@ router.post('/', auth, async (req, res) => {
         [req.user.id, req.user.username, game, score, meta || null]
       );
     }
-    res.json({ success: true });
+
+    // Award tickets every time you play
+    const ticketsEarned = calcTickets(game, score);
+    await awardTickets(req.user.id, ticketsEarned);
+
+    const { rows: userRows } = await pool.query('SELECT tickets FROM users WHERE id = $1', [req.user.id]);
+    res.json({ success: true, ticketsEarned, totalTickets: userRows[0].tickets });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -55,6 +77,15 @@ router.get('/badges/:username', auth, async (req, res) => {
         if (game === 'reaction') badges.push({ id: 'lightning', label: 'Lightning Reflexes', emoji: '⚡', desc: '#1 in Reaction Test' });
       }
     }
+
+    // Shop badges from inventory
+    const { rows: shopBadges } = await pool.query(
+      `SELECT si.value, si.name, si.emoji FROM user_inventory ui
+       JOIN shop_items si ON ui.item_id = si.id
+       WHERE ui.user_id = $1 AND si.type = 'badge' AND ui.equipped = TRUE`,
+      [userId]
+    );
+    shopBadges.forEach(b => badges.push({ id: b.value, label: b.name, emoji: b.emoji, desc: 'Shop badge' }));
 
     res.json(badges);
   } catch (err) {
